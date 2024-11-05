@@ -7,7 +7,7 @@ function HomePage() {
 
   useEffect(() => {
     console.log('Request for sample data');
-    axios.get('/web/sample-data', {
+    axios.get('/web-api/sample-data', {
       headers: {
         'User-Agent': navigator.userAgent
       }

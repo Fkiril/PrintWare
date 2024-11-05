@@ -2,7 +2,7 @@ import path, { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import express from 'express';
-import serveIndex from 'serve-index';
+// import serveIndex from 'serve-index';
 
 // Load environment variables
 dotenv.config();
@@ -14,7 +14,8 @@ const port = process.env.PORT || 3000;
 
 // Middlewares
 app.use(express.json());
-app.use(serveIndex(join(__dirname, '../web/build'), { icons: true }));
+
+// app.use(serveIndex(join(__dirname, '../web/build'), { icons: true }));
 app.use(express.static(join(__dirname, '../web/build')));
 
 app.use((req, res, next) => {
@@ -23,16 +24,11 @@ app.use((req, res, next) => {
 });
 
 // Import routes
-import homeRouter from './routes/index.js';
-app.use('/', homeRouter);
-
 import webRouter from './routes/web.js';
-app.use('/web', webRouter);
+app.use('/web-api', webRouter);
 
-app.get('*', (req, res) => {
-  console.log('get*');
-  res.sendFile(join(__dirname, '../web/build/index.html'));
-});
+import authRouter from './routes/auth.js';
+app.use('/auth-api', authRouter);
 
 // Start the server
 app.listen(port, () => {

@@ -42,8 +42,16 @@ A multi-platform software project using React.js, React Native, and Node.js for 
 
 ## Usage
 
+### Run server
+To start the server:
+```sh
+cd server
+node server.js
+```
+
 ### Web Application
 To start the web application:
 ```sh
 cd web
 npm start
+```
