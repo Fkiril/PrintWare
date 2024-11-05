@@ -1,8 +1,9 @@
 import { Router } from 'express';
 const router = Router();
-import { getHomePage, getDashboard } from '../controllers/webController.js';
+import { getDashboard, getSampleData } from '../controllers/webController.js';
 
-router.get('/', getHomePage);
 router.get('/dashboard', getDashboard);
+
+router.get('/sample-data', getSampleData);
 
 export default router;
