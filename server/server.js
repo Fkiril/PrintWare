@@ -24,11 +24,14 @@ app.use((req, res, next) => {
 });
 
 // Import routes
-import webRouter from './routes/web.js';
+import webRouter from './routes/web_routes/web.js';
 app.use('/web-api', webRouter);
 
 import authRouter from './routes/auth.js';
 app.use('/auth-api', authRouter);
+
+import authenticate from './middleware/authenticate.js';
+app.use(authenticate);
 
 // Start the server
 app.listen(port, () => {

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+import { useAuth } from '../hooks/useAuth.js';
+
 function HomePage() {
+  const { token } = useAuth();
 
   const [data, setData] = useState(null);
 
@@ -9,7 +12,7 @@ function HomePage() {
     console.log('Request for sample data');
     axios.get('/web-api/sample-data', {
       headers: {
-        'User-Agent': navigator.userAgent
+        'authentication': token
       }
     })
       .then(response => setData(response.data))
