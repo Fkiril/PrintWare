@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { webAuth } from '../services/firebase.js';
+import { useNavigate } from 'react-router-dom';
+
+import { webAuth } from '../services/FirebaseClientSDK.js';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useAuth } from '../hooks/useAuth.js'
+import useAuth from '../hooks/useAuth'
 
 const Login = () => {
+    const navigate = useNavigate();
+    const { user, token, setUser, setToken } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { user, token, setUser, setToken } = useAuth();
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -22,28 +25,32 @@ const Login = () => {
         }
     };
 
+    console.log('User:', user);
+    console.log('Token:', token);
+
     return (
         <div>
             <h1>Login</h1>
             <form onSubmit={handleLogin}>
-            <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-            />
-            <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-            />
-            <button type="submit">Login</button>
+                <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+                <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
+                <button type="submit">Login</button>
             </form>
             {user && <p>You are logged in as: {user.email} </p>}
             {token && <p>With token: {token} </p>}
+            <button onClick={() => navigate('/home')}>HomePage</button>
         </div>
     );
 };

@@ -1,8 +1,11 @@
+// useAuth.js
 import { create } from 'zustand';
 
-export const useAuth = create((set) => ({
+const useAuth = create(set => ({
   user: null,
-  token: "",
-  setUser: (user) => set({ user }),
-  setToken: (token) => set({ token })
+  token: null,
+  setUser: user => set({ user }),
+  setToken: token => set({ token }),
 }));
+
+export default useAuth;

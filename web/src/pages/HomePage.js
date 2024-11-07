@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import customAPI from '../services/CustomAPI.js';
 
-import { useAuth } from '../hooks/useAuth.js';
+import useAuth from '../hooks/useAuth';
 
 function HomePage() {
   const { token } = useAuth();
-
+  console.log('Token: ', token);
   const [data, setData] = useState(null);
 
   useEffect(() => {
     console.log('Request for sample data');
-    axios.get('/web-api/sample-data', {
+    axios.get('web-api/sample-data', {
       headers: {
-        'authentication': token
+        'Authorization': token,
       }
     })
       .then(response => setData(response.data))
