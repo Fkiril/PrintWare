@@ -44,54 +44,54 @@ A multi-platform software project using React.js, React Native, and Node.js for 
 
 ### Web Application
 To start the web application:
-    ```sh
-    cd web
-    npm start
-    ```
+```sh
+cd web
+npm start
+```
 
 ## Workflow
 
 ### New feature
 To start working a new feature, create a new `feature` branch from `develop`
-    ```sh
-    git checkout develop
-    git pull origin develop
-    git checkout -b feature/my-new-feature
-    ```
+```sh
+git checkout develop
+git pull origin develop
+git checkout -b feature/my-new-feature
+```
 When it's done, merge the feature into `develop`
-    ```sh
-    git checkout develop
-    git pull origin develop
-    git merge feature/my-new-feature
-    git push origin develop
-    ```
+```sh
+git checkout develop
+git pull origin develop
+git merge feature/my-new-feature
+git push origin develop
+```
 
 ### Release new version
 To release a new version, create a new `release` branch from `develop`
-    ```sh
-    git checkout develop
-    git pull origin develop
-    git checkout -b release/my-new-version
-    ```
+```sh
+git checkout develop
+git pull origin develop
+git checkout -b release/my-new-version
+```
 
 When it's done, merge the release into `develop` and `main`
-    ```sh
-    git checkout develop
-    git pull origin develop
-    git merge release/my-new-version
-    git push origin develop
+```sh
+git checkout develop
+git pull origin develop
+git merge release/my-new-version
+git push origin develop
 
-    git checkout main
-    git pull origin main
-    git merge release/my-new-version
-    git push origin main
-    ```
+git checkout main
+git pull origin main
+git merge release/my-new-version
+git push origin main
+```
 
 ### Hotfix
 When there is a bug or an issue, create a new `hotfix` branch from `develop`
-    ```sh
-    git checkout develop
-    git pull origin develop
-    git checkout -b hotfix/my-new-hotfix
-    ```
+```sh
+git checkout develop
+git pull origin develop
+git checkout -b hotfix/my-new-hotfix
+```
 
