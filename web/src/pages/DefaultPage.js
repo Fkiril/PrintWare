@@ -1,13 +1,21 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import useAuth from '../hooks/useAuth';
+
 function DefaultPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <div>
       <p>This is the default page of the web application.</p>
-      <button onClick={() => navigate('/login')}>Login</button>
+
+      {user? (
+        <button onClick={() => navigate('/home')}>Home</button>
+      ): (
+        <button onClick={() => navigate('/login')}>Login</button>
+      )}
     </div>
   );
 }

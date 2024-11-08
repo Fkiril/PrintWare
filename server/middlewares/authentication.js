@@ -1,6 +1,8 @@
 import { webAuth } from '../services/firebase.js';
 
 const authenticate = async (req, res, next) => {
+  // console.log('request headers: ', req.headers);
+  // console.log('request query: ', req.query);
   const token = req.headers.authorization;  
 
   if (!token) {
@@ -8,7 +10,8 @@ const authenticate = async (req, res, next) => {
   }
 
   try {
-    const decodedToken = await webAuth.verifyIdToken(token);
+    const decodedToken = await webAuth.verifyIdToken(token.split('Bearer ')[1]);
+    // const decodedToken = await webAuth.verifyIdToken(token);
     req.user = decodedToken;
     next();
   } catch (error) {
