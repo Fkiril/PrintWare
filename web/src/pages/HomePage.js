@@ -6,7 +6,6 @@ import useAuth from '../hooks/useAuth';
 
 function HomePage() {
   const { token } = useAuth();
-  console.log('Token: ', token);
   const [data, setData] = useState(null);
 
   useEffect(() => {
