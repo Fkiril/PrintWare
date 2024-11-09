@@ -5,7 +5,7 @@ import { webAuth } from '../services/FirebaseClientSDK.js';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import useAuth from '../hooks/useAuth'
 
-const Login = () => {
+const LoginComponent = () => {
     const navigate = useNavigate();
     const { user, token, setUser, setToken } = useAuth();
     const [email, setEmail] = useState('');
@@ -24,9 +24,6 @@ const Login = () => {
             console.error('Error logging in:', error);
         }
     };
-
-    console.log('User:', user);
-    console.log('Token:', token);
 
     return (
         <div>
@@ -55,4 +52,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default LoginComponent;
