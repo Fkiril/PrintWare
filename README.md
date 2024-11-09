@@ -65,6 +65,15 @@ git pull origin develop
 git merge feature/my-new-feature
 git push origin develop
 ```
+You can alse delete that feature branch after it's merged
+1. Delete local
+```sh
+git branch -d feature/my-new-feature
+```
+2. Delete remote
+```sh
+git push origin --delete feature/my-new-feature
+```
 
 ### Release new version
 To release a new version, create a new `release` branch from `develop`
