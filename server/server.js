@@ -1,4 +1,4 @@
-import path, { dirname, join, resolve } from 'path';
+import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import express from 'express';
@@ -22,7 +22,7 @@ app.use(express.json());
 import authenticate from './middlewares/authentication.js';
 // app.use(authenticate);
 
-const whitelist = ['/web-api/dashboard', '/', '/favicon.ico'];
+const whitelist = ['/', '/favicon.ico', '/spso/test'];
 
 app.use((req, res, next) => {
   console.log('Time: ', Date.now());
@@ -38,8 +38,8 @@ app.use((req, res, next) => {
 });
 
 // Import routes
-import webRouter from './routes/web_routes/web.js';
-app.use('/web-api', webRouter);
+import SPSORoutes from './routes/web_routes/HCMUTSSORoute.js';
+app.use('/spso', SPSORoutes);
     
 // Start the server
 app.listen(port, () => {

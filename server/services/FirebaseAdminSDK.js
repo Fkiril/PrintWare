@@ -1,15 +1,18 @@
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
+
 import serviceAccount from './printware-2af4c-firebase-adminsdk-gr4c0-d0995f709e.json' assert { type: 'json' };
 // const serviceAccount = require('./printware-2af4c-firebase-adminsdk-gr4c0-d0995f709e.json');
 
-const firebaseWebApp = initializeApp({
+const adminApp = initializeApp({
   credential: cert(serviceAccount),
   databaseURL: 'https://printware-2af4c.firebaseio.com'
 });
 
-let webAuth = getAuth(firebaseWebApp);
+const adminAuth = getAuth(adminApp);
+const firestore = getFirestore(adminApp);
 
-export default firebaseWebApp;
+export default adminApp;
 
-export { webAuth };
+export { adminAuth, firestore };
