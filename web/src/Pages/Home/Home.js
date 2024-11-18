@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 
 const Home = () => {
   return (
-    <Box >
+    <Box sx={{display: 'flex', margin: 'auto',}} >
       <h1 style={{ color: '#000', padding: '20px', margin: 0 }}>Welcome to Printer</h1>
     </Box>
   );

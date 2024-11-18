@@ -11,7 +11,7 @@ import Profile from './Pages/Profile/Profile';
 import SidebarLayout from './Pages/Sidebar/Sidebarlayout';
 import Footer from './components/ui/Footer/Footer';
 import Printer from './Pages/Printer/Printer';
-
+import ViewLogs from './Pages/ViewLogs/ViewLogs';
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -170,7 +170,7 @@ function App() {
 
 
   return (
-    <Box >
+    <Box sx={{backgroundColor:'#f0f0f0'}}>
       <Router >
         <Routes >
           <Route 
@@ -214,6 +214,20 @@ function App() {
                   onLogout={handleLogout}
                 >
                   <Printer/>
+                </SidebarLayout>
+                : <Navigate to="/" />
+            }
+          />
+          <Route
+            path="/viewlogs"
+            element={
+              isLoggedIn ?
+                <SidebarLayout
+                  isSidebarOpen={isSidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                  onLogout={handleLogout}
+                >
+                  <ViewLogs />
                 </SidebarLayout>
                 : <Navigate to="/" />
             }

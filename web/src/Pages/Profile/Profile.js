@@ -22,10 +22,10 @@ const Profile = () => {
   const [fullname, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone_number, setPhone] = useState('');
-  const [maLop, setmaLop] = useState('');
+  const [Class, setClass] = useState('');
 
-  const [mssv, setmssv] = useState('');
-  const [khoa, setKhoa] = useState('');
+  const [idstudent, setidstudent] = useState('');
+  const [Faculty, setFaculty] = useState('');
   const [avatar, setAvatar] = useState('');
   const [originalAvatar, setOriginalAvatar] = useState('');
   const [coverPhoto, setCoverPhoto] = useState('');
@@ -39,9 +39,9 @@ const Profile = () => {
     setFullName(localStorage.getItem('fullname'));
     setEmail(localStorage.getItem('email'));
     setPhone(localStorage.getItem('phone_number'));
-    setmaLop(localStorage.getItem('maLop'));
-    setmssv(localStorage.getItem('MSSV'));
-    setKhoa(localStorage.getItem('Khoa'));
+    setClass(localStorage.getItem('Class'));
+    setidstudent(localStorage.getItem('idstudent'));
+    setFaculty(localStorage.getItem('Faculty'));
     if (localStorage.getItem('avatar')) {
       setAvatar(localStorage.getItem('avatar'));
       setOriginalAvatar(localStorage.getItem('avatar'));
@@ -63,7 +63,7 @@ const Profile = () => {
       showAlert('Username is required', 'error');
       return;
     }
-    if (!mssv || !khoa) {
+    if (!idstudent || !Faculty) {
       showAlert('AIO Username and AIO Key are required', 'error');
       return;
     }
@@ -72,9 +72,9 @@ const Profile = () => {
     formData.append('fullname', fullname);
     formData.append('email', email);
     formData.append('phone_number', phone_number);
-    formData.append('MSSV', mssv);
-    formData.append('Khoa', khoa);
-    formData.append('maLop', maLop);
+    formData.append('idstudent', idstudent);
+    formData.append('Faculty', Faculty);
+    formData.append('Class', Class);
     const fileInputAvatar = document.querySelector('input[name="avatar"]');
     const fileInputCover = document.querySelector('input[name="coverPhoto"]');
     if (fileInputAvatar && fileInputAvatar.files[0]) {
@@ -99,9 +99,9 @@ const Profile = () => {
         localStorage.setItem('fullname', result.data.fullname || '');
         localStorage.setItem('email', result.data.email || '');
         localStorage.setItem('phone_number', result.data.phone_number || '');
-        localStorage.setItem('MSSV', result.data.MSSV || '');
-        localStorage.setItem('Khoa', result.data.Khoa || '');
-        localStorage.setItem('maLop', result.data.maLop || '');
+        localStorage.setItem('idstudent', result.data.idstudent || '');
+        localStorage.setItem('Faculty', result.data.Faculty || '');
+        localStorage.setItem('Class', result.data.Class || '');
         if (result.data.avatar) {
           const avatarSrc = `data:${result.data.avatar.contentType};base64,${result.data.avatar.data}`;
           localStorage.setItem('avatar', avatarSrc);
@@ -178,7 +178,7 @@ const Profile = () => {
   };
 
   return (
-    <Box sx={{ p: 3, maxWidth: '600px', margin: 'auto',mb:'5%' }}>
+    <Box sx={{ p: 3, maxWidth: '600px', margin: 'auto',}}>
       <Paper sx={{ p: 2, borderRadius: '17px' ,background: `linear-gradient(to bottom, 
                     rgba(255, 255, 255, 0.6) 5%, 
                     rgba(255, 255, 255, 1) 100%)`,}}>
@@ -345,9 +345,9 @@ const Profile = () => {
           </Grid>
           <Grid item xs={12}>
             <TextField
-              label="MSSV"
-              value={mssv || ''}
-              onChange={(e) => setmssv(e.target.value)}
+              label="ID Student"
+              value={idstudent || ''}
+              onChange={(e) => setidstudent(e.target.value)}
               fullWidth
               InputProps={{
                 readOnly: !isEditable,
@@ -359,9 +359,9 @@ const Profile = () => {
           </Grid>
           <Grid item xs={12}>
             <TextField
-              label="Lop" // Thêm trường nhập Web Server IP
-              value={maLop || ''}
-              onChange={(e) => setmaLop(e.target.value)}
+              label="Class" 
+              value={Class || ''}
+              onChange={(e) => setClass(e.target.value)}
               fullWidth
               InputProps={{
                 readOnly: !isEditable,
@@ -373,9 +373,9 @@ const Profile = () => {
           </Grid>
           <Grid item xs={12}>
             <TextField
-              label="Khoa"
-              value={khoa || ''}
-              onChange={(e) => setKhoa(e.target.value)}
+              label="Faculty"
+              value={Faculty || ''}
+              onChange={(e) => setFaculty(e.target.value)}
               fullWidth
               InputProps={{
                 readOnly: !isEditable,
