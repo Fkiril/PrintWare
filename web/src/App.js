@@ -12,6 +12,13 @@ import SidebarLayout from './Pages/Sidebar/Sidebarlayout';
 import Footer from './components/ui/Footer/Footer';
 import Printer from './Pages/Printer/Printer';
 import ViewLogs from './Pages/ViewLogs/ViewLogs';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import DocumentUploader from "./Pages/Sprint2/DocumentUploader";
+import DocumentList from "./Pages/Sprint2/DocumentList";
+import Order from "./Pages/Sprint2/Order";
+import Payment from "./Pages/Sprint2/Payment";
+import Viewlog from "./Pages/Sprint2/Viewlog";
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -246,7 +253,12 @@ function App() {
                 : <Navigate to="/" />
             }
           />
-         
+          <Route path="/" element={<DocumentUploader />} />
+          <Route path="/document-uploader" element={<DocumentUploader />} />
+          <Route path="/document-list" element={<DocumentList />} />
+          <Route path="/order" element={<Order />} />
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/viewlog" element={<Viewlog />} />
          
         </Routes>
         <Footer />
