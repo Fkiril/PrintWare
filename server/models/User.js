@@ -31,24 +31,24 @@ export class Student extends IUser {
 
     convertToJSON() {
         return {
-            userName: this.userName,
-            userId: this.userId,
-            email: this.email,
-            phoneNum: this.phoneNum,
-            studentId: this.studentId,
-            major: this.major,
-            academicYear: this.academicYear
+            userName: this.userName?? "",
+            userId: this.userId?? "",
+            email: this.email?? "",
+            phoneNum: this.phoneNum?? "",
+            studentId: this.studentId?? "",
+            major: this.major?? "",
+            academicYear: this.academicYear?? ""
         };
     }
 
     setInfoFromJSON(json) {
-        this.userName = json.userName;
-        this.userId = json.userId;
-        this.email = json.email;
-        this.phoneNum = json.phoneNum;
-        this.studentId = json.studentId;
-        this.major = json.major;
-        this.academicYear = json.academicYear;
+        this.userName = json.userName?? "";
+        this.userId = json.userId?? "";
+        this.email = json.email?? "";
+        this.phoneNum = json.phoneNum?? "";
+        this.studentId = json.studentId?? "";
+        this.major = json.major?? "";
+        this.academicYear = json.academicYear?? "";
     }
 }
 
@@ -62,15 +62,15 @@ export class SPSO extends IUser {
 
     convertToJSON() {
         return {
-            userName: this.userName,
-            userId: this.userId,
-            authorityLevel: this.authorityLevel
+            userName: this.userName?? "",
+            userId: this.userId?? "",
+            authorityLevel: this.authorityLevel?? ""
         };
     }
 
     setInfoFromJSON(json) {
-        this.userName = json.userName;
-        this.userId = json.userId;
-        this.authorityLevel = json.authorityLevel;
+        this.userName = json.userName?? "";
+        this.userId = json.userId?? "";
+        this.authorityLevel = json.authorityLevel?? "";
     }
 }

@@ -1,0 +1,4 @@
+file-uploads/*
+
+services/google-api-key.json
+services/firebase-admin-api-key.json
