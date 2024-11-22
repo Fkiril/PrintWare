@@ -14,28 +14,14 @@ function TestPage() {
 
   const handleTestFunc = async (fileId) => {
     try {
-      const response = await axios.get('spso/test', {
-        responseType: 'blob',
+      const response = await axios.patch('web-api/test', {
         headers: {
           'Authorization': `Bearer ${token}`
         },
         params: {
           fileId: fileId
         }
-      });
-      console.log('Response: ', response.data);
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-          const base64data = reader.result; // This is the base64 string
-          console.log('Base64 data: ', base64data);
-          localStorage.setItem(fileId, base64data); // Store it in localStorage
-          setData({
-            data: response.data,
-            url: base64data
-          }); // Set the image source to display
-      };
-      reader.readAsDataURL(response.data); // Convert Blob to base64
+      })
     } catch (error) {
       console.log('Error: ',error);
     }

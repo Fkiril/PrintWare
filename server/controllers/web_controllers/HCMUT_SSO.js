@@ -10,154 +10,14 @@ import { Student, SPSO } from '../../models/User.js';
 //13TqG02bA2rJnMoUDOw5i2haZINNm38Af
 export async function test(req, res) {
     console.log('test');
-    console.log("query: ", req.query);
 
-    if (!req.query || !req.query.fileId) {
-        res.status(400).send('Missing required parameters.');
-        return;
-    }
-    else {
-        try {
-            const fileId = req.query.fileId;
-            const response = await googleDrive.files.get({
-                fileId: fileId,
-                alt: 'media'
-            }, {
-                responseType: 'stream'
-            });
+    console.log('Query: ', req.query);
 
-            res.set({
-                'Content-Type': response.headers['content-type'],
-                'Content-Disposition': `attachment; filename="${fileId}"`,
-            });
+    console.log('Body: ', req.body);
 
-            response.data
-                .on('end', () => {
-                    console.log('File downloaded successfully.');
-                })
-                .on('error', (err) => {
-                    console.log('Error: ', err);
-                    res.status(500).send(err);
-                })
-                .pipe(res);
-        } catch (error) {
-            console.log('Error: ', error);
-            res.status(500).send(error);
-        }
-    }
+    console.log('name: ', req.body.name);
 
-    // res.send("Request received!");
-}
-
-export async function updateAvatar(req, res) {
-    console.log('updateAvatar');
-
-    if (!req.file || !req.body || !req.query || !req.query.userId) {
-        res.status(400).send('Missing required parameters.');
-        return;
-    }
-    else {
-        const userRef = firestore.collection('users').doc(req.query.userId);
-
-        await userRef.get().then((userSnapshot) => {
-            if (userSnapshot.empty) {
-                res.status(404).send('User not found.');
-                return;
-            }
-
-            const user = userSnapshot.data();
-            if (user.avatar) {
-                const response = googleDrive.files.delete({ fileId: user.avatar }).execute();
-
-                response.then(() => {
-                    console.log('Avatar deleted successfully.');
-                }).catch((error) => {
-                    res.status(500).send(error);
-                });
-            }
-        }).catch((error) => {
-            res.status(500).send(error);
-        });
-
-        const filePath = join(fileURLToPath(import.meta.url), '../../../file-uploads', req.file.filename);
-        const mimeType = req.file.mimetype;
-        const userID = req.body.userId;
-        const fileMetadata = {
-            name: userID,
-            parents: [process.env.AVATARS_FOLDER_ID]
-        };
-
-        googleDrive.files.create({
-            resource: fileMetadata,
-            media: {
-                body: fs.createReadStream(filePath),
-                mimeType: mimeType
-            },
-            fields: 'id'
-        }, async (err, response) => {
-            if (err) {
-                console.log('Error: ', err);
-                res.status(500).send(err);
-            }
-            else {
-                await fs.unlink(filePath).then(() => {
-                    console.log('File deleted successfully.');
-                }).catch((error) => {
-                    console.log('Error deleting file: ', error);
-                })
-
-                console.log('File ID: ', response.data.id);
-                await userRef.update({ avatar: response.data.id }).then(() => {
-                    res.status(200).send(response.data.id);
-                }).catch((error) => {
-                    console.log('Error: ', error);
-                    res.status(500).send(error);
-                });
-            }
-        });
-    }
-}
-
-export async function getAvatar(req, res) {
-    console.log('getAvatar');
-
-    if (!req.query || !req.query.fileId) {
-        res.status(400).send('Missing required parameters.');
-        return;
-    }
-    else {
-        try {
-            const fileId = req.query.fileId;
-            const response = await googleDrive.files.get({
-                fileId: fileId,
-                alt: 'media'
-            }, {
-                responseType: 'stream'
-            });
-            if (!response.data) {
-                res.status(404).send('File not found.');
-                return;
-            }
-
-            res.set({
-                'Content-Type': response.headers['content-type'],
-                'Content-Disposition': `attachment; filename="${fileId}"`,
-            });
-
-            response.data
-                .on('end', () => {
-                    console.log('File downloaded successfully.');
-                })
-                .on('error', (err) => {
-                    console.log('Error: ', err);
-                    res.status(500).send(err);
-                })
-                .pipe(res);
-        } catch (error) {
-            console.log('Error: ', error);
-            res.status(500).send(error);
-        }
-    }
+    res.send("Request received!");
 }
 
 // export async function login(req, res) {
@@ -176,39 +36,50 @@ export async function getAvatar(req, res) {
 // }
 
 // Checked
-export function register(req, res) {
+export async function register(req, res) {
     console.log('Received a register request!');
-    const query = req.query;
+    const body = req.body;
 
-    if (!query || !query.email || !query.password || !query.userName) {
+    if (!body || !body.email || !body.password || !body.userName) {
         res.status(400).send('Missing required parameters.');
         return;
     }
 
-    console.log('Query: ', query);
+    console.log('Body: ', body);
     
-    adminAuth.createUser({
-        email: query.email,
-        password: query.password,
-        displayName: query.userName
+    await adminAuth.createUser({
+        email: body.email,
+        password: body.password,
+        displayName: body.userName
     }).then((userRecord) => {
         const user = new Student();
-        user.setInfoFromJSON(query);
-        firestore.collection('users').doc(userRecord.uid).set(user.convertToJSON());
+        user.setInfoFromJSON(body);
 
-        res.status(200).send(user.convertToJSON());
+        firestore.collection('users').doc(userRecord.uid).set(user.convertToJSON()).then(() => {
+            res.status(201).send(user.convertToJSON());
+        }).catch((error) => {
+            console.log('Error creating new user:', error);
+            res.status(500).send(error.message);
+        });
+
     }).catch((error) => {
         console.log('Error creating new user:', error);
         res.status(500).send(error.message);
     });
 }
 
-export function changePassword(req, res) {
+export async function changePassword(req, res) {
     console.log('changePassword');
+
+    if (!req || !req.query || !req.query.userId || !req.query.password) {
+        res.status(400).send('Missing required parameters.');
+        return;
+    }
+
     res.send('This is the change password page.');
 }
 
-export function forgotPassword(req, res) {
+export async function forgotPassword(req, res) {
     console.log('forgotPassword');
     res.send('This is the forgot password page.');
 }
@@ -225,26 +96,26 @@ export async function deleteAccount(req, res) {
 
     console.log('Query: ', query);
 
-    adminAuth.deleteUser(query.userId).then(async () => {
+    await adminAuth.deleteUser(query.userId).then(async () => {
         const userRef = firestore.collection('users').doc(query.userId);
 
-        await userRef.get().then((userSnapshot) => {
-            if (userSnapshot.empty) {
-                req.status(404).send('User\'s profile not found.');
-            }
+        const userSnapshot = await userRef.get();
+        if (userSnapshot.empty) {
+            res.status(404).send('User not found.');
+            return;
+        }
 
-            if (userSnapshot.data().role === 'student') {
-                const walletRef = firestore.collection('wallet').doc(query.userId);
-
-                if (walletRef) walletRef.delete();
-            }
-        })
+        if (userSnapshot.data().role === 'student') {
+            const walletRef = firestore.collection('wallets').doc(query.userId);
+            if (walletRef) walletRef.delete();
+        }
 
         if (userRef) userRef.delete();
 
-        res.status(200).send('Successfully deleted user.');
+        res.status(204).send('Successfully deleted user.');
     })
     .catch((error) => {
+        console.log('Error deleting user:', error);
         res.status(500).send(error.message);
     });
 }
@@ -253,32 +124,34 @@ export async function deleteAccount(req, res) {
 export async function updateProfile(req, res) {
     console.log('updateProfile');
     
+    const body = req.body;
     const query = req.query;
-    if (!query || !query.updateInfo || !query.userId) {
+    if (!body || !query  || !query.userId) {
         res.status(400).send('Missing required parameters.');
         return;
     }
 
-    console.log('Query: ', query);
-    const updateInfo = JSON.parse(query.updateInfo);
+    console.log('Body: ', body);
+    const updateInfo = JSON.parse(body);
 
     const userRef = firestore.collection('users').doc(query.userId);
-    if (userRef) {
-        const batch = firestore.batch();
-
-        batch.update(userRef, updateInfo);
-
-        batch.commit().then(() => {
-            res.status(200).send('Successfully updated user.');
-        })
-        .catch((error) => {
-            res.status(500).send(error.message);
-        })
-    }
-    else {
+    const userSnapshot = await userRef.get();
+    if (userSnapshot.empty) {
         res.status(404).send('User not found.');
         return;
     }
+
+    const batch = firestore.batch();
+
+    batch.update(userRef, updateInfo);
+
+    await batch.commit().then(() => {
+        res.status(201).send('Successfully updated user.');
+    })
+    .catch((error) => {
+        console.log('Error updating user:', error);
+        res.status(500).send(error.message);
+    })
 }
 
 export async function getUserProfileById(req, res) {
@@ -330,7 +203,7 @@ export async function getUserProfileByEmail(req, res) {
 }
 
 // Checked
-export function getUserIdByEmail(req, res) {
+export async function getUserIdByEmail(req, res) {
     console.log('getUserByEmail');
     const query = req.query;
 
@@ -341,10 +214,131 @@ export function getUserIdByEmail(req, res) {
 
     console.log('Query: ', query);
 
-    adminAuth.getUserByEmail(query.email).then((userRecord) => {
+    await adminAuth.getUserByEmail(query.email).then((userRecord) => {
         res.status(200).send(userRecord.uid);
     })
     .catch((error) => {
         res.status(500).send(error.message);
     });
+}
+
+export async function updateAvatar(req, res) {
+    console.log('updateAvatar');
+
+    if (!req.file || !req.body || !req.query || !req.query.userId) {
+        res.status(400).send('Missing required parameters.');
+        return;
+    }
+    else {
+        const userRef = firestore.collection('users').doc(req.query.userId);
+
+        const userSnapshot = await userRef.get();
+        if (userSnapshot.empty) {
+            res.status(404).send('User not found.');
+            return;
+        }
+
+        if (userSnapshot.data().avatar) {
+            const avatarId = userSnapshot.data().avatar;
+            const response = await googleDrive.files.delete({ fileId: avatarId });
+
+            response.then(() => {
+                console.log('Avatar deleted successfully.');
+            }).catch((error) => {
+                console.log('Error deleting avatar: ', error);
+                res.status(500).send(error).message;
+            });
+        }
+
+        const filePath = join(fileURLToPath(import.meta.url), '../../../file-uploads', req.file.filename);
+        const mimeType = req.file.mimetype;
+        const userID = req.body.userId;
+        const fileMetadata = {
+            name: userID,
+            parents: [process.env.AVATARS_FOLDER_ID]
+        };
+
+        googleDrive.files.create({
+            resource: fileMetadata,
+            media: {
+                body: fs.createReadStream(filePath),
+                mimeType: mimeType
+            },
+            fields: 'id'
+        }, async (error, response) => {
+            if (error) {
+                console.log('Error creating file: ', error);
+                res.status(500).send(error.message);
+            }
+            else {
+                await fs.unlink(filePath).then(() => {
+                    console.log('File deleted successfully.');
+                }).catch((error) => {
+                    console.log('Error deleting file: ', error);
+                })
+
+                console.log('File ID: ', response.data.id);
+                await userRef.update({ avatar: response.data.id }).then(() => {
+                    res.status(201).send(response.data.id);
+                }).catch((error) => {
+                    console.log('Error updating avatar: ', error);
+                    res.status(500).send(error.message);
+                });
+            }
+        });
+    }
+}
+
+export async function getAvatar(req, res) {
+    console.log('getAvatar');
+
+    if (!req.query || !req.query.userId) {
+        res.status(400).send('Missing required parameters.');
+        return;
+    }
+    else {
+        try {
+            const userRef = firestore.collection('users').doc(req.query.userId);
+            const userSnapshot = await userRef.get();
+            if (userSnapshot.empty) {
+                res.status(404).send('User not found.');
+                return;
+            }
+            const user = userSnapshot.data();
+            if (!user.avatar) {
+                res.status(404).send('Avatar not found.');
+                return;
+            }
+
+            const avatarId = user.avatar;
+            const response = await googleDrive.files.get({
+                fileId: avatarId,
+                alt: 'media'
+            }, {
+                responseType: 'stream'
+            });
+            if (!response.data) {
+                res.status(404).send('File not found.');
+                return;
+            }
+
+            res.set({
+                'Content-Type': response.headers['content-type'],
+                'Content-Disposition': `attachment; filename="${avatarId}"`,
+            });
+
+            response.data
+                .on('end', () => {
+                    console.log('File downloaded successfully.');
+                })
+                .on('error', (error) => {
+                    console.log('Error pipe: ', error);
+                    res.status(500).send(error.message);
+                })
+                .pipe(res);
+        } catch (error) {
+            console.log('Error getting avatar: ', error);
+            res.status(500).send(error.message);
+        }
+    }
 }
