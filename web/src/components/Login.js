@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { loginWithEmailAndPassword, logout } from '../controller/HCMUT_SPSO';
+import { loginWithEmailAndPassword, logout } from '../controller/HCMUT_SSO';
 import useAuth from '../hooks/useAuth'
 
 const LoginComponent = () => {

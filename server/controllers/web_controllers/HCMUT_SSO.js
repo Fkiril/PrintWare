@@ -137,22 +137,6 @@ export async function adminRegister(req, res) {
     });
 }
 
-export async function changePassword(req, res) {
-    console.log('changePassword');
-
-    if (!req || !req.query || !req.query.userId || !req.query.password) {
-        res.status(400).send('Missing required parameters.');
-        return;
-    }
-
-    res.send('This is the change password page.');
-}
-
-export async function forgotPassword(req, res) {
-    console.log('forgotPassword');
-    res.send('This is the forgot password page.');
-}
-
 // Checked
 export async function deleteAccount(req, res) {
     console.log('deleteAccount');

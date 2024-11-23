@@ -5,33 +5,17 @@ import axios from 'axios';
 
 
 import useAuth from '../hooks/useAuth';
-import { handleResponseError } from '../utils';
+import { loginWithEmailAndPassword, logout, changePassword } from '../controller/HCMUT_SSO';
+import LoginComponent from '../components/Login';
 
 function TestPage() {
   const navigate = useNavigate();
   const { token } = useAuth();
   const [data, setData] = useState(null);
 
-  const handleTestFunc = async (userId) => {
+  const handleTestFunc = async (email, oldPassword, newPassword) => {
     try {
-      const response = await axios.get('spso/get-avatar', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        params: {
-          userId: userId
-        },
-        responseType: 'blob'
-      });
-
-      const fileReader = new FileReader();
-      fileReader.onload = () => {
-        setData({
-          blob: response.data,
-          url: fileReader.result
-        });
-      }
-      fileReader.readAsDataURL(response.data);
+      changePassword(email, oldPassword, newPassword);
     } catch (error) {
       console.log('Error: ',error);
     }
@@ -39,14 +23,16 @@ function TestPage() {
 
   return (
     <div>
+      <LoginComponent />
       <h2>Test Page</h2>
       <br></br>
       <form onSubmit={(e) => {
         e.preventDefault();
-        handleTestFunc( e.target.userId.value);
-      }} method='get'>
-        <input type="text" name="userId" placeholder="User ID" required />
-        {/* <input type="file" name="file" required /> */}
+        handleTestFunc(e.target.email.value, e.target.oldPassword.value, e.target.newPassword.value);
+      }}>
+        <input type="email" name="email" placeholder="Email" />
+        <input type="password" name="oldPassword" placeholder="Old Password" />
+        <input type="password" name="newPassword" placeholder="New Password" />
         <button type="submit">Test</button>
       </form>
       <br></br>
