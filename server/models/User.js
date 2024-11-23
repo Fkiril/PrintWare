@@ -2,11 +2,13 @@ class IUser {
     userName = '';
     userId = '';
     userRole = '';
+    email = '';
 
-    constructor(userName = '', userId = '', userRole = '') {
+    constructor(userName = '', userId = '', userRole = '', email = '') {
         this.userName = userName;
         this.userId = userId;
         this.userRole = userRole;
+        this.email = email;
     }
 
     convertToJSON() {}
@@ -14,16 +16,14 @@ class IUser {
 }
 
 export class Student extends IUser {
-    email = '';
     phoneNum = '';
     studentId = '';
     major = '';
     academicYear = '';
     avatar = '';
 
-    constructor(userName = '', userId = '', email = '', phoneNum = '', studentId = '', major = '', academicYear = '', avatar = '') {
-        super(userName, userId);
-        this.email = email;
+    constructor(userName = '', userId = '', userRole = '', email = '', phoneNum = '', studentId = '', major = '', academicYear = '', avatar = '') {
+        super(userName, userId, userRole, email);
         this.phoneNum = phoneNum;
         this.studentId = studentId;
         this.major = major;
@@ -35,6 +35,7 @@ export class Student extends IUser {
         return {
             userName: this.userName?? "",
             userId: this.userId?? "",
+            userRole: this.userRole?? "",
             email: this.email?? "",
             phoneNum: this.phoneNum?? "",
             studentId: this.studentId?? "",
@@ -47,6 +48,7 @@ export class Student extends IUser {
     setInfoFromJSON(json) {
         this.userName = json.userName?? "";
         this.userId = json.userId?? "";
+        this.userRole = json.userRole?? "";
         this.email = json.email?? "";
         this.phoneNum = json.phoneNum?? "";
         this.studentId = json.studentId?? "";
@@ -57,24 +59,28 @@ export class Student extends IUser {
 }
 
 export class SPSO extends IUser {
-    authorityLevel = '';
+    highestAuthority = false;
 
-    constructor(userName = '', userId = '', authorityLevel = '') {
-        super(userName, userId);
-        this.authorityLevel = authorityLevel;
+    constructor(userName = '', userId = '', userRole = '', email = '', highestAuthority = false) {
+        super(userName, userId, userRole, email);
+        this.highestAuthority = highestAuthority;
     }
 
     convertToJSON() {
         return {
             userName: this.userName?? "",
             userId: this.userId?? "",
-            authorityLevel: this.authorityLevel?? ""
+            userRole: this.userRole?? "",
+            email: this.email?? "",
+            highestAuthority: this.highestAuthority?? false
         };
     }
 
     setInfoFromJSON(json) {
         this.userName = json.userName?? "";
         this.userId = json.userId?? "";
-        this.authorityLevel = json.authorityLevel?? "";
+        this.userRole = json.userRole?? "";
+        this.email = json.email?? "";
+        this.highestAuthority = json.highestAuthority?? false;
     }
 }

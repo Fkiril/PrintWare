@@ -12,16 +12,26 @@ function TestPage() {
   const { token } = useAuth();
   const [data, setData] = useState(null);
 
-  const handleTestFunc = async (fileId) => {
+  const handleTestFunc = async (userId) => {
     try {
-      const response = await axios.patch('web-api/test', {
+      const response = await axios.get('spso/get-avatar', {
         headers: {
           'Authorization': `Bearer ${token}`
         },
         params: {
-          fileId: fileId
-        }
-      })
+          userId: userId
+        },
+        responseType: 'blob'
+      });
+
+      const fileReader = new FileReader();
+      fileReader.onload = () => {
+        setData({
+          blob: response.data,
+          url: fileReader.result
+        });
+      }
+      fileReader.readAsDataURL(response.data);
     } catch (error) {
       console.log('Error: ',error);
     }
@@ -33,9 +43,10 @@ function TestPage() {
       <br></br>
       <form onSubmit={(e) => {
         e.preventDefault();
-        handleTestFunc(e.target.fileId.value);
+        handleTestFunc( e.target.userId.value);
       }} method='get'>
-        <input type="text" name="fileId" placeholder="File ID" required />
+        <input type="text" name="userId" placeholder="User ID" required />
+        {/* <input type="file" name="file" required /> */}
         <button type="submit">Test</button>
       </form>
       <br></br>

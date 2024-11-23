@@ -1,6 +1,4 @@
-import fs from 'fs';
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
+import { Readable } from 'stream';
 
 import { adminAuth, firestore } from '../../services/FirebaseAdminSDK.js';
 import { googleDrive } from '../../services/GoogleSDK.js';
@@ -11,13 +9,20 @@ import { Student, SPSO } from '../../models/User.js';
 export async function test(req, res) {
     console.log('test');
 
-    console.log('Query: ', req.query);
+    if (!!req.query || !req.query.fileId) {
+        res.status(400).send('Missing required parameters.');
+        return;
+    }
+    else {
+        const response = await googleDrive.files().delete({ fileId: req.query.fileId });
 
-    console.log('Body: ', req.body);
-
-    console.log('name: ', req.body.name);
-
-    res.send("Request received!");
+        response.then(() => {
+            res.status(200).send('Successfully deleted file.');
+        }).catch((error) => {
+            console.log('Error deleting file:', error);
+            res.status(500).send(error.message);
+        });
+    }
 }
 
 // export async function login(req, res) {
@@ -45,6 +50,14 @@ export async function register(req, res) {
         return;
     }
 
+    const ftQuery = firestore.collection(process.env.USERS_COLLECTION).where('email', '==', body.email);
+    const querySnapshot = await ftQuery.get();
+    if (!querySnapshot.empty) {
+        res.status(400).send('Email already exists.');
+        return;
+    }
+
+    body['userRole'] = 'student';
     console.log('Body: ', body);
     
     await adminAuth.createUser({
@@ -55,13 +68,69 @@ export async function register(req, res) {
         const user = new Student();
         user.setInfoFromJSON(body);
 
-        firestore.collection('users').doc(userRecord.uid).set(user.convertToJSON()).then(() => {
+        const batch = firestore.batch();
+        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(userRecord.uid);
+
+        batch.set(userRef, user.convertToJSON());
+        batch.update(userRef, { userId: userRecord.uid })
+
+        batch.commit().then(() => {
+            user.userId = userRecord.uid;
             res.status(201).send(user.convertToJSON());
         }).catch((error) => {
-            console.log('Error creating new user:', error);
+            console.log('Error updating database for new user:', error);
             res.status(500).send(error.message);
         });
 
+    }).catch((error) => {
+        console.log('Error creating new user:', error);
+        res.status(500).send(error.message);
+    });
+}
+
+
+// Checked
+export async function adminRegister(req, res) {
+    console.log('adminRegister');
+
+    if (!req || !req.body|| !req.body.email || !req.body.password) {
+        res.status(400).send('Missing required parameters.');
+        return;
+    }
+
+    const ftQuery = firestore.collection(process.env.ADMINS_COLLECTION).where('email', '==', body.email);
+    const querySnapshot = await ftQuery.get();
+    if (!querySnapshot.empty) {
+        res.status(400).send('Email already exists.');
+        return;
+    }
+
+    const body = req.body;
+    body['userRole'] = 'admin';
+    body['highestAuthority'] = false;
+    console.log('Body: ', body);
+
+    await adminAuth.createUser({
+        email: body.email,
+        password: body.password,
+        displayName: body.userName?? ''
+    }).then((userRecord) => {
+        const admin = new SPSO();
+        admin.setInfoFromJSON(body);
+
+        const batch = firestore.batch();
+        const adminRef = firestore.collection(process.env.ADMINS_COLLECTION).doc(userRecord.uid);
+
+        batch.set(adminRef, admin.convertToJSON());
+        batch.update(adminRef, { userId: userRecord.uid })
+
+        batch.commit().then(() => {
+            admin.userId = userRecord.uid;
+            res.status(201).send(admin.convertToJSON());
+        }).catch((error) => {
+            console.log('Error updating database for new user:', error);
+            res.status(500).send(error.message);
+        });
     }).catch((error) => {
         console.log('Error creating new user:', error);
         res.status(500).send(error.message);
@@ -97,20 +166,23 @@ export async function deleteAccount(req, res) {
     console.log('Query: ', query);
 
     await adminAuth.deleteUser(query.userId).then(async () => {
-        const userRef = firestore.collection('users').doc(query.userId);
+        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(query.userId);
 
         const userSnapshot = await userRef.get();
-        if (userSnapshot.empty) {
+        if (userSnapshot.data() === undefined) {
             res.status(404).send('User not found.');
             return;
         }
 
         if (userSnapshot.data().role === 'student') {
-            const walletRef = firestore.collection('wallets').doc(query.userId);
-            if (walletRef) walletRef.delete();
+            const walletRef = firestore.collection(process.env.WALLETS_COLLECTION).doc(query.userId);
+            const walletSnapshot = await walletRef.get();
+            if (walletSnapshot.data() !== undefined) {
+                walletRef.delete();
+            }
         }
 
-        if (userRef) userRef.delete();
+        userRef.delete();
 
         res.status(204).send('Successfully deleted user.');
     })
@@ -132,18 +204,18 @@ export async function updateProfile(req, res) {
     }
 
     console.log('Body: ', body);
-    const updateInfo = JSON.parse(body);
+    // const updateInfo = JSON.parse(body);
 
-    const userRef = firestore.collection('users').doc(query.userId);
+    const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(query.userId);
     const userSnapshot = await userRef.get();
-    if (userSnapshot.empty) {
+    if (userSnapshot.data() === undefined) {
         res.status(404).send('User not found.');
         return;
     }
 
     const batch = firestore.batch();
 
-    batch.update(userRef, updateInfo);
+    batch.update(userRef, body);
 
     await batch.commit().then(() => {
         res.status(201).send('Successfully updated user.');
@@ -154,6 +226,7 @@ export async function updateProfile(req, res) {
     })
 }
 
+// Checked
 export async function getUserProfileById(req, res) {
     console.log('getProfileById');
     
@@ -165,9 +238,9 @@ export async function getUserProfileById(req, res) {
 
     console.log('Query: ', query);
 
-    const userRef = firestore.collection('users').doc(query.userId);
+    const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(query.userId);
     await userRef.get().then((userSnapshot) => {
-        if (userSnapshot.empty) {
+        if (userSnapshot.data() === undefined) {
             res.status(404).send('User not found.');
             return;
         }
@@ -189,7 +262,7 @@ export async function getUserProfileByEmail(req, res) {
     }
 
     console.log('Query: ', query);
-    const ftQuery = firestore.collection('users').where('email', '==', query.email);
+    const ftQuery = firestore.collection(process.env.USERS_COLLECTION).where('email', '==', query.email);
     await ftQuery.get().then((querySnapshot) => {
         if (querySnapshot.empty) {
             res.status(404).send('No user not found.');
@@ -222,73 +295,70 @@ export async function getUserIdByEmail(req, res) {
     });
 }
 
+// Checked
 export async function updateAvatar(req, res) {
     console.log('updateAvatar');
 
-    if (!req.file || !req.body || !req.query || !req.query.userId) {
+    if (!req.file || !req.query || !req.query.userId) {
         res.status(400).send('Missing required parameters.');
         return;
     }
-    else {
-        const userRef = firestore.collection('users').doc(req.query.userId);
+    
+    const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(req.query.userId);
 
-        const userSnapshot = await userRef.get();
-        if (userSnapshot.empty) {
-            res.status(404).send('User not found.');
-            return;
-        }
+    const userSnapshot = await userRef.get();
+    if (userSnapshot.data() === undefined) {
+        res.status(404).send('User not found.');
+        return;
+    }
 
-        if (userSnapshot.data().avatar) {
-            const avatarId = userSnapshot.data().avatar;
-            const response = await googleDrive.files.delete({ fileId: avatarId });
-
-            response.then(() => {
-                console.log('Avatar deleted successfully.');
-            }).catch((error) => {
-                console.log('Error deleting avatar: ', error);
-                res.status(500).send(error).message;
-            });
-        }
-
-        const filePath = join(fileURLToPath(import.meta.url), '../../../file-uploads', req.file.filename);
-        const mimeType = req.file.mimetype;
-        const userID = req.body.userId;
-        const fileMetadata = {
-            name: userID,
-            parents: [process.env.AVATARS_FOLDER_ID]
-        };
-
-        googleDrive.files.create({
-            resource: fileMetadata,
-            media: {
-                body: fs.createReadStream(filePath),
-                mimeType: mimeType
-            },
-            fields: 'id'
-        }, async (error, response) => {
-            if (error) {
-                console.log('Error creating file: ', error);
-                res.status(500).send(error.message);
-            }
-            else {
-                await fs.unlink(filePath).then(() => {
-                    console.log('File deleted successfully.');
-                }).catch((error) => {
-                    console.log('Error deleting file: ', error);
-                })
-
-                console.log('File ID: ', response.data.id);
-                await userRef.update({ avatar: response.data.id }).then(() => {
-                    res.status(201).send(response.data.id);
-                }).catch((error) => {
-                    console.log('Error updating avatar: ', error);
-                    res.status(500).send(error.message);
-                });
-            }
+    if (userSnapshot.data().avatar) {
+        const avatarId = userSnapshot.data().avatar;
+        googleDrive.files.delete({ fileId: avatarId }).then(() => {
+            console.log('Avatar deleted successfully.');
+        }).catch((error) => {
+            console.log('Error deleting avatar: ', error);
+            res.status(500).send(error).message;
         });
     }
+
+    const fileBuffer = Buffer.from(req.file.buffer);
+    const fileStream = new Readable();
+    fileStream.push(fileBuffer);
+    fileStream.push(null);
+
+    const mimeType = req.file.mimetype;
+    const userID = req.query.userId;
+    const fileMetadata = {
+        name: userID,
+        parents: [process.env.AVATARS_FOLDER_ID]
+    };
+
+    googleDrive.files.create({
+        resource: fileMetadata,
+        media: {
+            body: fileStream,
+            mimeType: mimeType
+        },
+        fields: 'id'
+    }, async (error, response) => {
+        if (error) {
+            console.log('Error creating file: ', error);
+            res.status(500).send(error.message);
+        }
+        else {
+            console.log('File ID: ', response.data.id);
+            await userRef.update({ avatar: response.data.id }).then(() => {
+                res.status(201).send(response.data.id);
+            }).catch((error) => {
+                console.log('Error updating avatar: ', error);
+                res.status(500).send(error.message);
+            });
+        }
+    });
 }
 
+// Check
 export async function getAvatar(req, res) {
     console.log('getAvatar');
 
@@ -298,9 +368,9 @@ export async function getAvatar(req, res) {
     }
     else {
         try {
-            const userRef = firestore.collection('users').doc(req.query.userId);
+            const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(req.query.userId);
             const userSnapshot = await userRef.get();
-            if (userSnapshot.empty) {
+            if (userSnapshot.data() === undefined) {
                 res.status(404).send('User not found.');
                 return;
             }
