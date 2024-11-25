@@ -6,4 +6,5 @@ mobile/node_modules/
 mobile/android/
 mobile/ios/
 server/node_modules/
-server/services/printware-2af4c-firebase-adminsdk-gr4c0-d0995f709e.json
+server/services/firebase-admin-api-key.json
+server/services/google-api-key.json
