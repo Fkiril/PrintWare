@@ -52,6 +52,6 @@ router.post('/update-avatar', upload.single('file'), updateAvatar)
 // Output: file as a blod object
 router.get('/get-avatar', getAvatar)
 
-router.post('/test', upload.single('file'), test)
+// router.post('/test', upload.single('file'), test)
 
 export default router;

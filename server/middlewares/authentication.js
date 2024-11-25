@@ -1,8 +1,6 @@
 import { adminAuth } from '../services/FirebaseAdminSDK.js';
 
 const authenticate = async (req, res, next) => {
-  // console.log('request headers: ', req.headers);
-  // console.log('request query: ', req.query);
   const token = req.headers.authorization;  
 
   if (!token) {

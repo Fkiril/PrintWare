@@ -5,23 +5,15 @@ import { googleDrive } from '../../services/GoogleSDK.js';
 
 import { Student, SPSO } from '../../models/User.js';
 
-//13TqG02bA2rJnMoUDOw5i2haZINNm38Af
 export async function test(req, res) {
     console.log('test');
 
-    if (!!req.query || !req.query.fileId) {
+    if (!req) {
         res.status(400).send('Missing required parameters.');
         return;
     }
     else {
-        const response = await googleDrive.files().delete({ fileId: req.query.fileId });
-
-        response.then(() => {
-            res.status(200).send('Successfully deleted file.');
-        }).catch((error) => {
-            console.log('Error deleting file:', error);
-            res.status(500).send(error.message);
-        });
+        res.send('Test request received.');
     }
 }
 

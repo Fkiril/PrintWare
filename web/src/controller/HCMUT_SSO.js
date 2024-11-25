@@ -2,7 +2,7 @@ import { clientAuth } from '../services/FirebaseClientSDK.js';
 import { signInWithEmailAndPassword, signOut, reauthenticateWithCredential, confirmPasswordReset, EmailAuthProvider, updatePassword, sendPasswordResetEmail } from 'firebase/auth';
 
 /**
- * Login with email and password using Firebase Client Auth
+ * Login with email and password using Firebase Client Auth, it will return the user and the custom token that used for authentication with the server
  * @param {string} email 
  * @param {string} password 
  * @returns {Promise<{user: import('firebase/auth').User, customToken: string}>}
@@ -12,6 +12,7 @@ export async function loginWithEmailAndPassword(email, password) {
         .then( async (userCredential) => {
             const user = userCredential.user;
             console.log('User logged in:', user);
+
             const customToken = await user.getIdToken();
             console.log('Custom token:', customToken);
             return { user, customToken };
