@@ -1,6 +1,6 @@
 import { Router } from 'express';
 const router = Router();
-import { adminRegister, register, deleteAccount, updateProfile, getUserProfileById, getUserProfileByEmail, getUserIdByEmail, updateAvatar, getAvatar, createResetPasswordLink, createEmailVertificationLink, test} from '../../controllers/web_controllers/HCMUT_SSO.js';
+import { adminRegister, register, deleteAccount, updateProfile, getUserProfileById, getUserProfileByEmail, getUserIdByEmail, updatePicture, getPicture, createResetPasswordLink, createEmailVertificationLink, test} from '../../controllers/web_controllers/HCMUT_SSO.js';
 
 import multer from 'multer';
 const storage = multer.memoryStorage();
@@ -44,13 +44,15 @@ router.get('/get-user-id-by-email', getUserIdByEmail)
 // Input:
     // form-data {fileBlob: file avatar}
     // query: userId
+    // query: type (avatar or coverPhoto)
 // Output: fileId
-router.post('/update-avatar', upload.single('file'), updateAvatar)
+router.post('/update-avatar', upload.single('file'), updatePicture)
 
 // Input:
     // query: userId
+    // query: type (avatar or coverPhoto)
 // Output: file as a blod object
-router.get('/get-avatar', getAvatar)
+router.get('/get-avatar', getPicture)
 
 
 // Input:

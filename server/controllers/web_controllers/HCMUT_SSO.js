@@ -272,11 +272,17 @@ export async function getUserIdByEmail(req, res) {
 }
 
 // Checked
-export async function updateAvatar(req, res) {
+export async function updatePicture(req, res) {
     console.log('updateAvatar');
 
-    if (!req.file || !req.query || !req.query.userId) {
+    if (!req.file || !req.query || !req.query.userId || !req.query.type) {
         res.status(400).send('Missing required parameters.');
+        return;
+    }
+
+    const workingType = req.query.type;
+    if (workingType !== 'avatar' && workingType !== 'coverPhoto') {
+        res.status(400).send('Invalid type.');
         return;
     }
     
@@ -288,14 +294,27 @@ export async function updateAvatar(req, res) {
         return;
     }
 
-    if (userSnapshot.data().avatar) {
-        const avatarId = userSnapshot.data().avatar;
-        googleDrive.files.delete({ fileId: avatarId }).then(() => {
-            console.log('Avatar deleted successfully.');
-        }).catch((error) => {
-            console.log('Error deleting avatar: ', error);
-            res.status(500).send(error).message;
-        });
+    if (workingType === 'avatar') {
+        if (userSnapshot.data().avatar) {
+            const avatarId = userSnapshot.data().avatar;
+            googleDrive.files.delete({ fileId: avatarId }).then(() => {
+                console.log('Avatar deleted successfully.');
+            }).catch((error) => {
+                console.log('Error deleting avatar: ', error);
+                res.status(500).send(error).message;
+            });
+        }
+    }
+    else {
+        if (userSnapshot.data().coverPhoto) {
+            const coverPhotoId = userSnapshot.data().coverPhoto;
+            googleDrive.files.delete({ fileId: coverPhotoId }).then(() => {
+                console.log('Cover photo deleted successfully.');
+            }).catch((error) => {
+                console.log('Error deleting cover photo: ', error);
+                res.status(500).send(error).message;
+            });
+        }
     }
 
     const fileBuffer = Buffer.from(req.file.buffer);
@@ -307,7 +326,7 @@ export async function updateAvatar(req, res) {
     const userID = req.query.userId;
     const fileMetadata = {
         name: userID,
-        parents: [process.env.AVATARS_FOLDER_ID]
+        parents: workingType === 'avatar' ? [process.env.AVATARS_FOLDER_ID] : [process.env.COVERPHOTOS_FOLDER_ID]
     };
 
     googleDrive.files.create({
@@ -324,7 +343,8 @@ export async function updateAvatar(req, res) {
         }
         else {
             console.log('File ID: ', response.data.id);
-            await userRef.update({ avatar: response.data.id }).then(() => {
+            const updateData = workingType === 'avatar' ? { avatar: response.data.id } : { coverPhoto: response.data.id };
+            await userRef.update(updateData).then(() => {
                 res.status(201).send(response.data.id);
             }).catch((error) => {
                 console.log('Error updating avatar: ', error);
@@ -335,57 +355,67 @@ export async function updateAvatar(req, res) {
 }
 
 // Check
-export async function getAvatar(req, res) {
+export async function getPictuer(req, res) {
     console.log('getAvatar');
 
-    if (!req.query || !req.query.userId) {
+    if (!req.query || !req.query.userId || !req.query.type) {
         res.status(400).send('Missing required parameters.');
         return;
     }
-    else {
-        try {
-            const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(req.query.userId);
-            const userSnapshot = await userRef.get();
-            if (userSnapshot.data() === undefined) {
-                res.status(404).send('User not found.');
-                return;
-            }
-            const user = userSnapshot.data();
-            if (!user.avatar) {
-                res.status(404).send('Avatar not found.');
-                return;
-            }
 
-            const avatarId = user.avatar;
-            const response = await googleDrive.files.get({
-                fileId: avatarId,
-                alt: 'media'
-            }, {
-                responseType: 'stream'
-            });
-            if (!response.data) {
-                res.status(404).send('File not found.');
-                return;
-            }
+    const workingType = req.query.type;
 
-            res.set({
-                'Content-Type': response.headers['content-type'],
-                'Content-Disposition': `attachment; filename="${avatarId}"`,
-            });
+    if (workingType !== 'avatar' && workingType !== 'coverPhoto') {
+        res.status(400).send('Invalid type.');
+        return;
+    }
 
-            response.data
-                .on('end', () => {
-                    console.log('File downloaded successfully.');
-                })
-                .on('error', (error) => {
-                    console.log('Error pipe: ', error);
-                    res.status(500).send(error.message);
-                })
-                .pipe(res);
-        } catch (error) {
-            console.log('Error getting avatar: ', error);
-            res.status(500).send(error.message);
+    try {
+        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(req.query.userId);
+        const userSnapshot = await userRef.get();
+        if (userSnapshot.data() === undefined) {
+            res.status(404).send('User not found.');
+            return;
         }
+        const user = userSnapshot.data();
+        if (workingType === 'avatar' && !user.avatar) {
+            res.status(404).send('Avatar not found.');
+            return;
+        }
+        if (workingType === 'coverPhoto' && !user.coverPhoto) {
+            res.status(404).send('Cover photo not found.');
+            return;
+        }
+
+        const fileId = workingType === 'avatar' ? user.avatar : user.coverPhoto;
+        const response = await googleDrive.files.get({
+            fileId: fileId,
+            alt: 'media'
+        }, {
+            responseType: 'stream'
+        });
+        if (!response.data) {
+            res.status(404).send('File not found.');
+            return;
+        }
+
+        res.set({
+            'Content-Type': response.headers['content-type'],
+            'Content-Disposition': `attachment; filename="${fileId}"`,
+        });
+
+        response.data
+            .on('end', () => {
+                console.log('File downloaded successfully.');
+            })
+            .on('error', (error) => {
+                console.log('Error pipe: ', error);
+                res.status(500).send(error.message);
+            })
+            .pipe(res);
+    } catch (error) {
+        console.log('Error getting avatar: ', error);
+        res.status(500).send(error.message);
     }
 }
 
