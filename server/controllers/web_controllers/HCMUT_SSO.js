@@ -388,3 +388,43 @@ export async function getAvatar(req, res) {
         }
     }
 }
+
+export function createResetPasswordLink(req, res) {
+    console.log('createResetPasswordLink');
+
+    if (!req.query || !req.query.email) {
+        res.status(400).send('Missing required parameters.');
+        return;
+    }
+
+    const email = req.query.email;
+    adminAuth.generatePasswordResetLink(email)
+        .then((link) => {
+            console.log('Password reset link: ', link);
+            res.send(link);
+        })
+        .catch((error) => {
+            console.log('Error generating password reset link: ', error);
+            res.status(500).send(error.message);
+        });
+}
+
+export function createEmailVertificationLink(req, res) {
+    console.log('createEmailVertificationLink');
+
+    if (!req.query || !req.query.email) {
+        res.status(400).send('Missing required parameters.');
+        return;
+    }
+
+    const email = req.query.email;
+    adminAuth.generateEmailVerificationLink(email)
+        .then((link) => {
+            console.log('Email verification link: ', link);
+            res.send(link);
+        })
+        .catch((error) => {
+            console.log('Error generating email verification link: ', error);
+            res.status(500).send(error.message);
+        });
+}

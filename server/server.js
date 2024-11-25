@@ -38,8 +38,8 @@ const whitelist = ['/', '/favicon.ico', '/spso/test'];
 // });
 
 // Import routes
-import SPSORoutes from './routes/web_routes/HCMUTSSORoute.js';
-app.use('/spso', SPSORoutes);
+import HCMUT_SSO from './routes/web_routes/HCMUTSSORoute.js';
+app.use('/hcmut-sso', HCMUT_SSO);
     
 // Start the server
 app.listen(port, () => {
