@@ -174,7 +174,7 @@ export async function updateProfile(req, res) {
     
     const body = req.body;
     const query = req.query;
-    if (!body || !query  || !query.userId) {
+    if (!body || !query || !query.userId) {
         res.status(400).send('Missing required parameters.');
         return;
     }

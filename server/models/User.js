@@ -20,15 +20,19 @@ export class Student extends IUser {
     studentId = '';
     major = '';
     academicYear = '';
+    classId = '';
     avatar = '';
+    coverPhoto = '';
 
-    constructor(userName = '', userId = '', userRole = '', email = '', phoneNum = '', studentId = '', major = '', academicYear = '', avatar = '') {
+    constructor(userName = '', userId = '', userRole = '', email = '', phoneNum = '', studentId = '', major = '', academicYear = '', classId = '', avatar = '', coverPhoto = '') {
         super(userName, userId, userRole, email);
         this.phoneNum = phoneNum;
         this.studentId = studentId;
         this.major = major;
         this.academicYear = academicYear;
+        this.classId = classId;
         this.avatar = avatar;
+        this.coverPhoto = coverPhoto;
     }
 
     convertToJSON() {
@@ -41,7 +45,9 @@ export class Student extends IUser {
             studentId: this.studentId?? "",
             major: this.major?? "",
             academicYear: this.academicYear?? "",
-            avatar: this.avatar?? ""
+            classId: this.classId?? "",
+            avatar: this.avatar?? "",
+            coverPhoto: this.coverPhoto?? ""
         };
     }
 
@@ -54,7 +60,9 @@ export class Student extends IUser {
         this.studentId = json.studentId?? "";
         this.major = json.major?? "";
         this.academicYear = json.academicYear?? "";
+        this.classId = json.classId?? "";
         this.avatar = json.avatar?? "";
+        this.coverPhoto = json.coverPhoto?? "";
     }
 }
 
