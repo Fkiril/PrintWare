@@ -355,7 +355,7 @@ export async function updatePicture(req, res) {
 }
 
 // Check
-export async function getPictuer(req, res) {
+export async function getPicture(req, res) {
     console.log('getAvatar');
 
     if (!req.query || !req.query.userId || !req.query.type) {
