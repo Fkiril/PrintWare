@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { webAuth } from '../services/FirebaseClientSDK.js';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { loginWithEmailAndPassword, logout } from '../controller/HCMUT_SSO';
 import useAuth from '../hooks/useAuth'
 
 const LoginComponent = () => {
@@ -14,14 +13,24 @@ const LoginComponent = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const _user = await signInWithEmailAndPassword(webAuth, email, password);
-            setUser(_user.user);
-            const customToken = await _user.user.getIdToken();
-            setToken(customToken);
-            console.log('User logged in:', _user.user);
-            console.log('Custom token:', customToken);
+            const result = await loginWithEmailAndPassword(email, password);
+            setUser(result.user);
+            setToken(result.customToken);
         } catch (error) {
+            // Handle login error
             console.error('Error logging in:', error);
+        }
+    };
+
+    const handleLogout = async (e) => {
+        e.preventDefault();
+        try {
+            await logout();
+            setUser(null);
+            setToken(null);
+        } catch (error) {
+            // Handle logout error
+            console.error('Error logging out:', error);
         }
     };
 
@@ -45,6 +54,7 @@ const LoginComponent = () => {
                 />
                 <button type="submit">Login</button>
             </form>
+            <button onClick={handleLogout}>Logout</button>
             {user && <p>You are logged in as: {user.email} </p>}
             {token && <p>With token: {token} </p>}
             <button onClick={() => navigate('/home')}>HomePage</button>

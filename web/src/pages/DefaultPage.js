@@ -16,6 +16,8 @@ function DefaultPage() {
       ): (
         <button onClick={() => navigate('/login')}>Login</button>
       )}
+
+      <button onClick={() => navigate('/test')}>Test</button>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import path, { dirname, join, resolve } from 'path';
+import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import express from 'express';
@@ -16,30 +16,30 @@ const port = process.env.PORT || 3000;
 app.use(express.static(join(__dirname, '../web/build')));
 
 // Middlewares
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Apply authentication middleware
 import authenticate from './middlewares/authentication.js';
-// app.use(authenticate);
 
-const whitelist = ['/web-api/dashboard', '/', '/favicon.ico'];
+const whitelist = ['/', '/favicon.ico', '/spso/test'];
 
-app.use((req, res, next) => {
-  console.log('Time: ', Date.now());
-  console.log('Request: ', req.path);
-  if (!whitelist.includes(req.path)) {
-    console.log('Authenticating...');
-    return authenticate(req, res, next);
-  }
-  else {
-    console.log('Skipping authentication...');
-  }
-  next();
-});
+// app.use((req, res, next) => {
+//   console.log('Time: ', Date.now());
+//   console.log('Request: ', req.path);
+//   if (!whitelist.includes(req.path)) {
+//     console.log('Authenticating...');
+//     return authenticate(req, res, next);
+//   }
+//   else {
+//     console.log('Skipping authentication...');
+//   }
+//   next();
+// });
 
 // Import routes
-import webRouter from './routes/web_routes/web.js';
-app.use('/web-api', webRouter);
+import HCMUT_SSO from './routes/web_routes/HCMUTSSORoute.js';
+app.use('/hcmut-sso', HCMUT_SSO);
     
 // Start the server
 app.listen(port, () => {
