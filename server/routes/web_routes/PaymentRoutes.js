@@ -1,7 +1,7 @@
-const express = require('express');
-const PaymentController = require('../../controllers/web_controllers/PaymentController');
+import { Router } from 'express';
+const router = Router();
 
-const router = express.Router();
+import PaymentController from '../../controllers/web_controllers/PaymentController.js';
 const paymentController = new PaymentController();
 
 router.post('/create-wallet', (req, res) => {
@@ -44,4 +44,4 @@ router.get('/history/:ownerId', (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

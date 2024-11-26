@@ -50,8 +50,8 @@ app.use('/printer', Printer);
 import Document from './routes/web_routes/DocumentRoutes.js';
 app.use('/document', Document);
 
-// import Payment from './routes/web_routes/PaymentRoutes.js';
-// app.use('/payment', Payment);
+import Payment from './routes/web_routes/PaymentRoutes.js';
+app.use('/payment', Payment);
     
 // Start the server
 app.listen(port, () => {

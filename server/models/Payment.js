@@ -1,4 +1,4 @@
-const Wallet = require('./Wallet');
+import Wallet from './Wallet.js';
 
 class IPayment {
     constructor(paymentId, ownerId, charge, date) {
@@ -64,4 +64,4 @@ class PagePayment extends IPayment {
     }
 }
 
-module.exports = {IPayment, PrintPayment, PagePayment, Wallet};
+export { IPayment, PrintPayment, PagePayment, Wallet };

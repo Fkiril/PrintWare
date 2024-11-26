@@ -1,5 +1,5 @@
-const {PrintPayment, PagePayment, Wallet} = require('../models/Payment');
-const Wallet = require('../models/Wallet');
+import { PrintPayment, PagePayment, Wallet } from '../../models/Payment.js';
+import Wallet from '../../models/Wallet.js';
 class PaymentController {
     constructor() {
         this.payments = [];
@@ -76,4 +76,4 @@ class PaymentController {
     }
 }
 
-module.exports = PaymentController;
+export default PaymentController;
