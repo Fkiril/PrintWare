@@ -13,11 +13,6 @@ function App() {
     <Router>
       <Header />
       <Routes>
-        <Route path="/" element={<DefaultPage />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/login" element={<LoginComponent />} />
-        <Route path="/test" element={<TestPage />} />
-        <Route path="/error" element={<ErrorPage />} />
       </Routes>
     </Router>
   );
