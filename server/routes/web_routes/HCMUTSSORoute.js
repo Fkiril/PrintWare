@@ -46,13 +46,13 @@ router.get('/get-user-id-by-email', getUserIdByEmail)
     // query: userId
     // query: type (avatar or coverPhoto)
 // Output: fileId
-router.post('/update-avatar', upload.single('file'), updatePicture)
+router.post('/update-picture', upload.single('file'), updatePicture)
 
 // Input:
     // query: userId
     // query: type (avatar or coverPhoto)
 // Output: file as a blod object
-router.get('/get-avatar', getPicture)
+router.get('/get-picture', getPicture)
 
 
 // Input:
