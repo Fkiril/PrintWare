@@ -40,6 +40,18 @@ const whitelist = ['/', '/favicon.ico', '/spso/test'];
 // Import routes
 import HCMUT_SSO from './routes/web_routes/HCMUTSSORoute.js';
 app.use('/hcmut-sso', HCMUT_SSO);
+
+import SPSO from './routes/web_routes/SPSORoutes.js';
+app.use('/spso', SPSO);
+
+import Printer from './routes/web_routes/PrinterRoutes.js';
+app.use('/printer', Printer);
+
+import Document from './routes/web_routes/DocumentRoutes.js';
+app.use('/document', Document);
+
+import Payment from './routes/web_routes/PaymentRoutes.js';
+app.use('/payment', Payment);
     
 // Start the server
 app.listen(port, () => {
