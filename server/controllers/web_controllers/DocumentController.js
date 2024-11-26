@@ -205,7 +205,7 @@ export const createPrintTask = async (req, res) => {
     );
 
     await firestore
-      .collection("printTasks")
+      .collection(process.env.PRINT_TASKS_COLLECTION)
       .doc(printTaskId)
       .set(printTask.convertToJson());
 

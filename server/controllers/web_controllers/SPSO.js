@@ -50,7 +50,7 @@ class SPSOController {
     
         try {
             // Lấy tài liệu Firestore tương ứng
-            const ref = firestore.collection('SystemConfig').doc(configId);
+            const ref = firestore.collection(process.env.SYSTEM_CONFIGS_COLLECTION).doc(configId);
     
             // Kiểm tra nếu tài liệu tồn tại
             const doc = await ref.get();
@@ -82,7 +82,7 @@ class SPSOController {
     
         try {
             // Lấy tài liệu Firestore tương ứng
-            const ref = firestore.collection('SystemConfig').doc(configId);
+            const ref = firestore.collection(process.env.SYSTEM_CONFIGS_COLLECTION).doc(configId);
     
             // Kiểm tra nếu tài liệu tồn tại
             const doc = await ref.get();
@@ -119,7 +119,7 @@ class SPSOController {
             }
     
             // Lấy tài liệu Firestore tương ứng
-            const ref = firestore.collection('SystemConfig').doc(configId);
+            const ref = firestore.collection(process.env.SYSTEM_CONFIGS_COLLECTION).doc(configId);
     
             // Kiểm tra nếu tài liệu tồn tại
             const doc = await ref.get();
@@ -219,7 +219,7 @@ class SPSOController {
     //xóa lịch sử
     async resetHistory(req, res) {
         try {
-            const historyLogCollection = firestore.collection('HistoryLog');
+            const historyLogCollection = firestore.collection(process.env.HISTORY_LOGS_COLLECTION);
 
             // Lấy tất cả các document trong collection
             const snapshot = await historyLogCollection.get();
@@ -250,7 +250,7 @@ class SPSOController {
     //Lấy cấu hình hệ thống
     async getSystemConfig(req, res) {
         try {
-            const snapshot = await firestore.collection('SystemConfig').get();
+            const snapshot = await firestore.collection(process.env.SYSTEM_CONFIGS_COLLECTION).get();
             const configs = snapshot.docs.map((doc) => {
                 const data = doc.data();
     

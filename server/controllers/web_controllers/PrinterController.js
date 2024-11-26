@@ -1,6 +1,7 @@
 import { firestore } from '../../services/FirebaseAdminSDK.js';
-import PrintTask from '../../models/PrintTask.js';
 import { FieldValue } from 'firebase-admin/firestore';
+
+import PrintTask from '../../models/PrintTask.js';
 
 // Cập nhật thông tin của Printer
 export async function updatePrinterInfo(req, res) {
