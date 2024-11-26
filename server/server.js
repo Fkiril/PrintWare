@@ -47,8 +47,8 @@ app.use('/spso', SPSO);
 // import Printer from './routes/web_routes/PrinterRoutes.js';
 // app.use('/printer', Printer);
 
-// import Document from './routes/web_routes/DocumentRoutes.js';
-// app.use('/document', Document);
+import Document from './routes/web_routes/DocumentRoutes.js';
+app.use('/document', Document);
 
 // import Payment from './routes/web_routes/PaymentRoutes.js';
 // app.use('/payment', Payment);

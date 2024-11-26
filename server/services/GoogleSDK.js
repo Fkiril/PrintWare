@@ -1,9 +1,6 @@
 // printwarehk241@gmail.com - @PrintWare_hk241
 // print-ware-hk241@printware-442312.iam.gserviceaccount.com
-// Documents folder: 1suzmYdbpX75-Q1egaraurDvosiVUuVET
-// Avatars folder: 1zXxnms1G9dOWTuCrWY_OUBy3jJ06xFk5
 
-import { createReadStream } from 'fs';
 import { google } from 'googleapis';
 import GOOGLE_API_KEY from './google-api-key.json' assert { type: 'json' };
 const SCOPE = ['https://www.googleapis.com/auth/drive'];
