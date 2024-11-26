@@ -64,4 +64,4 @@ class PagePayment extends IPayment {
     }
 }
 
-export { IPayment, PrintPayment, PagePayment, Wallet };
+export { PrintPayment, PagePayment };
