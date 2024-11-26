@@ -44,14 +44,14 @@ app.use('/hcmut-sso', HCMUT_SSO);
 import SPSO from './routes/web_routes/SPSORoutes.js';
 app.use('/spso', SPSO);
 
-import Printer from './routes/web_routes/PrinterRoutes.js';
-app.use('/printer', Printer);
+// import Printer from './routes/web_routes/PrinterRoutes.js';
+// app.use('/printer', Printer);
 
-import Document from './routes/web_routes/DocumentRoutes.js';
-app.use('/document', Document);
+// import Document from './routes/web_routes/DocumentRoutes.js';
+// app.use('/document', Document);
 
-import Payment from './routes/web_routes/PaymentRoutes.js';
-app.use('/payment', Payment);
+// import Payment from './routes/web_routes/PaymentRoutes.js';
+// app.use('/payment', Payment);
     
 // Start the server
 app.listen(port, () => {

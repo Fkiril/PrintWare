@@ -1,8 +1,8 @@
-const SystemConfig = require('./SystemConfig');
+import { firestore } from '../services/FirebaseAdminSDK.js';
 
-import { firestore } from '../services/FirebaseAdminSDK';
+import { SystemConfig } from './SystemConfig.js';
 
-class SPSO {
+export class SPSO {
     constructor() {
         this.systemConfig = new SystemConfig();
         this.history = [];
@@ -254,5 +254,3 @@ async updatePageUnitPrice(configId, price) {
         }
     }
 }
-
-module.exports = SPSO;

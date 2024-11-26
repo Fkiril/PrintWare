@@ -1,4 +1,4 @@
-class SystemConfig {
+export class SystemConfig {
     constructor() {
         this.pageUnitPrice = 0;
         this.pageSizes = [];
@@ -62,5 +62,3 @@ class SystemConfig {
         }
     }
 }
-
-module.exports = SystemConfig;

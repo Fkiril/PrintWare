@@ -1,4 +1,4 @@
-class HistoryLog {
+export class HistoryLog {
     constructor() {
         this.hisLogId = "";
         this.ownerId = "";
@@ -24,5 +24,3 @@ class HistoryLog {
         this.printedDocRepo = json.printedDocRepo;
     }
 }
-
-module.exports = HistoryLog;

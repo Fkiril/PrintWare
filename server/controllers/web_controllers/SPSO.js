@@ -1,10 +1,13 @@
-const SystemConfig = require('../../models/SystemConfig');
-const SPSO = require('../../models/SPSO');
-const HistoryLog = require('../../models/HistoryLog');
+// const SystemConfig = require('../../models/SystemConfig').default;
+// const SPSO = require('../../models/SPSO');
+// const HistoryLog = require('../../models/HistoryLog').default;
+import { SystemConfig } from '../../models/SystemConfig.js';
+import { SPSO } from '../../models/SPSO.js';
+import { HistoryLog } from '../../models/HistoryLog.js';
 
 import { firestore } from '../../services/FirebaseAdminSDK.js';
 
- const spso = new SPSO();
+const spso = new SPSO();
 class SPSOController {
     // Trang chào
     index(req, res) {
@@ -273,4 +276,4 @@ class SPSOController {
     }
     
 }
-module.exports = new SPSOController();
+export const spsoController = new SPSOController();

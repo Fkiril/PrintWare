@@ -1,6 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const spsoController = require('../../controllers/web_controllers/SPSO');
+import { Router } from 'express';
+const router = Router();
+
+import { spsoController } from '../../controllers/web_controllers/SPSO.js';
+
+// const spsoController = require('../../controllers/web_controllers/SPSO');
 // Endpoint liên quan đến cấu hình : Chưa kịp check :((((
 router.post('/updatePageUnitPrice', spsoController.updatePageUnitPrice); //done
 router.post('/updatePageSizes', spsoController.updatePageSizes); //done
@@ -26,4 +29,4 @@ router.get('/config', spsoController.getSystemConfig);
 // Trang chào
 router.get('/', spsoController.index);
 
-module.exports = router;
+export default router;
