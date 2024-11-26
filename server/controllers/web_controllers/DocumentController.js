@@ -1,13 +1,3 @@
-import fs from "fs";
-import path from "path";
-
-import { firestore } from "../../services/FirebaseAdminSDK.js";
-import { googleDrive } from "../../services/GoogleSDK.js";
-
-import { Document } from "../../models/Document.js";
-import { PrintTask } from "../../models/PrintTask.js";
-import { Printer } from "../../models/Printer.js";
-
 // const { google } = require("googleapis");
 
 // const document = require("../models/document");
@@ -25,7 +15,19 @@ import { Printer } from "../../models/Printer.js";
 
 // const drive = google.googleDrive({ version: "v3", auth });
 
-const { v4: uuidv4 } = require("uuid");
+// const { v4: uuidv4 } = require("uuid");
+
+import fs from "fs";
+import path from "path";
+
+import { firestore } from "../../services/FirebaseAdminSDK.js";
+import { googleDrive } from "../../services/GoogleSDK.js";
+
+import Document from "../../models/Document.js";
+import PrintTask from "../../models/PrintTask.js";
+import Printer from "../../models/Printer.js";
+
+import { v4 as uuidv4 } from "uuid";
 
 export const uploadDoc = async (req, res) => {
   try {

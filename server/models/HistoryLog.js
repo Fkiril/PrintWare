@@ -1,4 +1,4 @@
-export class HistoryLog {
+export default class HistoryLog {
     constructor() {
         this.hisLogId = "";
         this.ownerId = "";

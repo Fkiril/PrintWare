@@ -1,4 +1,4 @@
-export class SystemConfig {
+export default class SystemConfig {
     constructor() {
         this.pageUnitPrice = 0;
         this.pageSizes = [];

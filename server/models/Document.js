@@ -1,4 +1,4 @@
-export class Document {
+export default class Document {
     constructor(
         docId,
         ownerId,

@@ -1,6 +1,6 @@
-import db from './firebase.js';
+import { firestore } from '../../services/FirebaseAdminSDK.js';
 import PrintTask from '../../models/PrintTask.js';
-import admin from 'firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 // Cập nhật thông tin của Printer
 export async function updatePrinterInfo(req, res) {
@@ -12,8 +12,8 @@ export async function updatePrinterInfo(req, res) {
   }
 
   try {
-    const printerRef = db.collection('printers').doc(printerId);
-    await db.runTransaction(async (transaction) => {
+    const printerRef = firestore.collection(process.env.PRINTERS_COLLECTION).doc(printerId);
+    await firestore.runTransaction(async (transaction) => {
       const printerSnapshot = await transaction.get(printerRef);
       if (!printerSnapshot.exists) throw new Error("Printer not found");
 
@@ -36,7 +36,7 @@ export async function takeDocList(req, res) {
   }
 
   try {
-    const printerDoc = await db.collection('printers').doc(printerId).get();
+    const printerDoc = await firestore.collection(process.env.PRINTERS_COLLECTION).doc(printerId).get();
     if (!printerDoc.exists) throw new Error("Printer not found");
 
     const printerData = printerDoc.data();
@@ -66,13 +66,13 @@ export async function addTask(req, res) {
       taskData.state
     );
 
-    const batch = db.batch();
-    const printerRef = db.collection('printers').doc(printerId);
+    const batch = firestore.batch();
+    const printerRef = firestore.collection(process.env.PRINTERS_COLLECTION).doc(printerId);
     batch.update(printerRef, {
-      jobQueue: admin.firestore.FieldValue.arrayUnion(printTask.taskId),
+      jobQueue: FieldValue.arrayUnion(printTask.taskId),
     });
 
-    const taskRef = db.collection('tasks').doc(printTask.taskId);
+    const taskRef = firestore.collection(process.env.PRINT_TASKS_COLLECTION).doc(printTask.taskId);
     batch.set(taskRef, printTask.convertToJson());
 
     await batch.commit();
@@ -92,13 +92,13 @@ export async function removeTask(req, res) {
   }
 
   try {
-    const batch = db.batch();
-    const printerRef = db.collection('printers').doc(printerId);
+    const batch = firestore.batch();
+    const printerRef = firestore.collection(process.env.PRINTERS_COLLECTION).doc(printerId);
     batch.update(printerRef, {
-      jobQueue: admin.firestore.FieldValue.arrayRemove(taskId),
+      jobQueue: FieldValue.arrayRemove(taskId),
     });
 
-    const taskRef = db.collection('tasks').doc(taskId);
+    const taskRef = firestore.collection(process.env.PRINT_TASKS_COLLECTION).doc(taskId);
     batch.delete(taskRef);
 
     await batch.commit();
@@ -119,8 +119,8 @@ export async function sortTasks(req, res) {
   }
 
   try {
-    const printerRef = db.collection('printers').doc(printerId);
-    await db.runTransaction(async (transaction) => {
+    const printerRef = firestore.collection(process.env.PRINTERS_COLLECTION).doc(printerId);
+    await firestore.runTransaction(async (transaction) => {
       const printerSnapshot = await transaction.get(printerRef);
       if (!printerSnapshot.exists) throw new Error("Printer not found");
 

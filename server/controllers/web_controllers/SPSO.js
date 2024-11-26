@@ -1,11 +1,11 @@
 // const SystemConfig = require('../../models/SystemConfig').default;
 // const SPSO = require('../../models/SPSO');
 // const HistoryLog = require('../../models/HistoryLog').default;
-import { SystemConfig } from '../../models/SystemConfig.js';
-import { SPSO } from '../../models/SPSO.js';
-import { HistoryLog } from '../../models/HistoryLog.js';
-
 import { firestore } from '../../services/FirebaseAdminSDK.js';
+
+import SystemConfig from '../../models/SystemConfig.js';
+import SPSO from '../../models/SPSO.js';
+import HistoryLog from '../../models/HistoryLog.js';
 
 const spso = new SPSO();
 class SPSOController {

@@ -1,7 +1,7 @@
 import express from 'express';
-import { updatePrinterInfo, takeDocList, addTask, removeTask, sortTasks } from './PrinterController.js';
-
 const router = express.Router();
+
+import { updatePrinterInfo, takeDocList, addTask, removeTask, sortTasks } from '../../controllers/web_controllers/PrinterController.js';
 
 router.put('/printer/:printerId', updatePrinterInfo);
 router.get('/printer/:printerId/doc-list', takeDocList);
