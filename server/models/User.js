@@ -15,24 +15,26 @@ class IUser {
     setInfoFromJSON(json) {}
 }
 
-export class Student extends IUser {
+export class Customer extends IUser {
     phoneNum = '';
-    studentId = '';
+    hcmutId = '';
     major = '';
     academicYear = '';
     classId = '';
     avatar = '';
     coverPhoto = '';
+    documents = [];
 
-    constructor(userName = '', userId = '', userRole = '', email = '', phoneNum = '', studentId = '', major = '', academicYear = '', classId = '', avatar = '', coverPhoto = '') {
+    constructor(userName = '', userId = '', userRole = '', email = '', phoneNum = '', studentId = '', major = '', academicYear = '', classId = '', avatar = '', coverPhoto = '', documents = []) {
         super(userName, userId, userRole, email);
         this.phoneNum = phoneNum;
-        this.studentId = studentId;
+        this.hcmutId = studentId;
         this.major = major;
         this.academicYear = academicYear;
         this.classId = classId;
         this.avatar = avatar;
         this.coverPhoto = coverPhoto;
+        this.documents = documents;
     }
 
     convertToJSON() {
@@ -42,12 +44,13 @@ export class Student extends IUser {
             userRole: this.userRole?? "",
             email: this.email?? "",
             phoneNum: this.phoneNum?? "",
-            studentId: this.studentId?? "",
+            studentId: this.hcmutId?? "",
             major: this.major?? "",
             academicYear: this.academicYear?? "",
             classId: this.classId?? "",
             avatar: this.avatar?? "",
-            coverPhoto: this.coverPhoto?? ""
+            coverPhoto: this.coverPhoto?? "",
+            documents: this.documents?? []
         };
     }
 
@@ -57,12 +60,13 @@ export class Student extends IUser {
         this.userRole = json.userRole?? "";
         this.email = json.email?? "";
         this.phoneNum = json.phoneNum?? "";
-        this.studentId = json.studentId?? "";
+        this.hcmutId = json.studentId?? "";
         this.major = json.major?? "";
         this.academicYear = json.academicYear?? "";
         this.classId = json.classId?? "";
         this.avatar = json.avatar?? "";
         this.coverPhoto = json.coverPhoto?? "";
+        this.documents = json.documents?? [];
     }
 }
 

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 const router = Router();
-import { adminRegister, register, deleteAccount, updateProfile, getUserProfileById, getUserProfileByEmail, getUserIdByEmail, updatePicture, getPicture, createResetPasswordLink, createEmailVertificationLink, test} from '../../controllers/web_controllers/HCMUT_SSO.js';
+import { adminRegister, register, deleteAccount, updateProfile, getUserProfileById, getUserProfileByEmail, getUserIdByEmail, updatePicture, getPicture, createResetPasswordLink, createEmailVertificationLink, getDocIdList, test} from '../../controllers/web_controllers/HCMUT_SSO.js';
 
 import multer from 'multer';
 const storage = multer.memoryStorage();
@@ -64,6 +64,12 @@ router.get('/get-reset-password-link', createResetPasswordLink)
     // query: email
 // Output: email verification link
 router.get('/get-email-verification-link', createEmailVertificationLink)
+
+
+// Input:
+    // query: userId
+// Output: docIdList
+router.get('/get-doc-id-list', getDocIdList)
 
 // router.post('/test', upload.single('file'), test)
 

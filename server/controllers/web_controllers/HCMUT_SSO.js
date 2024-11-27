@@ -3,13 +3,14 @@ import { Readable } from 'stream';
 import { adminAuth, firestore } from '../../services/FirebaseAdminSDK.js';
 import { googleDrive } from '../../services/GoogleSDK.js';
 
-import { Student, SPSO } from '../../models/User.js';
+import { Customer, SPSO } from '../../models/User.js';
+import Wallet from '../../models/Wallet.js';
 
 export async function test(req, res) {
     console.log('test');
 
     if (!req) {
-        res.status(400).send('Missing required parameters.');
+        res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
     else {
@@ -22,7 +23,7 @@ export async function test(req, res) {
     
 //     const query = req.query;
 //     if (!query || !query.email || !query.password) {
-//         res.status(400).send('Missing required parameters.');
+//         res.status(400).json({ message: 'Missing required parameters.' });
 //         return;
 //     }
 // }
@@ -38,46 +39,53 @@ export async function register(req, res) {
     const body = req.body;
 
     if (!body || !body.email || !body.password || !body.userName) {
-        res.status(400).send('Missing required parameters.');
+        res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
 
-    const ftQuery = firestore.collection(process.env.USERS_COLLECTION).where('email', '==', body.email);
-    const querySnapshot = await ftQuery.get();
-    if (!querySnapshot.empty) {
-        res.status(400).send('Email already exists.');
-        return;
-    }
+    try {
+        body['userRole'] = 'customer';
+        console.log('Body: ', body);
 
-    body['userRole'] = 'student';
-    console.log('Body: ', body);
-    
-    await adminAuth.createUser({
-        email: body.email,
-        password: body.password,
-        displayName: body.userName
-    }).then((userRecord) => {
-        const user = new Student();
+        const checkUserRecord = await adminAuth.getUserByEmail(body.email);
+        if (checkUserRecord !== undefined) {
+            res.status(409).json({ message: 'Email already exists.' });
+            return;
+        }
+
+        const userRecord = await adminAuth.createUser({
+            email: body.email,
+            password: body.password,
+            displayName: body.userName
+        });
+
+        const user = new Customer();
         user.setInfoFromJSON(body);
+        // const wallet = new Wallet();
+        // wallet.setInfoFromJson({ ownerId: userRecord.uid });
 
         const batch = firestore.batch();
         const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(userRecord.uid);
+        // const walletRef = firestore.collection(process.env.WALLETS_COLLECTION).doc(userRecord.uid);
 
         batch.set(userRef, user.convertToJSON());
         batch.update(userRef, { userId: userRecord.uid })
 
+        // batch.set(walletRef, wallet.convertToJSON());
+        // batch.update(walletRef, { ownerId: userRecord.uid })
+
         batch.commit().then(() => {
             user.userId = userRecord.uid;
-            res.status(201).send(user.convertToJSON());
+            res.status(201).json({ message: 'User created successfully.', user: user.convertToJSON() });
         }).catch((error) => {
             console.log('Error updating database for new user:', error);
-            res.status(500).send(error.message);
+            res.status(500).json({ message: error.message });
         });
-
-    }).catch((error) => {
+    }
+    catch (error) {
         console.log('Error creating new user:', error);
-        res.status(500).send(error.message);
-    });
+        res.status(500).json({ message: error.message });
+    }
 }
 
 
@@ -85,28 +93,29 @@ export async function register(req, res) {
 export async function adminRegister(req, res) {
     console.log('adminRegister');
 
-    if (!req || !req.body|| !req.body.email || !req.body.password) {
-        res.status(400).send('Missing required parameters.');
-        return;
-    }
-
-    const ftQuery = firestore.collection(process.env.ADMINS_COLLECTION).where('email', '==', body.email);
-    const querySnapshot = await ftQuery.get();
-    if (!querySnapshot.empty) {
-        res.status(400).send('Email already exists.');
-        return;
-    }
-
     const body = req.body;
-    body['userRole'] = 'admin';
-    body['highestAuthority'] = false;
-    console.log('Body: ', body);
+    if (!req || !body|| !body.email || !body.password) {
+        res.status(400).json({ message: 'Missing required parameters.' });
+        return;
+    }
 
-    await adminAuth.createUser({
-        email: body.email,
-        password: body.password,
-        displayName: body.userName?? ''
-    }).then((userRecord) => {
+    try {
+        body['userRole'] = 'admin';
+        body['highestAuthority'] = false;
+        console.log('Body: ', body);
+
+        const checkUserRecord = await adminAuth.getUserByEmail(body.email);
+        if (checkUserRecord !== undefined) {
+            res.status(409).json({ message: 'Email already exists.' });
+            return;
+        }
+
+        const userRecord = await adminAuth.createUser({
+            email: body.email,
+            password: body.password,
+            displayName: body.userName
+        });
+
         const admin = new SPSO();
         admin.setInfoFromJSON(body);
 
@@ -118,15 +127,16 @@ export async function adminRegister(req, res) {
 
         batch.commit().then(() => {
             admin.userId = userRecord.uid;
-            res.status(201).send(admin.convertToJSON());
+            res.status(201).json({ message: 'Admin created successfully.', admin: admin.convertToJSON() });
         }).catch((error) => {
             console.log('Error updating database for new user:', error);
-            res.status(500).send(error.message);
-        });
-    }).catch((error) => {
+            res.status(500).json({ message: error.message });
+        })
+    }
+    catch (error) {
         console.log('Error creating new user:', error);
-        res.status(500).send(error.message);
-    });
+        res.status(500).json({ message: error.message });
+    }
 }
 
 // Checked
@@ -135,7 +145,7 @@ export async function deleteAccount(req, res) {
     
     const query = req.query;
     if (!query || !query.userId) {
-        res.status(400).send('Missing required parameters.');
+        res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
 
@@ -146,11 +156,11 @@ export async function deleteAccount(req, res) {
 
         const userSnapshot = await userRef.get();
         if (userSnapshot.data() === undefined) {
-            res.status(404).send('User not found.');
+            res.status(404).json({ message: 'User not found.' });
             return;
         }
 
-        if (userSnapshot.data().role === 'student') {
+        if (userSnapshot.data().role === 'customer') {
             const walletRef = firestore.collection(process.env.WALLETS_COLLECTION).doc(query.userId);
             const walletSnapshot = await walletRef.get();
             if (walletSnapshot.data() !== undefined) {
@@ -160,11 +170,11 @@ export async function deleteAccount(req, res) {
 
         userRef.delete();
 
-        res.status(204).send('Successfully deleted user.');
+        res.status(200).json({ message: 'User deleted successfully.' });
     })
     .catch((error) => {
         console.log('Error deleting user:', error);
-        res.status(500).send(error.message);
+        res.status(500).json({ message: error.message });
     });
 }
 
@@ -174,32 +184,43 @@ export async function updateProfile(req, res) {
     
     const body = req.body;
     const query = req.query;
-    if (!body || !query || !query.userId) {
-        res.status(400).send('Missing required parameters.');
+    if (!body || Object.keys(body).length === 0 || !query || !query.userId) {
+        res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
 
-    console.log('Body: ', body);
-    // const updateInfo = JSON.parse(body);
+    try {
+        console.log('Body: ', body);
 
-    const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(query.userId);
-    const userSnapshot = await userRef.get();
-    if (userSnapshot.data() === undefined) {
-        res.status(404).send('User not found.');
-        return;
+        const invalidFields = Object.keys(body).filter(key => !Object.keys(Customer.prototype).includes(key));
+        if (invalidFields.length > 0) {
+            res.status(400).json({ message: `The following fields are invalid: ${invalidFields.join(', ')}.` });
+            return;
+        }
+
+        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(query.userId);
+        const userSnapshot = await userRef.get();
+        if (userSnapshot.data() === undefined) {
+            res.status(404).send('User not found.');
+            return;
+        }
+
+        const batch = firestore.batch();
+
+        batch.update(userRef, body);
+
+        await batch.commit().then(() => {
+            res.status(200).json({ message: 'User updated successfully.' });
+        })
+        .catch((error) => {
+            console.log('Error updating user:', error);
+            res.status(500).json({ message: error.message });
+        });
     }
-
-    const batch = firestore.batch();
-
-    batch.update(userRef, body);
-
-    await batch.commit().then(() => {
-        res.status(201).send('Successfully updated user.');
-    })
-    .catch((error) => {
-        console.log('Error updating user:', error);
-        res.status(500).send(error.message);
-    })
+    catch (error) {
+        console.log('Error:', error);
+        res.status(500).json({ message: error.message });
+    }
 }
 
 // Checked
@@ -208,7 +229,7 @@ export async function getUserProfileById(req, res) {
     
     const query = req.query;
     if (!query || !query.userId) {
-        res.status(400).send('Missing required parameters.');
+        res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
 
@@ -217,13 +238,13 @@ export async function getUserProfileById(req, res) {
     const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(query.userId);
     await userRef.get().then((userSnapshot) => {
         if (userSnapshot.data() === undefined) {
-            res.status(404).send('User not found.');
+            res.status(404).json({ message: 'User not found.' });
             return;
         }
-        res.status(200).send(userSnapshot.data());
+        res.status(200).json({ message: 'User found.', profile: userSnapshot.data() });
     })
     .catch((error) => {
-        res.status(500).send(error.message);
+        res.status(500).json({ message: error.message });
     })
 }
 
@@ -233,7 +254,7 @@ export async function getUserProfileByEmail(req, res) {
 
     const query = req.query;
     if (!query || !query.email) {
-        res.status(400).send('Missing required parameters.');
+        res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
 
@@ -241,13 +262,13 @@ export async function getUserProfileByEmail(req, res) {
     const ftQuery = firestore.collection(process.env.USERS_COLLECTION).where('email', '==', query.email);
     await ftQuery.get().then((querySnapshot) => {
         if (querySnapshot.empty) {
-            res.status(404).send('No user not found.');
+            res.status(404).json({ message: 'User not found.' });
             return;
         }
-        res.status(200).send(querySnapshot.docs[0].data());
+        res.status(200).json({ message: 'User found.', profile: querySnapshot.docs[0].data() });
     })
     .catch((error) => {
-        res.status(500).send(error.message);
+        res.status(500).json({ message: error.message });
     })
 }
 
@@ -257,17 +278,25 @@ export async function getUserIdByEmail(req, res) {
     const query = req.query;
 
     if (!query || !query.email) {
-        res.status(400).send('Missing required parameters.');
+        res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
 
     console.log('Query: ', query);
 
     await adminAuth.getUserByEmail(query.email).then((userRecord) => {
-        res.status(200).send(userRecord.uid);
+        res.status(200).json({ message: 'User found.', userId: userRecord.uid });
     })
     .catch((error) => {
-        res.status(500).send(error.message);
+        if (error.code === 'auth/user-not-found') {
+            res.status(404).json({ message: 'User not found.' });
+        }
+        else if (error.code === 'auth/invalid-email') {
+            res.status(400).json({ message: 'Invalid email.' });
+        }
+        else {
+            res.status(500).json({ message: error.message });
+        }
     });
 }
 
@@ -276,13 +305,13 @@ export async function updatePicture(req, res) {
     console.log('updateAvatar');
 
     if (!req.file || !req.query || !req.query.userId || !req.query.type) {
-        res.status(400).send('Missing required parameters.');
+        res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
 
     const workingType = req.query.type;
     if (workingType !== 'avatar' && workingType !== 'coverPhoto') {
-        res.status(400).send('Invalid type.');
+        res.status(400).json({ message: 'Invalid type.' });
         return;
     }
     
@@ -290,7 +319,7 @@ export async function updatePicture(req, res) {
 
     const userSnapshot = await userRef.get();
     if (userSnapshot.data() === undefined) {
-        res.status(404).send('User not found.');
+        res.status(404).json({ message: 'User not found.' });
         return;
     }
 
@@ -301,7 +330,7 @@ export async function updatePicture(req, res) {
                 console.log('Avatar deleted successfully.');
             }).catch((error) => {
                 console.log('Error deleting avatar: ', error);
-                res.status(500).send(error).message;
+                res.status(500).json({ message: error.message });
             });
         }
     }
@@ -312,7 +341,7 @@ export async function updatePicture(req, res) {
                 console.log('Cover photo deleted successfully.');
             }).catch((error) => {
                 console.log('Error deleting cover photo: ', error);
-                res.status(500).send(error).message;
+                res.status(500).json({ message: error.message });
             });
         }
     }
@@ -339,16 +368,16 @@ export async function updatePicture(req, res) {
     }, async (error, response) => {
         if (error) {
             console.log('Error creating file: ', error);
-            res.status(500).send(error.message);
+            res.status(500).json({ message: error.message });
         }
         else {
             console.log('File ID: ', response.data.id);
             const updateData = workingType === 'avatar' ? { avatar: response.data.id } : { coverPhoto: response.data.id };
             await userRef.update(updateData).then(() => {
-                res.status(201).send(response.data.id);
+                res.status(201).json({ message: 'Avatar updated successfully.' });
             }).catch((error) => {
                 console.log('Error updating avatar: ', error);
-                res.status(500).send(error.message);
+                res.status(500).json({ message: error.message });
             });
         }
     });
@@ -359,7 +388,7 @@ export async function getPicture(req, res) {
     console.log('getAvatar');
 
     if (!req.query || !req.query.userId || !req.query.type) {
-        res.status(400).send('Missing required parameters.');
+        res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
 
@@ -374,16 +403,16 @@ export async function getPicture(req, res) {
         const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(req.query.userId);
         const userSnapshot = await userRef.get();
         if (userSnapshot.data() === undefined) {
-            res.status(404).send('User not found.');
+            res.status(404).json({ message: 'User not found.' });
             return;
         }
         const user = userSnapshot.data();
         if (workingType === 'avatar' && !user.avatar) {
-            res.status(404).send('Avatar not found.');
+            res.status(404).json({ message: 'Avatar not found.' });
             return;
         }
         if (workingType === 'coverPhoto' && !user.coverPhoto) {
-            res.status(404).send('Cover photo not found.');
+            res.status(404).json({ message: 'Cover photo not found.' });
             return;
         }
 
@@ -395,7 +424,7 @@ export async function getPicture(req, res) {
             responseType: 'stream'
         });
         if (!response.data) {
-            res.status(404).send('File not found.');
+            res.status(404).json({ message: 'File not found.' });
             return;
         }
 
@@ -410,51 +439,104 @@ export async function getPicture(req, res) {
             })
             .on('error', (error) => {
                 console.log('Error pipe: ', error);
-                res.status(500).send(error.message);
+                res.status(500).json({ message: error.message });
             })
             .pipe(res);
     } catch (error) {
         console.log('Error getting avatar: ', error);
-        res.status(500).send(error.message);
+        res.status(500).json({ message: error.message });
     }
 }
 
-export function createResetPasswordLink(req, res) {
+export async function createResetPasswordLink(req, res) {
     console.log('createResetPasswordLink');
 
     if (!req.query || !req.query.email) {
-        res.status(400).send('Missing required parameters.');
+        res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
 
     const email = req.query.email;
-    adminAuth.generatePasswordResetLink(email)
-        .then((link) => {
-            console.log('Password reset link: ', link);
-            res.send(link);
-        })
-        .catch((error) => {
-            console.log('Error generating password reset link: ', error);
-            res.status(500).send(error.message);
-        });
+    console.log('Email: ', email);
+
+    try {
+        const userRecord = await adminAuth.getUserByEmail(email);
+        if (userRecord === undefined) {
+            res.status(404).json({ message: 'User not found.' });
+            return;
+        }
+
+        const link = await adminAuth.generatePasswordResetLink(email);
+        if (link === undefined) {
+            res.status(500).json({ message: 'Error generating password reset link.' });
+            return;
+        }
+
+        res.status(200).json({ message: 'Password reset link generated successfully.', link: link });
+    }
+    catch (error) {
+        console.log('Error generating password reset link: ', error);
+        res.status(500).json({ message: error.message });
+    }
 }
 
-export function createEmailVertificationLink(req, res) {
+export async function createEmailVertificationLink(req, res) {
     console.log('createEmailVertificationLink');
 
     if (!req.query || !req.query.email) {
-        res.status(400).send('Missing required parameters.');
+        res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
 
     const email = req.query.email;
-    adminAuth.generateEmailVerificationLink(email)
-        .then((link) => {
-            console.log('Email verification link: ', link);
-            res.send(link);
-        })
-        .catch((error) => {
-            console.log('Error generating email verification link: ', error);
-            res.status(500).send(error.message);
-        });
+    console.log('Email: ', email);
+
+    try {
+        const userRecord = await adminAuth.getUserByEmail(email);
+        if (userRecord === undefined) {
+            res.status(404).json({ message: 'User not found.' });
+            return;
+        }
+
+        const link = await adminAuth.generateEmailVerificationLink(email);
+        if (link === undefined) {
+            res.status(500).json({ message: 'Error generating email vertification link.' });
+            return;
+        }
+
+        res.status(200).json({ message: 'Email vertification link generated successfully.', link: link });
+    }
+    catch (error) {
+        console.log('Error generating email vertification link: ', error);
+        res.status(500).json({ message: error.message });
+    }
+}
+
+export async function getDocIdList(req, res) {
+    console.log('getDocIdList');
+
+    const query = req.query;
+    if (!req || !query || !query.userId) {
+        res.locals.ok = false;
+        res.status(400).json({ message: 'Missing required parameters.' });
+        return;
+    }
+
+    console.log('Query: ', query);
+    try {
+        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(query.userId);
+        const userSnapshot = await userRef.get();
+        if (userSnapshot.data() === undefined) {
+            res.locals.ok = false;
+            res.status(404).json({ message: 'User not found.' });
+            return;
+        }
+        
+        const docIdList = userSnapshot.data().documents;
+        res.status(200).json({ message: 'Document ID list retrieved successfully.', docIdList: docIdList });
+    }
+    catch (error) {
+        console.log('Error getting docIdList: ', error);
+        res.status(500).json({ message: error.message });
+    }
 }
