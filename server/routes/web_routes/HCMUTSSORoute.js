@@ -1,6 +1,6 @@
 import { Router } from 'express';
 const router = Router();
-import { adminRegister, register, deleteAccount, updateProfile, getUserProfileById, getUserProfileByEmail, getUserIdByEmail, updatePicture, getPicture, createResetPasswordLink, createEmailVertificationLink, getDocIdList, test} from '../../controllers/web_controllers/HCMUT_SSO.js';
+import { adminRegister, register, deleteAccount, updateProfile, getUserProfileById, getUserProfileByEmail, getUserIdByEmail, uploadPicture, getPicture, createResetPasswordLink, createEmailVertificationLink, getDocIdList, test} from '../../controllers/web_controllers/HCMUT_SSO.js';
 
 import multer from 'multer';
 const storage = multer.memoryStorage();
@@ -46,7 +46,7 @@ router.get('/get-user-id-by-email', getUserIdByEmail)
     // query: userId
     // query: type (avatar or coverPhoto)
 // Output: fileId
-router.post('/update-picture', upload.single('file'), updatePicture)
+router.post('/update-picture', upload.single('file'), uploadPicture)
 
 // Input:
     // query: userId

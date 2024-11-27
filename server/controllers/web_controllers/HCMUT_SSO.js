@@ -301,7 +301,7 @@ export async function getUserIdByEmail(req, res) {
 }
 
 // Checked
-export async function updatePicture(req, res) {
+export async function uploadPicture(req, res) {
     console.log('updateAvatar');
 
     if (!req.file || !req.query || !req.query.userId || !req.query.type) {
