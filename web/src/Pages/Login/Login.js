@@ -31,18 +31,23 @@ export default function Login({ onLogin }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ emailOrusername: convert, password }),
+        
       });
 
       const result = await response.json();
 
       if (response.ok) {
         setError('');
-        const { accessToken, refreshToken } = result;
+        const { accessToken, refreshToken , profile} = result;
+        const { role } = profile;
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('connect', 'MQTT');
-        localStorage.setItem('connected', 'false');
+        localStorage.setItem('role', role); 
+        console.log(result);
+        console.log(result.profile);
+        console.log(profile.role);
+
         onLogin(true);
         navigate('/home');
       } else {
