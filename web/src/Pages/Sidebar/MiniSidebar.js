@@ -41,7 +41,9 @@ export default function Navbar({ onLogout }) {
       link: `/${array.slice(0, index + 1).join('/')}`,
     }));
 
-
+    const handleGoBack = () => {
+      navigate(-1); // Quay lại trang trước
+    };
   return (
     <Box
       sx={{
@@ -185,13 +187,18 @@ export default function Navbar({ onLogout }) {
         alignItems: 'center',
       }}
     >
+       <IconButton onClick={handleGoBack} sx={{ marginRight: '10px' }}>
+          <Typography variant="h6" sx={{ color: '#007bff', cursor: 'pointer' }}>
+            {'«'}  {/* Thay '»' bằng '<<' */}
+          </Typography>
+        </IconButton>
       {breadcrumbs.map((crumb, index) => (
         <Typography key={crumb.link} sx={{ marginRight: '10px' }}>
           <Link
             to={crumb.link}
             style={{ textDecoration: 'none', color: '#007bff' }}
           >
-            » {crumb.label} 
+            {crumb.label} 
           </Link>
            {index < breadcrumbs.length - 1 && ' » '}
         </Typography>
