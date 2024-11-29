@@ -55,9 +55,8 @@ const History = () => {
       setLoading(false); // Kết thúc trạng thái loading
     }
   };
-
   return (
-    <Box sx={{ p: 3, ml: '1.5cm', height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <Box sx={{ p: 3, ml: '1.5cm', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {/* Page title */}
       <Typography variant="h3" gutterBottom sx={{ mb: 3 }}></Typography>
       {/* Time input form */}

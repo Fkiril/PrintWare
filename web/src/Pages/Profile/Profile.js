@@ -176,9 +176,8 @@ const Profile = () => {
     const [user, domain] = email.split('@');
     return `${user.slice(0, 2)}${'*'.repeat(user.length - 2)}@${domain}`;
   };
-
   return (
-    <Box sx={{ p: 3, maxWidth: '600px', margin: 'auto',}}>
+    <Box sx={{ p: 3, maxWidth: '600px', margin: 'auto',height:'100vh',marginTop: '50px',}}>
       <Paper sx={{ p: 2, borderRadius: '17px' ,background: `linear-gradient(to bottom, 
                     rgba(255, 255, 255, 0.6) 5%, 
                     rgba(255, 255, 255, 1) 100%)`,}}>
