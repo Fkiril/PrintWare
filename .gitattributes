@@ -1,1 +1,1 @@
-*.zip filter=lfs diff=lfs merge=lfs -text
+git rev-list --objects --all | grep '.zip'
