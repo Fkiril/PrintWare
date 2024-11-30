@@ -35,41 +35,6 @@ const Payment = () => {
           <img src="https://via.placeholder.com/50?text=Momo" alt="Momo" />
           <span>Momo</span>
         </div>
-        <div
-          className={`payment-option ${
-            selectedPayment === "Zalopay" ? "selected" : ""
-          }`}
-          onClick={() => setSelectedPayment("Zalopay")}
-        >
-          <input
-            type="radio"
-            name="payment"
-            value="Zalopay"
-            checked={selectedPayment === "Zalopay"}
-            onChange={() => setSelectedPayment("Zalopay")}
-          />
-          <img
-            src="https://via.placeholder.com/50?text=Zalopay"
-            alt="Zalopay"
-          />
-          <span>Zalopay</span>
-        </div>
-        <div
-          className={`payment-option ${
-            selectedPayment === "VNPay" ? "selected" : ""
-          }`}
-          onClick={() => setSelectedPayment("VNPay")}
-        >
-          <input
-            type="radio"
-            name="payment"
-            value="VNPay"
-            checked={selectedPayment === "VNPay"}
-            onChange={() => setSelectedPayment("VNPay")}
-          />
-          <img src="https://via.placeholder.com/50?text=VNPay" alt="VNPay" />
-          <span>VNPay</span>
-        </div>
       </div>
       {error && <p className="error-message">{error}</p>}
       <div className="actions">

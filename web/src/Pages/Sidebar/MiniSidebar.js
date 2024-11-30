@@ -124,7 +124,7 @@ export default function Navbar({ onLogout }) {
           
           )}
 
-          {role === 'admin' && (
+          {role === 'printer' && (
             <>
               <Box>
                 <Link to="/manage-printer" style={{ textDecoration: 'none' }}>
@@ -142,6 +142,54 @@ export default function Navbar({ onLogout }) {
               </Box>
             </>
           )}
+
+          {role === 'admin' && (
+            <>
+              <Box>
+                <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: location.pathname === '/dashboard' ? '#1976d2' : '#333',
+                      '&:hover': { color: '#787878' },
+                      paddingLeft: '10px',
+                    }}
+                  >
+                    Dashboard
+                  </Typography>
+                </Link>
+              </Box>
+              <Box>
+                <Link to="/manageUser" style={{ textDecoration: 'none' }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: location.pathname === '/manageUser' ? '#1976d2' : '#333',
+                      '&:hover': { color: '#787878' },
+                      paddingLeft: '10px',
+                    }}
+                  >
+                    Manage User
+                  </Typography>
+                </Link>
+              </Box>
+              <Box>
+                <Link to="/managerPrint-er" style={{ textDecoration: 'none' }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: location.pathname === '/managerPrint-er' ? '#1976d2' : '#333',
+                      '&:hover': { color: '#787878' },
+                      paddingLeft: '10px',
+                    }}
+                  >
+                    Manage Printer
+                  </Typography>
+                </Link>
+              </Box>
+            </>
+          )}
+
         </Box>
     
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -149,7 +197,7 @@ export default function Navbar({ onLogout }) {
             <IconButton onClick={handleAvatarClick} sx={{ marginRight: 2 ,marginTop:'5px'}}>
               <Avatar src={avatar} sx={{ width: 35, height: 35 }} />
             </IconButton>
-          ) : role === 'admin' ? (
+          ) : role === 'printer' ||  role === 'admin'? (
             <IconButton onClick={onLogout} sx={{ marginRight: 2 }}>
               <LogoutIcon sx={{ color: '#d32f2f', fontSize: 30 }} />
             </IconButton>
