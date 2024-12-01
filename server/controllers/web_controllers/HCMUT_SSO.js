@@ -5,18 +5,8 @@ import { googleDrive } from '../../services/GoogleSDK.js';
 
 import { Customer, SPSO } from '../../models/User.js';
 import Wallet from '../../models/Wallet.js';
-
-export async function test(req, res) {
-    console.log('test');
-
-    if (!req) {
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
-    else {
-        res.send('Test request received.');
-    }
-}
+import { file } from 'googleapis/build/src/apis/file/index.js';
+import { content } from 'googleapis/build/src/apis/content/index.js';
 
 // export async function login(req, res) {
 //     console.log('Received a login request!\n');
@@ -34,33 +24,24 @@ export async function test(req, res) {
 // }
 
 // Checked
-export async function register(req, res) {
-    console.log('Received a register request!');
-    const body = req.body;
-
-    if (!body || !body.email || !body.password || !body.userName) {
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
-
+export async function register(paramBody) {
     try {
-        body['userRole'] = 'customer';
-        console.log('Body: ', body);
+        paramBody['userRole'] = 'customer';
 
-        const checkUserRecord = await adminAuth.getUserByEmail(body.email);
+        const checkUserRecord = await adminAuth.getUserByEmail(paramBody.email);
         if (checkUserRecord !== undefined) {
-            res.status(409).json({ message: 'Email already exists.' });
-            return;
+            return { status: 409, body: { message: 'Email already exists.' } };
         }
 
         const userRecord = await adminAuth.createUser({
-            email: body.email,
-            password: body.password,
-            displayName: body.userName
+            email: paramBody.email?? null,
+            password: paramBody.password?? null,
+            displayName: paramBody.userName?? null,
+            phoneNumber: paramBody.phoneNum?? null
         });
 
         const user = new Customer();
-        user.setInfoFromJSON(body);
+        user.setInfoFromJSON(paramBody);
         // const wallet = new Wallet();
         // wallet.setInfoFromJson({ ownerId: userRecord.uid });
 
@@ -74,50 +55,42 @@ export async function register(req, res) {
         // batch.set(walletRef, wallet.convertToJSON());
         // batch.update(walletRef, { ownerId: userRecord.uid })
 
-        batch.commit().then(() => {
+        return await batch.commit().then(() => {
             user.userId = userRecord.uid;
-            res.status(201).json({ message: 'User created successfully.', user: user.convertToJSON() });
+            return { status: 201, body: { message: 'User created successfully.', data: user.convertToJSON() } };
         }).catch((error) => {
             console.log('Error updating database for new user:', error);
-            res.status(500).json({ message: error.message });
+            return { status: 500, body: { message: error.message } };
         });
     }
     catch (error) {
         console.log('Error creating new user:', error);
-        res.status(500).json({ message: error.message });
+        return { status: 500, body: { message: error.message } };
     }
 }
 
 
 // Checked
-export async function adminRegister(req, res) {
-    console.log('adminRegister');
-
-    const body = req.body;
-    if (!req || !body|| !body.email || !body.password) {
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
-
+export async function adminRegister(paramBody) {
     try {
-        body['userRole'] = 'admin';
-        body['highestAuthority'] = false;
-        console.log('Body: ', body);
+        paramBody['userRole'] = 'admin';
+        boparamBodydparamBodyy['highestAuthority'] = false;
+        console.log('Body: ', paramBody);
 
-        const checkUserRecord = await adminAuth.getUserByEmail(body.email);
+        const checkUserRecord = await adminAuth.getUserByEmail(paramBody.email);
         if (checkUserRecord !== undefined) {
-            res.status(409).json({ message: 'Email already exists.' });
-            return;
+            return { status: 409, body: { message: 'Email already exists.' } };
         }
 
         const userRecord = await adminAuth.createUser({
-            email: body.email,
-            password: body.password,
-            displayName: body.userName
+            email: paramBody.email?? null,
+            password: paramBody.password?? null,
+            displayName: paramBody.userName?? null,
+            phoneNumber: paramBody.phoneNum?? null
         });
 
         const admin = new SPSO();
-        admin.setInfoFromJSON(body);
+        admin.setInfoFromJSON(paramBody);
 
         const batch = firestore.batch();
         const adminRef = firestore.collection(process.env.ADMINS_COLLECTION).doc(userRecord.uid);
@@ -125,39 +98,28 @@ export async function adminRegister(req, res) {
         batch.set(adminRef, admin.convertToJSON());
         batch.update(adminRef, { userId: userRecord.uid })
 
-        batch.commit().then(() => {
+        return await batch.commit().then(() => {
             admin.userId = userRecord.uid;
-            res.status(201).json({ message: 'Admin created successfully.', admin: admin.convertToJSON() });
+            return { status: 201, body: { message: 'Admin account created successfully.', data: admin.convertToJSON() } };
         }).catch((error) => {
             console.log('Error updating database for new user:', error);
-            res.status(500).json({ message: error.message });
+            return { status: 500, body: { message: error.message } };
         })
     }
     catch (error) {
         console.log('Error creating new user:', error);
-        res.status(500).json({ message: error.message });
+        return { status: 500, body: { message: error.message } };
     }
 }
 
 // Checked
-export async function deleteAccount(req, res) {
-    console.log('deleteAccount');
-    
-    const query = req.query;
-    if (!query || !query.userId) {
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
-
-    console.log('Query: ', query);
-
-    await adminAuth.deleteUser(query.userId).then(async () => {
-        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(query.userId);
+export async function deleteAccount(paramUserId) {
+    return await adminAuth.deleteUser(paramUserId).then(async () => {
+        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
 
         const userSnapshot = await userRef.get();
         if (userSnapshot.data() === undefined) {
-            res.status(404).json({ message: 'User not found.' });
-            return;
+            return { status: 404, body: { message: 'User not found.' } };
         }
 
         if (userSnapshot.data().role === 'customer') {
@@ -170,250 +132,206 @@ export async function deleteAccount(req, res) {
 
         userRef.delete();
 
-        res.status(200).json({ message: 'User deleted successfully.' });
+        return { status: 200, body: { message: 'User deleted successfully.' } };
     })
     .catch((error) => {
         console.log('Error deleting user:', error);
-        res.status(500).json({ message: error.message });
+        return { status: 500, body: { message: error.message } };
     });
 }
 
 // Checked
-export async function updateProfile(req, res) {
-    console.log('updateProfile');
-    
-    const body = req.body;
-    const query = req.query;
-    if (!body || Object.keys(body).length === 0 || !query || !query.userId) {
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
-
+export async function updateProfile(paramUserId, paramBody) {
     try {
-        console.log('Body: ', body);
+        console.log('paramBody: ', paramBody);
 
-        const invalidFields = Object.keys(body).filter(key => !Object.keys(Customer.prototype).includes(key));
+        const invalidFields = Object.keys(paramBody).filter(key => !Object.keys(Customer.prototype).includes(key));
         if (invalidFields.length > 0) {
-            res.status(400).json({ message: `The following fields are invalid: ${invalidFields.join(', ')}.` });
-            return;
+            return { status: 400, body: { message: `The following fields are invalid: ${invalidFields.join(', ')}.` } };
         }
 
-        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(query.userId);
+        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
         const userSnapshot = await userRef.get();
         if (userSnapshot.data() === undefined) {
-            res.status(404).send('User not found.');
-            return;
+            return { status: 404, body: { message: 'User not found.' } };
         }
 
         const batch = firestore.batch();
 
         batch.update(userRef, body);
 
-        await batch.commit().then(() => {
-            res.status(200).json({ message: 'User updated successfully.' });
+        return await batch.commit().then(() => {
+            return { status: 200, body: { message: 'User updated successfully.' } };
         })
         .catch((error) => {
             console.log('Error updating user:', error);
-            res.status(500).json({ message: error.message });
+            return { status: 500, body: { message: error.message } };
         });
     }
     catch (error) {
         console.log('Error:', error);
-        res.status(500).json({ message: error.message });
+        return { status: 500, body: { message: error.message } };
     }
 }
 
 // Checked
-export async function getUserProfileById(req, res) {
-    console.log('getProfileById');
-    
-    const query = req.query;
-    if (!query || !query.userId) {
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
+export async function getUserProfileById(paramUserId) {
+    const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
 
-    console.log('Query: ', query);
-
-    const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(query.userId);
-    await userRef.get().then((userSnapshot) => {
+    return await userRef.get().then((userSnapshot) => {
         if (userSnapshot.data() === undefined) {
-            res.status(404).json({ message: 'User not found.' });
-            return;
+            return { status: 404, body: { message: 'User not found.' } };
         }
-        res.status(200).json({ message: 'User found.', profile: userSnapshot.data() });
+        
+        return { status: 200, body: { message: 'User found.', data: userSnapshot.data() } };
     })
     .catch((error) => {
-        res.status(500).json({ message: error.message });
+        return { status: 500, body: { message: error.message } };
     })
 }
 
 // Checked
-export async function getUserProfileByEmail(req, res) {
-    console.log('getProfileByEmail');
+export async function getUserProfileByEmail(paramEmail) {
+    const ftQuery = firestore.collection(process.env.USERS_COLLECTION).where('email', '==', paramEmail);
 
-    const query = req.query;
-    if (!query || !query.email) {
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
-
-    console.log('Query: ', query);
-    const ftQuery = firestore.collection(process.env.USERS_COLLECTION).where('email', '==', query.email);
-    await ftQuery.get().then((querySnapshot) => {
+    return await ftQuery.get().then((querySnapshot) => {
         if (querySnapshot.empty) {
-            res.status(404).json({ message: 'User not found.' });
-            return;
+            return { status: 404, body: { message: 'User not found.' } };
         }
-        res.status(200).json({ message: 'User found.', profile: querySnapshot.docs[0].data() });
+
+        return { status: 200, body: { message: 'User found.', data: querySnapshot.docs[0].data() } };
     })
     .catch((error) => {
-        res.status(500).json({ message: error.message });
+        return { status: 500, body: { message: error.message } };
     })
 }
 
 // Checked
-export async function getUserIdByEmail(req, res) {
-    console.log('getUserByEmail');
-    const query = req.query;
-
-    if (!query || !query.email) {
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
-
-    console.log('Query: ', query);
-
-    await adminAuth.getUserByEmail(query.email).then((userRecord) => {
-        res.status(200).json({ message: 'User found.', userId: userRecord.uid });
+export async function getUserIdByEmail(paramEmail) {
+    return await adminAuth.getUserByEmail(paramEmail).then((userRecord) => {
+        return { status: 200, body: { message: 'User found.', data: userRecord.uid } };
     })
     .catch((error) => {
         if (error.code === 'auth/user-not-found') {
-            res.status(404).json({ message: 'User not found.' });
+            return { status: 404, body: { message: 'User not found.' } };
         }
         else if (error.code === 'auth/invalid-email') {
-            res.status(400).json({ message: 'Invalid email.' });
+            return { status: 400, body: { message: 'Invalid email.' } };
         }
         else {
-            res.status(500).json({ message: error.message });
+            return { status: 500, body: { message: error.message } };
         }
     });
 }
 
 // Checked
-export async function uploadPicture(req, res) {
-    console.log('updateAvatar');
-
-    if (!req.file || !req.query || !req.query.userId || !req.query.type) {
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
-
-    const workingType = req.query.type;
+export async function uploadPicture(paramFile, paramUserId, paramType) {
+    const workingType = paramType;
     if (workingType !== 'avatar' && workingType !== 'coverPhoto') {
-        res.status(400).json({ message: 'Invalid type.' });
-        return;
+        return { status: 400, body: { message: 'Invalid type.' } };
     }
     
-    const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(req.query.userId);
+    const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
 
     const userSnapshot = await userRef.get();
     if (userSnapshot.data() === undefined) {
-        res.status(404).json({ message: 'User not found.' });
-        return;
+        return { status: 404, body: { message: 'User not found.' } };
     }
 
     if (workingType === 'avatar') {
         if (userSnapshot.data().avatar) {
             const avatarId = userSnapshot.data().avatar;
-            googleDrive.files.delete({ fileId: avatarId }).then(() => {
+
+            const delResult = await googleDrive.files.delete({ fileId: avatarId }).then(() => {
                 console.log('Avatar deleted successfully.');
+                return { check: true };
             }).catch((error) => {
                 console.log('Error deleting avatar: ', error);
-                res.status(500).json({ message: error.message });
+                return { check: false, status: 500, message: error.message };
             });
+
+            if (!delResult.check) {
+                return { status: delResult.status, body: { message: delResult.message } };
+            }
         }
     }
     else {
         if (userSnapshot.data().coverPhoto) {
             const coverPhotoId = userSnapshot.data().coverPhoto;
-            googleDrive.files.delete({ fileId: coverPhotoId }).then(() => {
+            
+            const delResult = await googleDrive.files.delete({ fileId: coverPhotoId }).then(() => {
                 console.log('Cover photo deleted successfully.');
+                return { check: true };
             }).catch((error) => {
                 console.log('Error deleting cover photo: ', error);
-                res.status(500).json({ message: error.message });
+                return { check: false, status: 500, message: error.message };
             });
+
+            if (!delResult.check) {
+                return { status: delResult.status, body: { message: delResult.message } };
+            }
         }
     }
 
-    const fileBuffer = Buffer.from(req.file.buffer);
+    const fileBuffer = Buffer.from(paramFile.buffer);
     const fileStream = new Readable();
     fileStream.push(fileBuffer);
     fileStream.push(null);
 
-    const mimeType = req.file.mimetype;
-    const userID = req.query.userId;
+    const mimeType = paramFile.mimetype;
+    const userID = paramUserId;
     const fileMetadata = {
         name: userID,
         parents: workingType === 'avatar' ? [process.env.AVATARS_FOLDER_ID] : [process.env.COVERPHOTOS_FOLDER_ID]
     };
 
-    googleDrive.files.create({
-        resource: fileMetadata,
-        media: {
-            body: fileStream,
-            mimeType: mimeType
-        },
-        fields: 'id'
-    }, async (error, response) => {
-        if (error) {
-            console.log('Error creating file: ', error);
-            res.status(500).json({ message: error.message });
-        }
-        else {
-            console.log('File ID: ', response.data.id);
-            const updateData = workingType === 'avatar' ? { avatar: response.data.id } : { coverPhoto: response.data.id };
-            await userRef.update(updateData).then(() => {
-                res.status(201).json({ message: 'Avatar updated successfully.' });
-            }).catch((error) => {
-                console.log('Error updating avatar: ', error);
-                res.status(500).json({ message: error.message });
-            });
-        }
-    });
+    try {
+        const response = googleDrive.files.create({
+            resource: fileMetadata,
+            media: {
+                body: fileStream,
+                mimeType: mimeType
+            },
+            fields: 'id'
+        });
+
+        console.log('File ID: ', response.data.id);
+        const updateData = workingType === 'avatar' ? { avatar: response.data.id } : { coverPhoto: response.data.id };
+
+        return await userRef.update(updateData).then(() => {
+            return { status: 201, body: { message: 'File uploaded successfully.', data: response.data.id } };
+        }).catch((error) => {
+            console.log('Error updating avatar: ', error);
+            return { status: 500, body: { message: error.message } };
+        });
+    }
+    catch (error) {
+        console.log('Error uploading file: ', error);
+        return { status: 500, body: { message: error.message } };
+    }
+
 }
 
 // Check
-export async function getPicture(req, res) {
-    console.log('getAvatar');
-
-    if (!req.query || !req.query.userId || !req.query.type) {
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
-
-    const workingType = req.query.type;
+export async function getPicture(paramUserId, paramType) {
+    const workingType = paramType;
 
     if (workingType !== 'avatar' && workingType !== 'coverPhoto') {
-        res.status(400).send('Invalid type.');
-        return;
+        return { status: 400, body: { message: 'Invalid type.' } };
     }
 
     try {
-        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(req.query.userId);
+        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
         const userSnapshot = await userRef.get();
         if (userSnapshot.data() === undefined) {
-            res.status(404).json({ message: 'User not found.' });
-            return;
+            return { status: 404, body: { message: 'User not found.' } };
         }
         const user = userSnapshot.data();
         if (workingType === 'avatar' && !user.avatar) {
-            res.status(404).json({ message: 'Avatar not found.' });
-            return;
+            return { status: 404, body: { message: 'Avatar not found.' } };
         }
         if (workingType === 'coverPhoto' && !user.coverPhoto) {
-            res.status(404).json({ message: 'Cover photo not found.' });
-            return;
+            return { status: 404, body: { message: 'Cover photo not found.' } };
         }
 
         const fileId = workingType === 'avatar' ? user.avatar : user.coverPhoto;
@@ -423,120 +341,71 @@ export async function getPicture(req, res) {
         }, {
             responseType: 'stream'
         });
-        if (!response.data) {
-            res.status(404).json({ message: 'File not found.' });
-            return;
+
+        if (response.data === undefined) {
+            return { status: 404, body: { message: 'File not found.' } };
         }
 
-        res.set({
-            'Content-Type': response.headers['content-type'],
-            'Content-Disposition': `attachment; filename="${fileId}"`,
-        });
-
-        response.data
-            .on('end', () => {
-                console.log('File downloaded successfully.');
-            })
-            .on('error', (error) => {
-                console.log('Error pipe: ', error);
-                res.status(500).json({ message: error.message });
-            })
-            .pipe(res);
+        return { status: 200, body: { message: 'File found.', file: response.data, data: { fileId: fileId, contentType: response.headers['content-type'] } } };
     } catch (error) {
         console.log('Error getting avatar: ', error);
-        res.status(500).json({ message: error.message });
+        return { status: 500, body: { message: error.message } };
     }
 }
 
-export async function createResetPasswordLink(req, res) {
-    console.log('createResetPasswordLink');
-
-    if (!req.query || !req.query.email) {
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
-
-    const email = req.query.email;
-    console.log('Email: ', email);
-
+export async function createResetPasswordLink(paramEmail) {
     try {
-        const userRecord = await adminAuth.getUserByEmail(email);
+        const userRecord = await adminAuth.getUserByEmail(paramEmail);
         if (userRecord === undefined) {
-            res.status(404).json({ message: 'User not found.' });
-            return;
+            return { status: 404, body: { message: 'User not found.' } };
         }
 
-        const link = await adminAuth.generatePasswordResetLink(email);
+        const link = await adminAuth.generatePasswordResetLink(paramEmail);
         if (link === undefined) {
-            res.status(500).json({ message: 'Error generating password reset link.' });
-            return;
+            return { status: 500, body: { message: 'Error generating password reset link.' } };
         }
 
-        res.status(200).json({ message: 'Password reset link generated successfully.', link: link });
+        return { status: 200, body: { message: 'Password reset link generated successfully.', data: link } };
     }
     catch (error) {
         console.log('Error generating password reset link: ', error);
-        res.status(500).json({ message: error.message });
+        return { status: 500, body: { message: error.message } };
     }
 }
 
-export async function createEmailVertificationLink(req, res) {
-    console.log('createEmailVertificationLink');
-
-    if (!req.query || !req.query.email) {
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
-
-    const email = req.query.email;
-    console.log('Email: ', email);
-
+export async function createEmailVertificationLink(paramEmail) {
     try {
-        const userRecord = await adminAuth.getUserByEmail(email);
+        const userRecord = await adminAuth.getUserByEmail(paramEmail);
         if (userRecord === undefined) {
-            res.status(404).json({ message: 'User not found.' });
-            return;
+            return { status: 404, body: { message: 'User not found.' } };
         }
 
-        const link = await adminAuth.generateEmailVerificationLink(email);
+        const link = await adminAuth.generateEmailVerificationLink(paramEmail);
         if (link === undefined) {
-            res.status(500).json({ message: 'Error generating email vertification link.' });
-            return;
+            return { status: 500, body: { message: 'Error generating email vertification link.' } };
         }
 
-        res.status(200).json({ message: 'Email vertification link generated successfully.', link: link });
+        return { status: 200, body: { message: 'Email vertification link generated successfully.', data: link } };
     }
     catch (error) {
         console.log('Error generating email vertification link: ', error);
-        res.status(500).json({ message: error.message });
+        return { status: 500, body: { message: error.message } };
     }
 }
 
-export async function getDocIdList(req, res) {
-    console.log('getDocIdList');
-
-    const query = req.query;
-    if (!req || !query || !query.userId) {
-        res.locals.ok = false;
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
-
-    console.log('Query: ', query);
+export async function getDocIdList(paramUserId) {
     try {
-        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(query.userId);
+        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
         const userSnapshot = await userRef.get();
         if (userSnapshot.data() === undefined) {
-            res.locals.ok = false;
-            res.status(404).json({ message: 'User not found.' });
-            return;
+            return { status: 404, body: { message: 'User not found.' } };
         }
         
         const docIdList = userSnapshot.data().documents;
-        res.status(200).json({ message: 'Document ID list retrieved successfully.', docIdList: docIdList });
+        return { status: 200, body: { message: 'Document ID list retrieved successfully.', data: docIdList } };
     }
     catch (error) {
         console.log('Error getting docIdList: ', error);
-        res.status(500).json({ message: error.message });
+        return { status: 500, body: { message: error.message } };
     }
 }
