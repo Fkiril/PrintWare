@@ -29,7 +29,6 @@ const SidebarLayout = ({ onLogout, children }) => {
       <Box 
         sx={{ 
           flexGrow: 1, 
-          padding: '3%', 
           height: '100%',
           boxSizing: 'border-box',
           overflow: 'auto',

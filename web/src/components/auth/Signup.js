@@ -6,8 +6,8 @@ export default function Signup({ onClose }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [mssv, setmssv] = useState('');
-  const [khoa, setkhoa] = useState('');
+  const [idstudent, setidstudent] = useState('');
+  const [Faculty, setFaculty] = useState('');
   const [phone, setPhone] = useState(''); // Thêm state cho số điện thoại
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -25,7 +25,7 @@ export default function Signup({ onClose }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username: convert_username, email: convert_email, password, mssv, khoa, phone }),
+        body: JSON.stringify({ username: convert_username, email: convert_email, password, idstudent, Faculty, phone }),
       });
       const result = await response.json();
       if (response.ok) {
@@ -149,16 +149,16 @@ export default function Signup({ onClose }) {
           sx={{ mb: 2 }}
         />
         <TextField
-          label="MSSV"
-          value={mssv}
-          onChange={(e) => setmssv(e.target.value)}
+          label="ID Student"
+          value={idstudent}
+          onChange={(e) => setidstudent(e.target.value)}
           fullWidth
           sx={{ mb: 2 }}
         />
         <TextField
-          label="Khoa"
-          value={khoa}
-          onChange={(e) => setkhoa(e.target.value)}
+          label="Faculty"
+          value={Faculty}
+          onChange={(e) => setFaculty(e.target.value)}
           fullWidth
           sx={{ mb: 2 }}
         />

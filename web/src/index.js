@@ -10,17 +10,19 @@ const root = ReactDOM.createRoot(document.getElementById('root')); // Tạo root
 root.render(
 
   
-    <><App /><ToastContainer
-    position="top-center"
-    autoClose={3000}
-    hideProgressBar={false}
-    newestOnTop={false}
-    closeOnClick
-    rtl={false}
-    pauseOnFocusLoss
-    draggable
-    pauseOnHover={false}
-    theme="light" /></>
+    <><App />
+        <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover={false}
+        theme="light" />
+    </>
 
 
 );
