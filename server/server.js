@@ -2,6 +2,7 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import express from 'express';
+
 // import serveIndex from 'serve-index';
 
 // Load environment variables
@@ -22,7 +23,7 @@ app.use(express.json());
 // Apply authentication middleware
 import authenticate from './middlewares/authentication.js';
 
-const whitelist = ['/', '/favicon.ico', '/spso/test'];
+const whitelist = ['/', '/favicon.ico', '/spso/test', '/events/:userId'];
 
 // app.use((req, res, next) => {
 //   console.log('Time: ', Date.now());
@@ -52,7 +53,10 @@ app.use('/document', Document);
 
 import Payment from './routes/web_routes/PaymentRoutes.js';
 app.use('/payment', Payment);
-    
+
+import SSE from './routes/web_routes/SSERoutes.js';
+app.use('/sse', SSE);
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

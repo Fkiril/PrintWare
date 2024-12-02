@@ -6,6 +6,7 @@ class Printer {
     this.config = config;
     this.jobQueue = jobQueue;
     this.historyDocRepo = historyDocRepo;
+    
   }
 
   // Chuyển đổi sang JSON
@@ -17,6 +18,7 @@ class Printer {
       config: this.config,
       jobQueue: this.jobQueue,
       historyDocRepo: this.historyDocRepo,
+      
     };
   }
 
@@ -28,6 +30,7 @@ class Printer {
     this.config = json.config || {};
     this.jobQueue = json.jobQueue || [];
     this.historyDocRepo = json.historyDocRepo || [];
+    
   }
 
   // Thêm tác vụ
@@ -51,5 +54,4 @@ class Printer {
   }
 }
 
-// Export default
 export default Printer;
