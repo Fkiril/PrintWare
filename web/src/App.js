@@ -3,15 +3,18 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 import axios from 'axios';
 
-const test = async (email) => {
-
+const test = async (paramUserId, paramType, file) => {
   try {
-    const res = await axios.get('hcmut-sso/get-user-id-by-email', {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await axios.post('hcmut-sso/upload-picture', formData, {
       headers: {
-        ContentType: 'application/json'
+        ContentType: 'form-data'
       },
       params: {
-        email: email
+        userId: paramUserId,
+        type: paramType
       }
     });
   
@@ -28,9 +31,11 @@ function App() {
       <div>
         <form onSubmit={(e) => {
               e.preventDefault();
-              test(e.target.email.value);
+              test(e.target.userId.value, e.target.type.value, e.target.file.files[0]);
             }}>
-          <input type="text" name="email" placeholder="Email" />
+          <input type="text" name="userId" placeholder="userId" />
+          <input type="text" name="type" placeholder="type" />
+          <input type="file" name="file" />
           <button type="submit">Submit</button>
         </form>
       </div>

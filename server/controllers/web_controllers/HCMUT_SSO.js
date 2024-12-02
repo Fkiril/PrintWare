@@ -5,8 +5,6 @@ import { googleDrive } from '../../services/GoogleSDK.js';
 
 import { Customer, SPSO } from '../../models/User.js';
 import Wallet from '../../models/Wallet.js';
-import { file } from 'googleapis/build/src/apis/file/index.js';
-import { content } from 'googleapis/build/src/apis/content/index.js';
 
 // export async function login(req, res) {
 //     console.log('Received a login request!\n');
@@ -28,17 +26,23 @@ export async function register(paramBody) {
     try {
         paramBody['userRole'] = 'customer';
 
-        const checkUserRecord = await adminAuth.getUserByEmail(paramBody.email);
-        if (checkUserRecord !== undefined) {
-            return { status: 409, body: { message: 'Email already exists.' } };
-        }
+        const checkUserQuery = firestore.collection(process.env.USERS_COLLECTION).where('email', '==', paramBody.email);
+        checkUserQuery.get().then((checkUserSnapshot) => {
+            if (!checkUserSnapshot.empty) {
+                return { status: 409, body: { message: 'Email already exists.' } };
+            }
+        });
 
-        const userRecord = await adminAuth.createUser({
+        const createRequest = {
             email: paramBody.email?? null,
             password: paramBody.password?? null,
-            displayName: paramBody.userName?? null,
-            phoneNumber: paramBody.phoneNum?? null
-        });
+            displayName: paramBody.userName?? null
+        };
+        if (paramBody.phoneNum) {
+            createRequest.phoneNumber = paramBody.phoneNum;
+        }
+
+        const userRecord = await adminAuth.createUser(createRequest);
 
         const user = new Customer();
         user.setInfoFromJSON(paramBody);
@@ -53,7 +57,7 @@ export async function register(paramBody) {
         batch.update(userRef, { userId: userRecord.uid })
 
         // batch.set(walletRef, wallet.convertToJSON());
-        // batch.update(walletRef, { ownerId: userRecord.uid })
+        // batch.update(walletRef, { ownerId: userRecord.uid });
 
         return await batch.commit().then(() => {
             user.userId = userRecord.uid;
@@ -77,17 +81,23 @@ export async function adminRegister(paramBody) {
         boparamBodydparamBodyy['highestAuthority'] = false;
         console.log('Body: ', paramBody);
 
-        const checkUserRecord = await adminAuth.getUserByEmail(paramBody.email);
-        if (checkUserRecord !== undefined) {
-            return { status: 409, body: { message: 'Email already exists.' } };
-        }
+        const checkUserQuery = firestore.collection(process.env.USERS_COLLECTION).where('email', '==', paramBody.email);
+        checkUserQuery.get().then((checkUserSnapshot) => {
+            if (!checkUserSnapshot.empty) {
+                return { status: 409, body: { message: 'Email already exists.' } };
+            }
+        });
 
-        const userRecord = await adminAuth.createUser({
+        const createRequest = {
             email: paramBody.email?? null,
             password: paramBody.password?? null,
-            displayName: paramBody.userName?? null,
-            phoneNumber: paramBody.phoneNum?? null
-        });
+            displayName: paramBody.userName?? null
+        };
+        if (paramBody.phoneNum) {
+            createRequest.phoneNumber = paramBody.phoneNum;
+        }
+
+        const userRecord = await adminAuth.createUser(createRequest);
 
         const admin = new SPSO();
         admin.setInfoFromJSON(paramBody);
@@ -145,7 +155,11 @@ export async function updateProfile(paramUserId, paramBody) {
     try {
         console.log('paramBody: ', paramBody);
 
-        const invalidFields = Object.keys(paramBody).filter(key => !Object.keys(Customer.prototype).includes(key));
+        const CustomerInstance = new Customer();
+        const validFields = Object.keys(CustomerInstance).filter(key => key !== 'constructor');
+        console.log('validFields: ', validFields);
+
+        const invalidFields = Object.keys(paramBody).filter(key => !validFields.includes(key));
         if (invalidFields.length > 0) {
             return { status: 400, body: { message: `The following fields are invalid: ${invalidFields.join(', ')}.` } };
         }
@@ -158,7 +172,7 @@ export async function updateProfile(paramUserId, paramBody) {
 
         const batch = firestore.batch();
 
-        batch.update(userRef, body);
+        batch.update(userRef, paramBody);
 
         return await batch.commit().then(() => {
             return { status: 200, body: { message: 'User updated successfully.' } };
@@ -286,7 +300,7 @@ export async function uploadPicture(paramFile, paramUserId, paramType) {
     };
 
     try {
-        const response = googleDrive.files.create({
+        const response = await googleDrive.files.create({
             resource: fileMetadata,
             media: {
                 body: fileStream,
@@ -402,7 +416,15 @@ export async function getDocIdList(paramUserId) {
         }
         
         const docIdList = userSnapshot.data().documents;
-        return { status: 200, body: { message: 'Document ID list retrieved successfully.', data: docIdList } };
+
+        var returnMessage;
+        if (docIdList === undefined || docIdList.length === 0) {
+            returnMessage = 'There are no documents found.';
+        }
+        else {
+            returnMessage = 'Document ID list retrieved successfully.';
+        }
+        return { status: 200, body: { message: returnMessage, data: docIdList } };
     }
     catch (error) {
         console.log('Error getting docIdList: ', error);

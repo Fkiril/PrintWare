@@ -10,7 +10,7 @@ const upload = multer({ storage: storage });
 // Input:
     // form-data: email, password, userName
 // Output: user information as JSON
-router.post('/admin-register', upload.single(''), async (res, req) => {
+router.post('/admin-register', upload.single(''), async (req, res) => {
     console.log('Received a admin register request!');
     const body = req.body;
 
@@ -27,7 +27,7 @@ router.post('/admin-register', upload.single(''), async (res, req) => {
 // Input:
     // form-data: email, password, name
 // Output: user information as JSON
-router.post('/register', upload.single(''), async (res, req) => {
+router.post('/register', upload.single(''), async (req, res) => {
     console.log('Received a register request!');
     const body = req.body;
 
@@ -43,7 +43,7 @@ router.post('/register', upload.single(''), async (res, req) => {
 
 // Input:
     // query: userId
-router.delete('/delete-account', async (res, req) => {
+router.delete('/delete-account', async (req, res) => {
     console.log('Received a delete account request!');
 
     const query = req.query;
@@ -52,7 +52,7 @@ router.delete('/delete-account', async (res, req) => {
         return;
     }
 
-    const result = await deleteAccount(userId);
+    const result = await deleteAccount(query.userId);
 
     res.status(result.status).json(result.body);
 })
@@ -60,7 +60,7 @@ router.delete('/delete-account', async (res, req) => {
 // Input:
     // form-data: updateInfo
     // query: userId
-router.patch('/update-profile', upload.single(''), async (res, req) => {
+router.patch('/update-profile', upload.single(''), async (req, res) => {
     console.log('Received a update profile request!');
 
     const body = req.body;
@@ -78,7 +78,7 @@ router.patch('/update-profile', upload.single(''), async (res, req) => {
 // Input:
     // query: userId
 // Output: user information as JSON
-router.get('/get-user-profile-by-id', async (res, req) => {
+router.get('/get-user-profile-by-id', async (req, res) => {
     console.log('Received a get user profile by id request!');
 
     const query = req.query;
@@ -95,7 +95,7 @@ router.get('/get-user-profile-by-id', async (res, req) => {
 // Input:
     // query: email
 // Output: user information as JSON
-router.get('/get-user-profile-by-email', async (res, req) => {
+router.get('/get-user-profile-by-email', async (req, res) => {
     console.log('Received a get user profile by email request!');
 
     const query = req.query;
@@ -112,7 +112,7 @@ router.get('/get-user-profile-by-email', async (res, req) => {
 // Input:
     // query: email
 // Output: userId
-router.get('/get-user-id-by-email', async (res, req) => {
+router.get('/get-user-id-by-email', async (req, res) => {
     console.log('Received a get user id by email request!');
 
     const query = req.query;
@@ -131,11 +131,12 @@ router.get('/get-user-id-by-email', async (res, req) => {
     // query: userId
     // query: type (avatar or coverPhoto)
 // Output: fileId
-router.post('/update-picture', upload.single('file'), async (res, req) => {
+router.post('/upload-picture', upload.single('file'), async (req, res) => {
     console.log('Received a update picture request!');
 
     const file = req.file;
     const query = req.query;
+    console.log(file, query);
     if (!file || !query || !query.userId || !query.type) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
@@ -150,7 +151,7 @@ router.post('/update-picture', upload.single('file'), async (res, req) => {
     // query: userId
     // query: type (avatar or coverPhoto)
 // Output: file as a blod object
-router.get('/get-picture', async (res, req) => {
+router.get('/get-picture', async (req, res) => {
     console.log('Received a get picture request!');
 
     const query = req.query;
@@ -186,7 +187,7 @@ router.get('/get-picture', async (res, req) => {
 // Input:
     // query: email
 // Output: reset password link
-router.get('/get-reset-password-link', async (res, req) => {
+router.get('/get-reset-password-link', async (req, res) => {
     console.log('Received a get reset password link request!');
 
     const query = req.query;
@@ -203,7 +204,7 @@ router.get('/get-reset-password-link', async (res, req) => {
 // Input:
     // query: email
 // Output: email verification link
-router.get('/get-email-verification-link', async (res, req) => {
+router.get('/get-email-verification-link', async (req, res) => {
     console.log('Received a get email verification link request!');
 
     const query = req.query;
@@ -221,7 +222,7 @@ router.get('/get-email-verification-link', async (res, req) => {
 // Input:
     // query: userId
 // Output: docIdList
-router.get('/get-doc-id-list', async (res, req) => {
+router.get('/get-doc-id-list', async (req, res) => {
     console.log('Received a get doc id list request!');
 
     const query = req.query;
