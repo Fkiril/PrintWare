@@ -1,23 +1,3 @@
-// const { google } = require("googleapis");
-
-// const document = require("../models/document");
-// const PrintTask = require("../models/printTask"); 
-// const Printer = require("../models/printer");
-
-// const db = require("../../util/firebase");
-// const fs = require("fs");
-// const path = require("path");
-
-// const auth = new google.auth.GoogleAuth({
-//   keyFile: path.join(__dirname, "../../../google-api-key.json"),
-//   scopes: ["https://www.googleapis.com/auth/googleDrive.file"],
-// });
-
-// const drive = google.googleDrive({ version: "v3", auth });
-
-// const { v4: uuidv4 } = require("uuid");
-
-import fs from "fs";
 import path from "path";
 
 import { firestore } from "../../services/FirebaseAdminSDK.js";
@@ -28,40 +8,66 @@ import PrintTask from "../../models/PrintTask.js";
 import Printer from "../../models/Printer.js";
 
 import { v4 as uuidv4 } from "uuid";
+import { Readable } from "stream";
 
-export const uploadDoc = async (req, res) => {
+function bufferToStream(buffer) {
+  const readable = new Readable();
+  readable.push(buffer);
+  readable.push(null);
+  return readable;
+}
+
+function checkFile(file) {
+  const allowedExtensions = [".doc", ".docx", ".pdf"];
+  const fileExtension = path.extname(file.originalname).toLowerCase();
+
+  if (!allowedExtensions.includes(fileExtension)) {
+    throw new Error("File type not supported for uploading.");
+  }
+  return true;
+}
+
+export const uploadDoc = async (file, ownerId, description, numPages) => {
   try {
-    const file = req.file;
+    if (!file || !ownerId || !description) {
+      throw new Error("Chưa đủ thông tin để tải tài liệu lên để in.");
+    }
+
+    if (!checkFile(file)) {
+      throw new Error("File không phù hợp định dạng tệp để in");
+    }
+    const fileStream = bufferToStream(file.buffer);
 
     const response = await googleDrive.files.create({
       requestBody: {
         name: file.originalname,
         mimeType: file.mimetype,
+        parents: [process.env.DOCUMENTs_FOLDER_ID],
       },
       media: {
         mimeType: file.mimetype,
-        body: fs.createReadStream(file.path),
+        body: fileStream,
       },
     });
 
-    await googleDrive.permissions.create({
+    await drive.permissions.create({
       fileId: response.data.id,
       requestBody: { role: "reader", type: "anyone" },
     });
 
-    const fileLink = `https://googleDrive.google.com/uc?id=${response.data.id}`;
+    const fileLink = `https://drive.google.com/uc?id=${response.data.id}`;
 
     const date = new Date();
     const time = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-    const newDoc = new Document(
+    const newDoc = new document(
       response.data.id,
-      req.body.ownerId,
+      ownerId,
       file.originalname,
-      req.body.description || "",
+      description || "",
       file.mimetype,
       file.size,
-      req.body.numPages || "",
-      `${date.getDate()}/${date.getMonth()}/${date.getFullYear()} ${time}`,
+      numPages || "",
+      `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${time}`,
       fileLink
     );
 
@@ -70,121 +76,115 @@ export const uploadDoc = async (req, res) => {
       .doc(newDoc.docId)
       .set(newDoc.convertToJson());
 
-    fs.unlinkSync(file.path);
-    res
-      .status(201)
-      .json({ message: "Document uploaded", data: newDoc.convertToJson() });
     return true;
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error in uploadDoc:", error);
+    throw new Error(error.message);
   }
 };
 
-export const deleteDoc = async (req, res) => {
+export const deleteDoc = async (documentId) => {
   try {
-    const id = req.body.docId;
+    if (!documentId) {
+      throw new Error("Chưa chọn tài liệu để xóa");
+    }
 
-    await googleDrive.files.delete({ fileId: id });
+    const response = await drive.files.list({
+      q: `'${process.env.DOCUMENTs_FOLDER_ID}' in parents`,
+      fields: "files(id, name)",
+    });
 
-    await firestore.collection(process.env.DOCUMENTS_COLLECTION).doc(id).delete();
+    const files = response.data.files;
 
-    res.status(200).json({ message: "Document deleted" });
+    if (!files || files.length === 0) {
+      throw new Error("Thư mục không chứa tài liệu nào");
+    }
+
+    const fileToDelete = files.find((file) => file.id === documentId);
+    if (!fileToDelete) {
+      throw new Error("Tài liệu không tồn tại để xóa");
+    }
+
+    await drive.files.delete({ fileId: documentId });
+
+    await db
+      .collection(process.env.DOCUMENTS_COLLECTION)
+      .doc(documentId)
+      .delete();
+
+    return true;
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Lỗi trong việc xóa tài liệu:", error.message);
+    throw new Error(`Xóa tài liệu thất bại: ${error.message}`);
   }
 };
 
-export const takeDocList = async (req, res) => {
+export const takeDocList = async (ownerId) => {
   try {
-    const { ownerId } = req.query;
+    if (!ownerId) {
+      throw new Error("Chưa có thông tin gì về MSSV");
+    }
     const snapshot = await firestore
       .collection(process.env.DOCUMENTS_COLLECTION)
       .where("ownerId", "==", ownerId)
       .get();
-    const documents = snapshot.docs.map((doc) => doc.data());
-    res.status(200).json(documents);
+
+    if (snapshot.size === 0) return [];
+    else if (snapshot.size === 1) return snapshot.docs[0];
+    else {
+      const documents = snapshot.docs.map((doc) => doc.data());
+      return documents;
+    }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Lấy thông tin thất bại:", error.message);
+    throw new Error(`Lấy tài liệu thất bại: ${error.message}`);
   }
 };
 
-export const getDoc = async (req, res) => {
+export const getDoc = async (documentId) => {
   try {
-    const { docId } = req.query;
-    const docRef = firestore.collection(process.env.DOCUMENTS_COLLECTION).doc(docId);
+    if (!documentId) {
+      throw new Error("Chưa có thông tin gì về mã số tài liệu");
+    }
+    const docRef = firestore
+      .collection(process.env.DOCUMENTS_COLLECTION)
+      .doc(documentId);
     const docSnapshot = await docRef.get();
-
+    if (!docSnapshot.exists) {
+      throw new Error("Không tồn tại tài liệu với mã số đã cung cấp.");
+    }
     const data = docSnapshot.data();
-    if (!data || Object.keys(data).length === 0) {
-      return res.status(404).json({ error: "Document has no data" });
-    }
 
-    res.status(200).json(data);
+    return data;
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    throw new Error(`Lấy tài liệu thất bại: ${error.message}`);
   }
 };
 
-export const checkFile = async (req, res) => {
+export const createPrintTask = async (documentId, roomId) => {
   try {
-    const { fileId } = req.body;
-
-    // Lấy thông tin tệp từ Google googleDrive
-    const response = await googleDrive.files.get({
-      fileId,
-      fields: "id, name, mimeType",
-    });
-
-    const fileName = response.data.name;
-    const mimeType = response.data.mimeType;
-
-    // Kiểm tra đuôi tệp (extension)
-    const allowedExtensions = [".doc", ".docx", ".pdf"];
-    const fileExtension = path.extname(fileName).toLowerCase();
-
-    if (!allowedExtensions.includes(fileExtension)) {
-      return res.status(400).json({
-        exists: true,
-        fileId: response.data.id,
-        fileName: fileName,
-        message: `File type ${fileExtension} is not supported for printing.`,
-      });
+    if (!documentId || !roomId) {
+      throw new Error("Chưa đủ thông tin để tạo task in tài liệu");
     }
 
-    // Trả về thông tin nếu tệp hợp lệ
-    res.status(200).json({
-      exists: true,
-      fileId: response.data.id,
-      fileName: fileName,
-      message: `File is valid and ready for processing.`,
-    });
-  } catch (error) {
-    if (error.response && error.response.status === 404) {
-      res.status(404).json({ exists: false, message: "File not found" });
-    } else {
-      res.status(500).json({ error: error.message });
-    }
-  }
-};
-
-export const createPrintTask = async (req, res) => {
-  try {
-    const { documentId, roomId } = req.body;
-    //Lấy sau khi nhấn để in, documentId lấy từ doc chuẩn bị in, printerId lấy từ tòa đã chọn
-    const docRef = firestore.collection(process.env.DOCUMENTS_COLLECTION).doc(documentId);
+    const docRef = firestore
+      .collection(process.env.DOCUMENTS_COLLECTION)
+      .doc(documentId);
     const docSnapshot = await docRef.get();
 
     if (!docSnapshot.exists) {
-      return res.status(404).json({ error: "Document not found" });
+      throw new Error("Không tìm thấy tài liệu để in");
     }
 
     const document = docSnapshot.data();
 
-    const printerRef = firestore.collection(process.env.PRINTERS_COLLECTION).where("RoomId", "==", roomId);
+    const printerRef = firestore
+      .collection(process.env.PRINTERS_COLLECTION)
+      .where("roomId", "==", roomId);
     const printerSnapshot = await printerRef.get();
 
     if (!printerSnapshot.exists) {
-      return res.status(404).json({ error: "Printer not found" });
+      throw new Error("Không tìm thấy máy in cần in");
     }
 
     //chỉ có 1 máy in trong 1 phòng
@@ -195,6 +195,7 @@ export const createPrintTask = async (req, res) => {
 
     const date = new Date();
     const time = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+
     const printTask = new PrintTask(
       printTaskId,
       documentId,
@@ -209,17 +210,16 @@ export const createPrintTask = async (req, res) => {
       .doc(printTaskId)
       .set(printTask.convertToJson());
 
-    const newPrinter = new Printer();
-    newPrinter.setInfoFromJson(printerData); // Chuyển dữ liệu máy in thành đối tượng Printer
-    newPrinter.addTask(printTaskId); // Thêm taskId vào jobQueue của máy in
+    const newPrinter = new Printer(printerId, roomId, {}, {}, [], []);
+    newPrinter.addTask(printTaskId);
 
     await firestore
       .collection(process.env.PRINTERS_COLLECTION)
       .doc(printerSnapshot.docs[0].id)
       .set(newPrinter.convertToJson());
 
-    res.status(200).json({ success: true, printTaskId });
+    return true;
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    throw new Error(`Lấy tài liệu thất bại: ${error.message}`);
   }
 };
