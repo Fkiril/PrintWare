@@ -356,7 +356,7 @@ function App() {
           <Route
             path="/profile"
             element={
-              isLoggedIn ?
+              // isLoggedIn ?
                 <SidebarLayout
                   isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
@@ -364,7 +364,7 @@ function App() {
                 >
                   <Profile />
                 </SidebarLayout>
-                : <Navigate to="/" />
+                // : <Navigate to="/" />
             }
           />
           {/* Admin */}
@@ -384,7 +384,7 @@ function App() {
           /><Route
           path="/manageUser"
           element={
-            isLoggedIn ?
+            // isLoggedIn ?
               <SidebarLayout
                 isSidebarOpen={isSidebarOpen}
                 toggleSidebar={toggleSidebar}
@@ -392,7 +392,7 @@ function App() {
               >
                 <USER />
               </SidebarLayout>
-              : <Navigate to="/" />
+              // : <Navigate to="/" />
           }
         />
          <Route
