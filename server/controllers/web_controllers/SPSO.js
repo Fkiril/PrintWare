@@ -1,276 +1,220 @@
-// const SystemConfig = require('../../models/SystemConfig').default;
-// const SPSO = require('../../models/SPSO');
-// const HistoryLog = require('../../models/HistoryLog').default;
 import { firestore } from '../../services/FirebaseAdminSDK.js';
-
 import SystemConfig from '../../models/SystemConfig.js';
 import SPSO from '../../models/SPSO.js';
-import HistoryLog from '../../models/HistoryLog.js';
 
 const spso = new SPSO();
-    // Trang chào
-    export async function index(req, res) {
-        res.send('Xin chào! Đây là hệ thống quản lý SPSO.');
-    }
-    export async function updatePageUnitPrice(req, res) {
-        const { configId, pageUnitPrice } = req.body;
-    
+
+// Trang chào
+export const index = async () => {
+    return 'Xin chào! Đây là hệ thống quản lý SPSO.';
+};
+
+// Cập nhật giá tiền trên mỗi trang
+export const updatePageUnitPrice = async ({ configId, pageUnitPrice }) => {
+    try {
+        // Kiểm tra thông tin đầu vào
         if (!configId || !pageUnitPrice) {
-            return res.status(400).json({ message: 'Thiếu thông tin configId hoặc pageUnitPrice' });
+            throw new Error('Thiếu thông tin configId hoặc pageUnitPrice');
         }
-    
-        try {
-            // Lấy dữ liệu hiện tại từ Firestore
-            const systemConfig = await SystemConfig.getConfigById(configId, firestore);
-    
-            // Cập nhật giá trị pageUnitPrice
-            const success = await systemConfig.updatePageUnitPrice(pageUnitPrice, firestore, configId);
-    
-            if (success) {
-                return res.status(200).json({ message: 'Cập nhật pageUnitPrice thành công' });
-            } else {
-                return res.status(500).json({ message: 'Cập nhật pageUnitPrice thất bại' });
-            }
-        } catch (error) {
-            console.error('Lỗi khi cập nhật pageUnitPrice:', error.message);
-            return res.status(500).json({
-                message: 'Đã xảy ra lỗi khi cập nhật pageUnitPrice',
-                error: error.message,
-            });
+
+        // Lấy cấu hình từ Firestore
+        // const ref = firestore.collection('SystemConfig').doc(configId);
+        // const doc = await ref.get();
+        const ref = firestore.collection(process.env.SYSTEM_CONFIGS_COLLECTION).doc(configId);
+        const doc = await ref.get();
+
+    //     if (!doc.exists) {
+    //         throw new Error(`Không tìm thấy cấu hình với id: ${configId}`);
+    //     }
+
+    //     await ref.update({ pageSizes });
+    //     return 'Cập nhật pageSizes thành công';
+    // } catch (error) {
+    //     console.error('Lỗi khi cập nhật pageSizes:', error.message);
+    //     throw new Error(`Không thể cập nhật pageSizes: ${error.message}`);
+    // }
+        if (!doc.exists) {
+            throw new Error(`Không tìm thấy cấu hình với ID: ${configId}. Hãy kiểm tra lại ID hoặc tạo cấu hình mới.`);
         }
+
+        // Cập nhật giá trị pageUnitPrice
+        await ref.update({ pageUnitPrice });
+
+        // // Cập nhật lại giá trị trong instance của config
+        // const updatedConfig = doc.data();
+        // updatedConfig.pageUnitPrice = pageUnitPrice;
+
+        
+        return 'Cập nhật pageUnitPrice thành công';
+    } catch (error) {
+        console.error('Lỗi khi cập nhật pageUnitPrice:', error.message);
+        throw new Error(`Không thể cập nhật pageUnitPrice: ${error.message}`);
     }
-    
-    export async function updatePageSizes(req, res) {
-        const { configId, pageSizes } = req.body;
-    
+};
+
+// Cập nhật kích thước trang
+export const updatePageSizes = async ({ configId, pageSizes }) => {
+    try {
         if (!configId || !Array.isArray(pageSizes)) {
-            return res.status(400).json({ message: 'Thiếu thông tin configId hoặc pageSizes không hợp lệ' });
+            throw new Error('Thiếu thông tin configId hoặc pageSizes không hợp lệ');
         }
-    
-        try {
-            // Lấy tài liệu Firestore tương ứng
-            const ref = firestore.collection(process.env.SYSTEM_CONFIGS_COLLECTION).doc(configId);
-    
-            // Kiểm tra nếu tài liệu tồn tại
-            const doc = await ref.get();
-            if (!doc.exists) {
-                return res.status(404).json({ message: `Không tìm thấy cấu hình với id: ${configId}` });
-            }
-    
-            // Ghi đè giá trị mới của pageSizes
-            await ref.update({
-                pageSizes: pageSizes,
-            });
-    
-            return res.status(200).json({ message: 'Cập nhật pageSizes thành công' });
-        } catch (error) {
-            console.error('Lỗi khi cập nhật pageSizes:', error.message);
-            return res.status(500).json({
-                message: 'Đã xảy ra lỗi khi cập nhật pageSizes',
-                error: error.message,
-            });
+
+        const ref = firestore.collection(process.env.SYSTEM_CONFIGS_COLLECTION).doc(configId);
+        const doc = await ref.get();
+
+        if (!doc.exists) {
+            throw new Error(`Không tìm thấy cấu hình với id: ${configId}`);
         }
+
+        await ref.update({ pageSizes });
+        return 'Cập nhật pageSizes thành công';
+    } catch (error) {
+        console.error('Lỗi khi cập nhật pageSizes:', error.message);
+        throw new Error(`Không thể cập nhật pageSizes: ${error.message}`);
     }
-    
-    export async function updateDefaultPrintConfig(req, res) {
-        const { configId, defaultPrintConfig } = req.body;
-    
+};
+
+// Cập nhật cấu hình in mặc định
+export const updateDefaultPrintConfig = async ({ configId, defaultPrintConfig }) => {
+    try {
         if (!configId || typeof defaultPrintConfig !== 'object') {
-            return res.status(400).json({ message: 'Thiếu thông tin configId hoặc defaultPrintConfig không hợp lệ' });
+            throw new Error('Thiếu thông tin configId hoặc defaultPrintConfig không hợp lệ');
         }
-    
-        try {
-            // Lấy tài liệu Firestore tương ứng
-            const ref = firestore.collection(process.env.SYSTEM_CONFIGS_COLLECTION).doc(configId);
-    
-            // Kiểm tra nếu tài liệu tồn tại
-            const doc = await ref.get();
-            if (!doc.exists) {
-                return res.status(404).json({ message: `Không tìm thấy cấu hình với id: ${configId}` });
-            }
-    
-            // Ghi đè giá trị mới của defaultPrintConfig
-            await ref.update({
-                defaultPrintConfig: defaultPrintConfig,
-            });
-    
-            return res.status(200).json({ message: 'Cập nhật defaultPrintConfig thành công' });
-        } catch (error) {
-            console.error('Lỗi khi cập nhật defaultPrintConfig:', error.message);
-            return res.status(500).json({
-                message: 'Đã xảy ra lỗi khi cập nhật defaultPrintConfig',
-                error: error.message,
-            });
+
+        const ref = firestore.collection(process.env.SYSTEM_CONFIGS_COLLECTION).doc(configId);
+        const doc = await ref.get();
+
+        if (!doc.exists) {
+            throw new Error(`Không tìm thấy cấu hình với id: ${configId}`);
         }
+
+        await ref.update({ defaultPrintConfig });
+        return 'Cập nhật defaultPrintConfig thành công';
+    } catch (error) {
+        console.error('Lỗi khi cập nhật defaultPrintConfig:', error.message);
+        throw new Error(`Không thể cập nhật defaultPrintConfig: ${error.message}`);
     }
-    
-    export async function updateNextLogDate(req, res) {
-        const { configId, nextLogDate } = req.body;
-    
+};
+
+// Cập nhật ngày log tiếp theo
+export const updateNextLogDate = async ({ configId, nextLogDate }) => {
+    try {
         if (!configId || !nextLogDate) {
-            return res.status(400).json({ message: 'Thiếu thông tin configId hoặc nextLogDate' });
+            throw new Error('Thiếu thông tin configId hoặc nextLogDate');
         }
-    
-        try {
-            const parsedDate = new Date(nextLogDate);
-            if (isNaN(parsedDate.getTime())) {
-                return res.status(400).json({ message: 'nextLogDate không hợp lệ' });
+
+        const parsedDate = new Date(nextLogDate);
+        if (isNaN(parsedDate.getTime())) {
+            throw new Error('nextLogDate không hợp lệ');
+        }
+
+        const ref = firestore.collection(process.env.SYSTEM_CONFIGS_COLLECTION).doc(configId);
+        const doc = await ref.get();
+
+        if (!doc.exists) {
+            throw new Error(`Không tìm thấy cấu hình với id: ${configId}`);
+        }
+
+        await ref.update({ nextLogDate: parsedDate });
+        return 'Cập nhật nextLogDate thành công';
+    } catch (error) {
+        console.error('Lỗi khi cập nhật nextLogDate:', error.message);
+        throw new Error(`Không thể cập nhật nextLogDate: ${error.message}`);
+    }
+};
+
+// Lấy thông tin máy in
+export const getPrinter = async (printerId) => {
+    try {
+        const printer = await spso.getPrinter(printerId);
+        if (!printer) {
+            throw new Error(`Không tìm thấy máy in với id: ${printerId}`);
+        }
+        return printer;
+    } catch (error) {
+        console.error('Lỗi khi lấy thông tin máy in:', error.message);
+        throw new Error(`Không thể lấy thông tin máy in: ${error.message}`);
+    }
+};
+
+
+// Thêm máy in mới
+export const addPrinter = async (printerData) => {
+    try {
+        return await spso.addPrinter(printerData);
+    } catch (error) {
+        console.error('Lỗi khi thêm máy in:', error.message);
+        throw new Error(`Không thể thêm máy in: ${error.message}`);
+    }
+};
+
+
+
+// Xóa máy in
+export const removePrinter = async (printerId) => {
+    try {
+        const response = await spso.removePrinter(printerId);
+        return response;
+    } catch (error) {
+        console.error('Lỗi khi xóa máy in:', error.message);
+        throw new Error(`Không thể xóa máy in: ${error.message}`);
+    }
+};
+
+// Lấy danh sách máy in
+export const getPrinterList = async () => {
+    try {
+        return await spso.getPrinterList();
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách máy in:', error.message);
+        throw new Error(`Không thể lấy danh sách máy in: ${error.message}`);
+    }
+};
+
+// Lấy danh sách phòng
+export const getRoomList = async () => {
+    try {
+        return await spso.getRoomList();
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách phòng:', error.message);
+        throw new Error(`Không thể lấy danh sách phòng: ${error.message}`);
+    }
+};
+
+// Lấy cấu hình hệ thống
+export const getSystemConfig = async () => {
+    try {
+        const snapshot = await firestore.collection(process.env.SYSTEM_CONFIGS_COLLECTION).get();
+        return snapshot.docs.map((doc) => {
+            const data = doc.data();
+            if (data.nextLogDate && data.nextLogDate._seconds) {
+                data.nextLogDate = new Date(data.nextLogDate._seconds * 1000).toISOString();
             }
-    
-            // Lấy tài liệu Firestore tương ứng
-            const ref = firestore.collection(process.env.SYSTEM_CONFIGS_COLLECTION).doc(configId);
-    
-            // Kiểm tra nếu tài liệu tồn tại
-            const doc = await ref.get();
-            if (!doc.exists) {
-                return res.status(404).json({ message: `Không tìm thấy cấu hình với id: ${configId}` });
-            }
-    
-            // Ghi đè giá trị mới của nextLogDate
-            await ref.update({
-                nextLogDate: parsedDate,
-            });
-    
-            return res.status(200).json({ message: 'Cập nhật nextLogDate thành công' });
-        } catch (error) {
-            console.error('Lỗi khi cập nhật nextLogDate:', error.message);
-            return res.status(500).json({
-                message: 'Đã xảy ra lỗi khi cập nhật nextLogDate',
-                error: error.message,
-            });
-        }
+            return { id: doc.id, ...data };
+        });
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách cấu hình:', error.message);
+        throw new Error(`Không thể lấy danh sách cấu hình: ${error.message}`);
     }
+};
 
-    // Lấy thông tin máy in
-    export async function getPrinter(req, res) {
-        try {
-            await spso.getPrinter(req, res);
-        } catch (error) {
-            console.error('Lỗi khi lấy thông tin máy in:', error);
-            res.status(500).json({ message: 'Đã xảy ra lỗi khi truy xuất máy in', error: error.message });
+// Xóa lịch sử
+export const resetHistory = async () => {
+    try {
+        const historyLogCollection = firestore.collection(process.env.HISTORY_LOGS_COLLECTION);
+        const snapshot = await historyLogCollection.get();
+
+        if (snapshot.empty) {
+            return 'Không có lịch sử để xóa.';
         }
+
+        const batch = firestore.batch();
+        snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
+
+        return 'Lịch sử đã được xóa thành công.';
+    } catch (error) {
+        console.error('Lỗi khi xóa lịch sử:', error.message);
+        throw new Error(`Không thể xóa lịch sử: ${error.message}`);
     }
-
-    // Thêm máy in mới
-    export async function addPrinter(req, res) {
-        try {
-            await spso.addPrinter(req, res);
-        } catch (error) {
-            console.error('Lỗi khi thêm máy in:', error);
-            res.status(500).json({ message: 'Đã xảy ra lỗi khi thêm máy in', error: error.message });
-        }
-    }
-
-    // Xóa máy in
-    export async function removePrinter(req, res) {
-        try {
-            await spso.removePrinter(req, res);
-        } catch (error) {
-            console.error('Lỗi khi xóa máy in:', error);
-            res.status(500).json({ message: 'Đã xảy ra lỗi khi xóa máy in', error: error.message });
-        }
-    }
-
-    // Lấy danh sách máy in
-    export async function getPrinterList(req, res) {
-        try {
-            const printers = await spso.getPrinterList();
-            res.json(printers);
-        } catch (error) {
-            console.error('Lỗi khi lấy danh sách máy in:', error);
-            res.status(500).json({ message: 'Đã xảy ra lỗi khi lấy danh sách máy in', error: error.message });
-        }
-    }
-
-    // Lấy danh sách phòng
-    export async function getRoomList(req, res) {
-        try {
-            const rooms = await spso.getRoomList();
-            res.json(rooms);
-        } catch (error) {
-            console.error('Lỗi khi lấy danh sách phòng:', error);
-            res.status(500).json({ message: 'Đã xảy ra lỗi khi lấy danh sách phòng', error: error.message });
-        }
-    }
-
-    // Ghi lịch sử
-    export async function logHistory(req, res) {
-        const { entry } = req.body;
-        try {
-            const success = await spso.logHistory(entry);
-            res.json({ success });
-        } catch (error) {
-            console.error('Lỗi khi ghi lịch sử:', error);
-            res.status(500).json({ message: 'Đã xảy ra lỗi khi ghi lịch sử', error: error.message });
-        }
-    }
-
-    // Lấy lịch sử
-    export async function getHistoryLog(req, res) {
-        try {
-            const history = await spso.fetchHistory();
-            res.json(history);
-        } catch (error) {
-            console.error('Lỗi khi lấy lịch sử:', error);
-            res.status(500).json({ message: 'Đã xảy ra lỗi khi lấy lịch sử', error: error.message });
-        }
-    }
-    //xóa lịch sử
-    export async function resetHistory(req, res) {
-        try {
-            const historyLogCollection = firestore.collection(process.env.HISTORY_LOGS_COLLECTION);
-
-            // Lấy tất cả các document trong collection
-            const snapshot = await historyLogCollection.get();
-
-            // Nếu không có dữ liệu, trả về thông báo
-            if (snapshot.empty) {
-                return res.status(200).json({ message: 'Không có lịch sử để xóa.' });
-            }
-
-            // Xóa từng document trong collection
-            const batch = firestore.batch();
-            snapshot.docs.forEach((doc) => {
-                batch.delete(doc.ref);
-            });
-
-            // Thực hiện xóa batch
-            await batch.commit();
-
-            res.status(200).json({ message: 'Lịch sử trong HistoryLog đã được xóa thành công.' });
-        } catch (error) {
-            console.error('Lỗi khi reset lịch sử:', error.message);
-            res.status(500).json({
-                message: 'Lỗi khi xóa lịch sử trong HistoryLog',
-                error: error.message,
-            });
-        }
-    }
-    //Lấy cấu hình hệ thống
-    export async function getSystemConfig(req, res) {
-        try {
-            const snapshot = await firestore.collection(process.env.SYSTEM_CONFIGS_COLLECTION).get();
-            const configs = snapshot.docs.map((doc) => {
-                const data = doc.data();
-    
-                // Chuyển đổi nextLogDate từ Firestore timestamp sang ISO string
-                if (data.nextLogDate && data.nextLogDate._seconds) {
-                    data.nextLogDate = new Date(data.nextLogDate._seconds * 1000).toISOString();
-                }
-    
-                return {
-                    id: doc.id,
-                    ...data,
-                };
-            });
-    
-            res.status(200).json(configs);
-        } catch (error) {
-            console.error('Lỗi khi lấy danh sách cấu hình:', error.message);
-            res.status(500).json({
-                message: 'Không thể lấy danh sách cấu hình',
-                error: error.message,
-            });
-        }
-    }
-    
+};
