@@ -1,50 +1,31 @@
-class Wallet {
-    constructor(walletId, ownerId, budget = 0, availablePages = 0) {
+export default class Wallet {
+    constructor
+    (walletId, ownerId, availablePages, createAt, updateAt, lastSemesterUpdate) 
+    {
         this.walletId = walletId;
         this.ownerId = ownerId;
-        this.budget = budget;
         this.availablePages = availablePages;
-}
+        this.createAt = createAt;
+        this.updateAt = updateAt;
+        this.lastSemesterUpdate = lastSemesterUpdate;
+    }
     convertToJson() {
         return {
             walletId: this.walletId,
             ownerId: this.ownerId,
-            budget: this.budget,
-            availablePages: this.availablePages
+            availablePages: this.availablePages,
+            createAt: this.createAt,    
+            updateAt: this.updateAt,
+            lastSemesterUpdate: this.lastSemesterUpdate
         };
     }
 
     setInfoFromJson(json) {
         this.walletId = json.walletId;
         this.ownerId = json.ownerId;
-        this.budget = json.budget;
         this.availablePages = json.availablePages;
+        this.createAt = json.createAt;
+        this.updateAt = json.updateAt;
+        this.lastSemesterUpdate = json.lastSemesterUpdate;
     }
-
-    deposit(amount) {
-        if (amount <= 0)
-            throw new Error('Invalid amount');
-        this.budget += amount;
-    }
-
-    deduct(amount){
-        if (amount > this.budget)
-            throw new Error('Insufficient balance');
-        this.budget -= amount;
-    }
-
-    addPages(pageNum){
-        if (pageNum < 0)
-            throw new Error('Invalid page number');
-        this.availablePages += pageNum;
-    }
-
-    usePages(pageNum){
-        if (pageNum > this.availablePages)
-            throw new Error('Not enough pages available');
-        this.availablePages -= pageNum;
-    }
-
 }
-
-export default Wallet;
