@@ -8,12 +8,11 @@ import SPSO from '../../models/SPSO.js';
 import HistoryLog from '../../models/HistoryLog.js';
 
 const spso = new SPSO();
-class SPSOController {
     // Trang chào
-    index(req, res) {
+    export async function index(req, res) {
         res.send('Xin chào! Đây là hệ thống quản lý SPSO.');
     }
-    async updatePageUnitPrice(req, res) {
+    export async function updatePageUnitPrice(req, res) {
         const { configId, pageUnitPrice } = req.body;
     
         if (!configId || !pageUnitPrice) {
@@ -41,7 +40,7 @@ class SPSOController {
         }
     }
     
-    async updatePageSizes(req, res) {
+    export async function updatePageSizes(req, res) {
         const { configId, pageSizes } = req.body;
     
         if (!configId || !Array.isArray(pageSizes)) {
@@ -73,7 +72,7 @@ class SPSOController {
         }
     }
     
-    async updateDefaultPrintConfig(req, res) {
+    export async function updateDefaultPrintConfig(req, res) {
         const { configId, defaultPrintConfig } = req.body;
     
         if (!configId || typeof defaultPrintConfig !== 'object') {
@@ -105,7 +104,7 @@ class SPSOController {
         }
     }
     
-    async updateNextLogDate(req, res) {
+    export async function updateNextLogDate(req, res) {
         const { configId, nextLogDate } = req.body;
     
         if (!configId || !nextLogDate) {
@@ -143,7 +142,7 @@ class SPSOController {
     }
 
     // Lấy thông tin máy in
-    async getPrinter(req, res) {
+    export async function getPrinter(req, res) {
         try {
             await spso.getPrinter(req, res);
         } catch (error) {
@@ -153,7 +152,7 @@ class SPSOController {
     }
 
     // Thêm máy in mới
-    async addPrinter(req, res) {
+    export async function addPrinter(req, res) {
         try {
             await spso.addPrinter(req, res);
         } catch (error) {
@@ -163,7 +162,7 @@ class SPSOController {
     }
 
     // Xóa máy in
-    async removePrinter(req, res) {
+    export async function removePrinter(req, res) {
         try {
             await spso.removePrinter(req, res);
         } catch (error) {
@@ -173,7 +172,7 @@ class SPSOController {
     }
 
     // Lấy danh sách máy in
-    async getPrinterList(req, res) {
+    export async function getPrinterList(req, res) {
         try {
             const printers = await spso.getPrinterList();
             res.json(printers);
@@ -184,7 +183,7 @@ class SPSOController {
     }
 
     // Lấy danh sách phòng
-    async getRoomList(req, res) {
+    export async function getRoomList(req, res) {
         try {
             const rooms = await spso.getRoomList();
             res.json(rooms);
@@ -195,7 +194,7 @@ class SPSOController {
     }
 
     // Ghi lịch sử
-    async logHistory(req, res) {
+    export async function logHistory(req, res) {
         const { entry } = req.body;
         try {
             const success = await spso.logHistory(entry);
@@ -207,7 +206,7 @@ class SPSOController {
     }
 
     // Lấy lịch sử
-    async getHistoryLog(req, res) {
+    export async function getHistoryLog(req, res) {
         try {
             const history = await spso.fetchHistory();
             res.json(history);
@@ -217,7 +216,7 @@ class SPSOController {
         }
     }
     //xóa lịch sử
-    async resetHistory(req, res) {
+    export async function resetHistory(req, res) {
         try {
             const historyLogCollection = firestore.collection(process.env.HISTORY_LOGS_COLLECTION);
 
@@ -248,7 +247,7 @@ class SPSOController {
         }
     }
     //Lấy cấu hình hệ thống
-    async getSystemConfig(req, res) {
+    export async function getSystemConfig(req, res) {
         try {
             const snapshot = await firestore.collection(process.env.SYSTEM_CONFIGS_COLLECTION).get();
             const configs = snapshot.docs.map((doc) => {
@@ -275,5 +274,3 @@ class SPSOController {
         }
     }
     
-}
-export const spsoController = new SPSOController();
