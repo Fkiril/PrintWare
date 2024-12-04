@@ -269,7 +269,7 @@ function App() {
             element={
               isLoggedIn ?
                 <SidebarLayout
-                  isSidebarOpen={isSidebarOpen}
+                  //isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
                   onLogout={handleLogout}
                 >
