@@ -48,7 +48,7 @@ const DocumentList = () => {
       <Typography variant="h4" sx={{ marginBottom: "20px" }}>
         Document List
       </Typography>
-      <List sx={{ width: "50%", backgroundColor: "#fff", borderRadius: "6px", padding: "10px" }}>
+      <List sx={{ width: "75%", backgroundColor: "#fff", borderRadius: "6px", padding: "10px" }}>
         {documents.map((doc, index) => (
           <ListItem
             key={index}

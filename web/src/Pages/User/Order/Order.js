@@ -70,6 +70,12 @@ const Order = () => {
               >
                 BK.B6 - 115
               </button>
+              <button
+                className="popup-button"
+                onClick={() => handlePrinterChange("BK.B6 - 115")}
+              >
+                BK.B6 - 116
+              </button>
             </div>
             <button className="close-popup" onClick={togglePopup}>
               Close
@@ -79,52 +85,39 @@ const Order = () => {
       )}
       <div className="order-content">
         <table className="order-table">
-          <thead>
-            <tr>
-              <th>Document List</th>
-              <th>Unit Price</th>
-              <th>Copies</th>
-              <th>Amount Due</th>
+        <thead>
+          <tr>
+            <th>Document List</th>
+            <th>Copies</th> {/* Giữ lại cột Copies */}
+          </tr>
+        </thead>
+        <tbody>
+          {documents.map((doc, index) => (
+            <tr key={index}>
+              <td>{doc.name} ({doc.size})</td>
+              <td>
+                <button onClick={() => updateCopies(index, -1)}>-</button>
+                {doc.copies}
+                <button onClick={() => updateCopies(index, 1)}>+</button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {documents.map((doc, index) => (
-              <tr key={index}>
-                <td>
-                  {doc.name} <span>({doc.size})</span>
-                </td>
-                <td>{doc.price.toLocaleString()} VND</td>
-                <td>
-                  <button
-                    className="adjust-button"
-                    onClick={() => updateCopies(index, -1)}
-                  >
-                    -
-                  </button>
-                  <span className="copies-count">{doc.copies}</span>
-                  <button
-                    className="adjust-button"
-                    onClick={() => updateCopies(index, 1)}
-                  >
-                    +
-                  </button>
-                </td>
-                <td>{(doc.price * doc.copies).toLocaleString()} VND</td>
-              </tr>
-            ))}
-          </tbody>
+          ))}
+        </tbody>
+
         </table>
         <div className="invoice">
-          <h3>Invoice</h3>
-          <div className="invoice-item">
-            <span><strong>Amount Due:</strong> {totalPrice.toLocaleString()} VND</span>
-          </div>
-          <div className="invoice-item">
-            <span><strong>Service Fee:</strong> Free</span>
-          </div>
-          <div className="invoice-item">
-            <span><strong>Total Payment:</strong> {totalPrice.toLocaleString()} VND</span>
-          </div>
+        <h3>Invoice</h3>
+            <div className="invoice-item">
+              <span><strong>Total Prints:</strong> {documents.reduce((sum, doc) => sum + doc.copies, 0)}</span>
+            </div>
+            <br></br>
+            <div className="invoice-item">
+              <span><strong>Total Prints Remaining:</strong> {/* Add calculation logic */}</span>
+            </div>
+            <br></br>
+            <div className="invoice-item">
+              <span><strong>Expected Completion Time:</strong> {/* Add estimation logic */}</span>
+            </div>
           <button className="primary-button" onClick={handleNext}>
             Place an order
           </button>

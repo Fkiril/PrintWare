@@ -32,7 +32,7 @@ const Payment = () => {
             checked={selectedPayment === "Momo"}
             onChange={() => setSelectedPayment("Momo")}
           />
-          <img src="https://via.placeholder.com/50?text=Momo" alt="Momo" />
+          <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="Momo" />
           <span>Momo</span>
         </div>
       </div>
