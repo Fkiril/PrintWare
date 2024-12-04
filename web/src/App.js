@@ -24,7 +24,7 @@ import Order from './Pages/User/Order/Order';
 import Payment from './Pages/User/Payment/Payment';
 
 import Dashboard from './Pages/Admin/Dashboard/Dashboard';
-import PRINT from './Pages/Admin/managePrinter/ManagePrint_er';
+import PRINT from './Pages/Admin/ManagePrinter/ManagePrint_er';
 import USER from './Pages/Admin/manageUser/ManageUser';
 
 
@@ -253,7 +253,7 @@ function App() {
            <Route
             path="/order"
             element={
-              isLoggedIn ?
+              //isLoggedIn ?
                 <SidebarLayout
                   isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
@@ -261,21 +261,21 @@ function App() {
                 >
                   <Order/>
                 </SidebarLayout>
-                : <Navigate to="/" />
+                //: <Navigate to="/" />
             }
           />
            <Route
             path="/payment"
             element={
-              isLoggedIn ?
+              //isLoggedIn ?
                 <SidebarLayout
-                  //isSidebarOpen={isSidebarOpen}
+                  isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
                   onLogout={handleLogout}
                 >
                   <Payment/>
                 </SidebarLayout>
-                : <Navigate to="/" />
+                //: <Navigate to="/" />
             }
           />
 
@@ -398,7 +398,7 @@ function App() {
          <Route
             path="/managerPrint-er"
             element={
-              isLoggedIn ?
+              //isLoggedIn ?
                 <SidebarLayout
                   isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
@@ -406,7 +406,7 @@ function App() {
                 >
                   <PRINT />
                 </SidebarLayout>
-                : <Navigate to="/" />
+               // : <Navigate to="/" />
             }
           />
         </Routes>
