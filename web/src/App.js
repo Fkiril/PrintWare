@@ -253,7 +253,7 @@ function App() {
            <Route
             path="/order"
             element={
-              //isLoggedIn ?
+              isLoggedIn ?
                 <SidebarLayout
                   isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
@@ -261,13 +261,13 @@ function App() {
                 >
                   <Order/>
                 </SidebarLayout>
-                //: <Navigate to="/" />
+                : <Navigate to="/" />
             }
           />
            <Route
             path="/payment"
             element={
-              //isLoggedIn ?
+              isLoggedIn ?
                 <SidebarLayout
                   isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
@@ -275,7 +275,7 @@ function App() {
                 >
                   <Payment/>
                 </SidebarLayout>
-                //: <Navigate to="/" />
+                : <Navigate to="/" />
             }
           />
 
@@ -398,7 +398,7 @@ function App() {
          <Route
             path="/managerPrint-er"
             element={
-              //isLoggedIn ?
+              isLoggedIn ?
                 <SidebarLayout
                   isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
@@ -406,7 +406,7 @@ function App() {
                 >
                   <PRINT />
                 </SidebarLayout>
-               // : <Navigate to="/" />
+                : <Navigate to="/" />
             }
           />
         </Routes>
