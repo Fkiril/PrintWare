@@ -72,7 +72,7 @@ router.get("/getDoc", async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-s
+
 router.post("/printTask", async(req, res) => {
   try {
     const { documentId, roomId } = req.body;
