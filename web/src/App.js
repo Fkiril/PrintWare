@@ -12,14 +12,22 @@ import SidebarLayout from './Pages/Sidebar/Sidebarlayout';
 import Footer from './components/ui/Footer/Footer';
 
 import History from './Pages/History/History';
-import ViewLogsAD from './Pages/Admin/ViewLogsAdmin/ViewLogsad';
-import ManagerPrinter from './Pages/Admin/ManagePrinter/ManagePrinter';
-import ManagerConfiguration from './Pages/Admin/ManageConfiguration/ManageConfiguration';
-import ExportStatistics from './Pages/Admin/Export Statistics/ExportStatistics';
+
+import ViewLogsAD from './Pages/Printer/ViewLogsAdmin/ViewLogsad';
+import ManagerPrinter from './Pages/Printer/ManagePrint-er/ManagePrinter';
+import ManagerConfiguration from './Pages/Printer/ManageConfiguration/ManageConfiguration';
+import ExportStatistics from './Pages/Printer/Export Statistics/ExportStatistics';
+
 import DocumentList from './Pages/User/DocumentList/DocumentList';
 import DocumentUp from './Pages/User/DocumentUploader/DocumentUploader';
 import Order from './Pages/User/Order/Order';
 import Payment from './Pages/User/Payment/Payment';
+
+import Dashboard from './Pages/Admin/Dashboard/Dashboard';
+import PRINT from './Pages/Admin/managePrinter/ManagePrint_er';
+import USER from './Pages/Admin/manageUser/ManageUser';
+
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -274,7 +282,7 @@ function App() {
 
 
 
-          {/* Admin */}
+          {/* printer */}
            <Route
             path="/manage-printer"
             element={
@@ -359,8 +367,48 @@ function App() {
                 : <Navigate to="/" />
             }
           />
-         
-         
+          {/* Admin */}
+         <Route
+            path="/dashboard"
+            element={
+              isLoggedIn ?
+                <SidebarLayout
+                  isSidebarOpen={isSidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                  onLogout={handleLogout}
+                >
+                  <Dashboard />
+                </SidebarLayout>
+                : <Navigate to="/" />
+            }
+          /><Route
+          path="/manageUser"
+          element={
+            isLoggedIn ?
+              <SidebarLayout
+                isSidebarOpen={isSidebarOpen}
+                toggleSidebar={toggleSidebar}
+                onLogout={handleLogout}
+              >
+                <USER />
+              </SidebarLayout>
+              : <Navigate to="/" />
+          }
+        />
+         <Route
+            path="/managerPrint-er"
+            element={
+              isLoggedIn ?
+                <SidebarLayout
+                  isSidebarOpen={isSidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                  onLogout={handleLogout}
+                >
+                  <PRINT />
+                </SidebarLayout>
+                : <Navigate to="/" />
+            }
+          />
         </Routes>
         <Footer />
       </Router>
