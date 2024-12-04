@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth'
+import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 
 const firebaseConfig = {
     apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -11,6 +11,17 @@ const firebaseConfig = {
 };
 
 const clientApp = initializeApp(firebaseConfig);
+
 const clientAuth = getAuth(clientApp);
 
-export { clientApp, clientAuth };
+const googleProvider = new GoogleAuthProvider();
+googleProvider.addScope('profile');
+googleProvider.addScope('email');
+googleProvider.addScope('https://www.googleapis.com/auth/drive.readonly')
+googleProvider.setCustomParameters({
+    'login_hint': 'printware@example.com'
+})
+
+const credentialFromResult = GoogleAuthProvider.credentialFromResult;
+
+export { clientApp, clientAuth, googleProvider, credentialFromResult };

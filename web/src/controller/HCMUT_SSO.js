@@ -1,5 +1,5 @@
-import { clientAuth } from '../services/FirebaseClientSDK.js';
-import { signInWithEmailAndPassword, signOut, reauthenticateWithCredential, confirmPasswordReset, EmailAuthProvider, updatePassword, sendPasswordResetEmail } from 'firebase/auth';
+import { clientAuth, googleProvider, credentialFromResult } from '../services/FirebaseClientSDK.js';
+import { signInWithEmailAndPassword, signOut, reauthenticateWithCredential, confirmPasswordReset, EmailAuthProvider, updatePassword, sendPasswordResetEmail, signInWithRedirect, signInWithPopup, getRedirectResult } from 'firebase/auth';
 
 /**
  * Login with email and password using Firebase Client Auth, it will return the user and the custom token that used for authentication with the server
@@ -63,7 +63,7 @@ export async function changePassword(email, oldPassword, newPassword) {
         });
 }
 
-export async function sendPasswordResetEmail(email) {
+export async function sendCustomPasswordResetEmail(email) {
     await sendPasswordResetEmail(email)
         .then(() => {
             console.log('Password reset email sent successfully');
@@ -83,4 +83,19 @@ export async function resetPassword(oodcode, email) {
             console.log("confirmPasswordReset error: ", error);
             throw error;
         });
+}
+
+export async function loginWithGoogleAccount() {
+    return await signInWithPopup(clientAuth, googleProvider).then(async (result) => {
+        const user = result.user;
+        const customToken = await user.getIdToken();
+
+        const credential = credentialFromResult(result);
+        const googleAccessToken = credential.accessToken;
+
+        return { user, customToken, googleAccessToken };
+    }).catch((error) => {
+        console.log("loginWithGoogleAccount error: ", error);
+        throw error;
+    })
 }

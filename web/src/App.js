@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 import axios from 'axios';
+import { loginWithGoogleAccount } from './controller/HCMUT_SSO.js';
 
 const test = async (paramUserId, paramType, file) => {
   try {
@@ -25,7 +26,12 @@ const test = async (paramUserId, paramType, file) => {
   }
 }
 
+
 function App() {
+  const [User, setUser] = useState(null);
+  const [CustomToken, setCustomToken] = useState(null);
+  const [GoogleAccessToken, setGoogleAccessToken] = useState(null);
+
   return (
     <Router>
       <div>
@@ -38,6 +44,25 @@ function App() {
           <input type="file" name="file" />
           <button type="submit">Submit</button>
         </form>
+
+        <br/>
+
+        <button onClick={async (e) => {
+          e.preventDefault();
+          const result = await loginWithGoogleAccount();
+
+          console.log(result);
+
+          setUser(result.user);
+          setCustomToken(result.customToken);
+          setGoogleAccessToken(result.googleAccessToken);
+        }}>
+          Login with Google
+        </button>
+
+        {User && <p>Username: {User.name}</p>}
+        {CustomToken && <p>Custom Token: {CustomToken}</p>}
+        {GoogleAccessToken && <p>Google Access Token: {GoogleAccessToken}</p>}
       </div>
     </Router>
   );
