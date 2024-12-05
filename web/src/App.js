@@ -27,9 +27,9 @@ function App() {
   const enroll = async (userId) => {
     const newEvent = new EventSource(`http://localhost:3456/enroll-events?userId=${userId}`);
     
-    // newEvent.addEventListener('test', (e) => {
-    //   console.log(e.data);
-    // });
+    newEvent.addEventListener('printTaskCompleted', (e) => {
+      console.log(e.data);
+    });
 
     newEvent.onmessage = (e) => {
       console.log("onmessage: ", e);

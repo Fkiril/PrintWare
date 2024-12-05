@@ -62,35 +62,9 @@ app.get('/enroll-events', (req, res) => {
   }
 
   req.on('close', () => {
+    console.log('Client disconnected.');
     EnrollUser.getInstance().enrolledUsers = EnrollUser.getInstance().enrolledUsers.filter(client => client.res !== res);
   });
-})
-
-// test endpoint for server to send event to client when print task is completed
-app.post('/test', (req, res) => {
-  console.log('Received a test request!');
-    
-  if (!req || !req.query || !req.query.userId) {
-      res.status(400).json({ message: 'Missing required parameters.' });
-      return;
-  }
-
-  if (EnrollUser.getInstance().IsInEnrolledUsers(req.query.userId)) {
-      const user = EnrollUser.getInstance().GetEnrolledUser(req.query.userId);
-
-      if (user) {
-          // user.res.write(`event: test\n`);
-          user.res.write(`data: ${JSON.stringify({ message: 'Event send from server' })}\n\n`);
-          // EnrollUser.getInstance().RemoveEnrolledUser(req.query.userId);
-          res.status(200).json({ message: 'Invoked event successfully.' });
-      }
-      else {
-          res.status(401).json({ message: 'Can not invoke event.' });
-      }
-  }
-  else {
-      res.status(400).json({ message: 'Can not invoke event.' });
-  }
 })
 
 // Import routes

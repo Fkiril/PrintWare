@@ -31,20 +31,42 @@ export default class EnrollUser {
         return this.enrolledUsers.find((user) => user.userId === userId);
     }
 
-    EnrollMiddleware(req, res) {
-        console.log('EnrollMiddleware');
+    /**
+     * Invoke a new event to a client with given user ID, event name and data.
+     * If the client is not enrolled, return a 400 status code.
+     * If the client is enrolled but the event can not be invoked, return a 401 status code.
+     * If the event is invoked successfully, return a 200 status code.
+     * @param {string} userId The user ID of the client.
+     * @param {string} event The name of the event.
+     * @param {any} data The data to be sent with the event.
+     * @returns {Object} The result of invoking the event, with fields 'status' and 'body'.
+     */
+    InvokeNewEvent(userId, event, data) {
+        console.log('InvokeNewEvent');
 
-        if (!req || !req.query || !req.query.userId) {
-            res.status(400).json({ message: 'Missing required parameters.' });
-            return;
+        if (!data || data.length === 0) {
+            return { status: 400, body: { message: 'Missing required parameters.' } };
         }
 
-        if (this.IsInEnrolledUsers(req.query.userId)) {
-            res.status(208).json({ message: 'User is already enrolled.' });
+        if (EnrollUser.getInstance().IsInEnrolledUsers(userId)) {
+            const user = EnrollUser.getInstance().GetEnrolledUser(userId);
+      
+            if (user) {
+                if (event) {
+                    user.res.write(`event: ${event}\n`);
+                }
+                if (data) {
+                    user.res.write(`data: ${JSON.stringify(data)}\n\n`);
+                }
+
+                return { status: 200, body: { message: 'Invoked event successfully.' } };
+            }
+            else {
+                return { status: 401, body: { message: 'Can not invoke event.' } };
+            }
         }
         else {
-            this.AddEnrolledUser(req.query.userId);
-            res.status(200).json({ message: 'User enrolled successfully.' });
+            return { status: 400, body: { message: 'Can not invoke event.' } };
         }
     }
 }
