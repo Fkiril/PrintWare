@@ -118,22 +118,44 @@ export const getPrinter = async (printerId) => {
 // Thêm máy in mới
 export const addPrinter = async (printerData) => {
     try {
-        const { printerId, ...data } = printerData;
-        const ref = firestore.collection('Printers').doc(printerId);
+        const { printerId, roomId, ...data } = printerData;
 
-        const doc = await ref.get();
-        if (doc.exists) {
+        if (!printerId || !roomId) {
+            throw new Error('printerId và roomId là bắt buộc');
+        }
+
+        const printerRef = firestore.collection('Printers').doc(printerId);
+        const roomRef = firestore.collection('Rooms').doc(roomId);
+
+        // Kiểm tra máy in đã tồn tại chưa
+        const printerDoc = await printerRef.get();
+        if (printerDoc.exists) {
             throw new Error('Máy in đã tồn tại!');
         }
 
-        await ref.set({ ...data, createdAt: new Date().toISOString() });
-        return data;
+        // Kiểm tra phòng có tồn tại trong danh sách phòng không
+        const roomDoc = await roomRef.get();
+        if (!roomDoc.exists) {
+            throw new Error(`Phòng với ID "${roomId}" không tồn tại. Vui lòng thêm phòng trước khi thêm máy in.`);
+        }
+
+        // Thêm dữ liệu máy in
+        const newPrinterData = {
+            roomId,
+            ...data,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+
+        // Lưu máy in vào Firestore
+        await printerRef.set(newPrinterData);
+
+        return { message: 'Thêm máy in thành công', printer: newPrinterData };
     } catch (error) {
         console.error('Lỗi khi thêm máy in:', error.message);
-        throw new Error('Đã xảy ra lỗi khi thêm máy in');
+        throw new Error(`Không thể thêm máy in: ${error.message}`);
     }
 };
-
 // Xóa máy in
 export const removePrinter = async (printerId) => {
     try {
@@ -171,6 +193,41 @@ export const getRoomList = async () => {
         throw new Error(`Không thể lấy danh sách phòng: ${error.message}`);
     }
 };
+// Thêm 1 phòng 
+// Thêm phòng vào danh sách phòng
+export const addRoom = async (roomData) => {
+    try {
+        const { roomId, name, description } = roomData;
+
+        if (!roomId || !name) {
+            throw new Error('roomId và name là bắt buộc');
+        }
+
+        const ref = firestore.collection('Rooms').doc(roomId);
+
+        // Kiểm tra xem phòng đã tồn tại chưa
+        const doc = await ref.get();
+        if (doc.exists) {
+            throw new Error('Phòng đã tồn tại!');
+        }
+
+        // Tạo dữ liệu phòng mới
+        const newRoomData = {
+            name,
+            description: description || '',
+            createdAt: new Date().toISOString()
+        };
+
+        // Thêm phòng vào Firestore
+        await ref.set(newRoomData);
+
+        return { message: 'Thêm phòng thành công', room: newRoomData };
+    } catch (error) {
+        console.error('Lỗi khi thêm phòng:', error.message);
+        throw new Error(`Không thể thêm phòng: ${error.message}`);
+    }
+};
+
 // Lấy cấu hình hệ thống
 export const getSystemConfig = async () => {
     try {
