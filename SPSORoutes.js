@@ -11,9 +11,11 @@ import {
     getPrinterList,
     getRoomList,
     getSystemConfig,
-    addRoom
+    addRoom,
+    getAllHistoryLogs,
+    getHistoryLogById,
+    removeHistoryLogById
 } from '../../controllers/web_controllers/SPSO.js';
-
 const router = Router();
 
 // Trang chào
@@ -186,5 +188,36 @@ router.get('/config', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+
+// Lấy tất cả bản ghi lịch sử: Done
+router.get('/getAllHisLog', async (req, res) => {
+    try {
+        const result = await getAllHistoryLogs();
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Lấy một bản ghi lịch sử theo ID : Done
+router.get('/getHisLog/:id', async (req, res) => {
+    try {
+        const result = await getHistoryLogById(req.params.id);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(404).json({ error: error.message });
+    }
+});
+
+// Xóa một bản ghi lịch sử theo ID : done
+router.delete('/deleteHisLog/:id', async (req, res) => {
+    try {
+        const result = await removeHistoryLogById(req.params.id);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(404).json({ error: error.message });
+    }
+});
+
 
 export default router;
