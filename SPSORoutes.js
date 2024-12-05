@@ -11,6 +11,7 @@ import {
     getPrinterList,
     getRoomList,
     getSystemConfig,
+    addRoom
 } from '../../controllers/web_controllers/SPSO.js';
 
 const router = Router();
@@ -141,7 +142,31 @@ router.delete('/removePrinter/:printerId', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+// Tạo phòng mới 
+router.post('/addRoom', async (req, res) => {
+    try {
+        const roomData = req.body;
 
+        // Kiểm tra dữ liệu đầu vào
+        if (!roomData.roomId || !roomData.name) {
+            return res.status(400).json({
+                success: false,
+                error: 'Dữ liệu không hợp lệ. Vui lòng cung cấp đầy đủ thông tin roomId và name!'
+            });
+        }
+
+        // Gọi controller và xử lý phản hồi
+        const response = await addRoom(roomData);
+        res.status(201).json({
+            success: true,
+            message: 'Thêm phòng thành công!',
+            data: response,
+        });
+    } catch (error) {
+        console.error('Lỗi trong route /addRoom:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 // Lấy danh sách phòng: done
 router.get('/roomList', async (req, res) => {
     try {
