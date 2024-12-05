@@ -1,7 +1,5 @@
 import { firestore } from '../../services/FirebaseAdminSDK.js';
-// import SystemConfig from '../../models/SystemConfig.js';
-// import SPSO from '../../models/SPSO.js';
-
+import HistoryLog from '../../models/HistoryLog.js';
 // Trang chào
 export const index = async () => {
     return 'Xin chào! Đây là hệ thống quản lý SPSO.';
@@ -193,7 +191,6 @@ export const getRoomList = async () => {
         throw new Error(`Không thể lấy danh sách phòng: ${error.message}`);
     }
 };
-// Thêm 1 phòng 
 // Thêm phòng vào danh sách phòng
 export const addRoom = async (roomData) => {
     try {
@@ -242,5 +239,67 @@ export const getSystemConfig = async () => {
     } catch (error) {
         console.error('Lỗi khi lấy danh sách cấu hình:', error.message);
         throw new Error(`Không thể lấy danh sách cấu hình: ${error.message}`);
+    }
+};
+
+
+// Lấy tất cả bản ghi lịch sử
+export const getAllHistoryLogs = async () => {
+    try {
+        const snapshot = await firestore.collection(process.env.HISTORY_LOGS_COLLECTION).get();
+
+        if (snapshot.empty) {
+            console.warn('Danh sách HistoryLogs trống');
+            return [];
+        }
+
+        const logs = snapshot.docs.map((doc) => {
+            const historyLog = new HistoryLog();
+            historyLog.setInfoFromJson({ ...doc.data(), hisLogId: doc.id });
+            return historyLog.convertToJson();
+        });
+
+        return logs;
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách HistoryLogs:', error.message);
+        throw new Error(`Không thể lấy danh sách HistoryLogs: ${error.message}`);
+    }
+};
+
+
+// Lấy một bản ghi lịch sử theo ID
+export const getHistoryLogById = async (logId) => {
+    try {
+        if (!logId) {
+            throw new Error('Thiếu thông tin logId');
+        }
+        const doc = await firestore.collection(process.env.HISTORY_LOGS_COLLECTION).doc(logId).get();
+        if (!doc.exists) {
+            throw new Error(`Không tìm thấy HistoryLog với ID: ${logId}`);
+        }
+        const historyLog = new HistoryLog();
+        historyLog.setInfoFromJson({ ...doc.data(), hisLogId: logId });
+        return historyLog.convertToJson();
+    } catch (error) {
+        console.error('Lỗi khi lấy HistoryLog:', error.message);
+        throw new Error(`Không thể lấy HistoryLog: ${error.message}`);
+    }
+};
+
+// Xóa một bản ghi lịch sử theo ID
+export const removeHistoryLogById = async (logId) => {
+    try {
+        if (!logId) {
+            throw new Error('Thiếu thông tin logId');
+        }
+        const doc = await firestore.collection(process.env.HISTORY_LOGS_COLLECTION).doc(logId).get();
+        if (!doc.exists) {
+            throw new Error(`Không tìm thấy HistoryLog với ID: ${logId}`);
+        }
+        await firestore.collection(process.env.HISTORY_LOGS_COLLECTION).doc(logId).delete();
+        return { message: 'Xóa HistoryLog thành công', id: logId };
+    } catch (error) {
+        console.error('Lỗi khi xóa HistoryLog:', error.message);
+        throw new Error(`Không thể xóa HistoryLog: ${error.message}`);
     }
 };
