@@ -1,21 +1,16 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
 
 import axios from 'axios';
-import { loginWithGoogleAccount } from './controller/HCMUT_SSO.js';
 
-const test = async (paramUserId, paramType, file) => {
+const test = async (paramUserId) => {
   try {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const res = await axios.post('hcmut-sso/upload-picture', formData, {
+    const res = await axios.post('hcmut-sso/test', {
       headers: {
-        ContentType: 'form-data'
+        ContentType: 'application/json'
       },
       params: {
-        userId: paramUserId,
-        type: paramType
+        userId: paramUserId
       }
     });
   
@@ -26,43 +21,43 @@ const test = async (paramUserId, paramType, file) => {
   }
 }
 
-
 function App() {
-  const [User, setUser] = useState(null);
-  const [CustomToken, setCustomToken] = useState(null);
-  const [GoogleAccessToken, setGoogleAccessToken] = useState(null);
+  const [event, setEvent] = React.useState();
+
+  const enroll = async (userId) => {
+    const newEvent = new EventSource(`http://localhost:3456/enroll-events?userId=${userId}`);
+    
+    // newEvent.addEventListener('test', (e) => {
+    //   console.log(e.data);
+    // });
+
+    newEvent.onmessage = (e) => {
+      console.log("onmessage: ", e);
+    };
+
+    newEvent.onerror = (e) => {
+      console.log('onerror: ', e);
+    };
+
+    newEvent.onopen = (e) => {
+      console.log('onopen: ', e);
+    }
+
+    setEvent(newEvent);
+  }
+
+  console.log('event: ',event);
 
   return (
     <Router>
       <div>
         <form onSubmit={(e) => {
               e.preventDefault();
-              test(e.target.userId.value, e.target.type.value, e.target.file.files[0]);
+              enroll(e.target.userId.value);
             }}>
           <input type="text" name="userId" placeholder="userId" />
-          <input type="text" name="type" placeholder="type" />
-          <input type="file" name="file" />
           <button type="submit">Submit</button>
         </form>
-
-        <br/>
-
-        <button onClick={async (e) => {
-          e.preventDefault();
-          const result = await loginWithGoogleAccount();
-
-          console.log(result);
-
-          setUser(result.user);
-          setCustomToken(result.customToken);
-          setGoogleAccessToken(result.googleAccessToken);
-        }}>
-          Login with Google
-        </button>
-
-        {User && <p>Username: {User.name}</p>}
-        {CustomToken && <p>Custom Token: {CustomToken}</p>}
-        {GoogleAccessToken && <p>Google Access Token: {GoogleAccessToken}</p>}
       </div>
     </Router>
   );

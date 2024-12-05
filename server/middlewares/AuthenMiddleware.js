@@ -1,6 +1,6 @@
 import { adminAuth } from '../services/FirebaseAdminSDK.js';
 
-const authenticate = async (req, res, next) => {
+export default async function Authenticate(req, res, next) {
   const token = req.headers.authorization;  
 
   if (!token) {
@@ -16,5 +16,3 @@ const authenticate = async (req, res, next) => {
     res.status(401).json({ message: 'Invalid token', error: error.message });
   }
 };
-
-export default authenticate;
