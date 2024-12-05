@@ -33,9 +33,11 @@ export default class SystemConfig {
             const ref = db.collection('SystemConfig').doc(configId);
             const doc = await ref.get();
 
+
             if (!doc.exists) {
                 throw new Error(`Không tìm thấy cấu hình với ID: ${configId}`);
             }
+
 
             const config = new SystemConfig();
             config.setInfoFromJson(doc.data());
@@ -43,22 +45,6 @@ export default class SystemConfig {
         } catch (error) {
             console.error('Lỗi khi lấy cấu hình:', error.message);
             throw error;
-        }
-    }
-
-    // Cập nhật giá trị pageUnitPrice trong Firestore
-    async updatePageUnitPrice(newPrice, db, configId) {
-        try {
-            const ref = db.collection('SystemConfig').doc(configId);
-
-            // Cập nhật giá trị pageUnitPrice
-            await ref.update({ pageUnitPrice: newPrice });
-
-            console.log(`Đã cập nhật pageUnitPrice cho configId: ${configId}`);
-            return true;
-        } catch (error) {
-            console.error('Lỗi khi cập nhật pageUnitPrice:', error.message);
-            return false;
         }
     }
 }

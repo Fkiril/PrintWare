@@ -6,7 +6,7 @@ export default class HistoryLog {
         this.printedDocRepo = [];
     }
 
-    // Phương thức để chuyển dữ liệu thành JSON
+    // Chuyển thông tin đối tượng thành JSON
     convertToJson() {
         return {
             hisLogId: this.hisLogId,
@@ -16,11 +16,11 @@ export default class HistoryLog {
         };
     }
 
-    // Phương thức để lấy thông tin từ JSON
+    // Lấy thông tin từ JSON và gán giá trị cho đối tượng
     setInfoFromJson(json) {
-        this.hisLogId = json.hisLogId;
-        this.ownerId = json.ownerId;
-        this.paymentRepo = json.paymentRepo;
-        this.printedDocRepo = json.printedDocRepo;
+        this.hisLogId = json.hisLogId || "";
+        this.ownerId = json.ownerId || "";
+        this.paymentRepo = json.paymentRepo || [];
+        this.printedDocRepo = json.printedDocRepo || [];
     }
 }

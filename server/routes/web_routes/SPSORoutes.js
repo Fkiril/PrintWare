@@ -11,9 +11,11 @@ import {
     getPrinterList,
     getRoomList,
     getSystemConfig,
-    resetHistory,
+    addRoom,
+    getAllHistoryLogs,
+    getHistoryLogById,
+    removeHistoryLogById
 } from '../../controllers/web_controllers/SPSO.js';
-
 const router = Router();
 
 // Trang chào
@@ -26,7 +28,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-
 // Cập nhật giá trị pageUnitPrice
 router.post('/updatePageUnitPrice', async (req, res) => {
     try {
@@ -36,9 +37,6 @@ router.post('/updatePageUnitPrice', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
-
-
-
 
 // Cập nhật kích thước trang :done
 router.post('/updatePageSizes', async (req, res) => {
@@ -113,7 +111,6 @@ router.post('/addPrinter', async (req, res) => {
                 error: 'Dữ liệu không hợp lệ. Vui lòng cung cấp đầy đủ thông tin!'
             });
         }
-
         // Gọi controller và xử lý phản hồi
         const response = await addPrinter(printerData);
         res.status(201).json({
@@ -127,7 +124,7 @@ router.post('/addPrinter', async (req, res) => {
     }
 });
 
-// Xóa máy in ; done
+// Xóa máy in : done
 router.delete('/removePrinter/:printerId', async (req, res) => {
     try {
         const { printerId } = req.params;  // Đảm bảo rằng printerId có trong URL
@@ -147,7 +144,31 @@ router.delete('/removePrinter/:printerId', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+// Tạo phòng mới 
+router.post('/addRoom', async (req, res) => {
+    try {
+        const roomData = req.body;
 
+        // Kiểm tra dữ liệu đầu vào
+        if (!roomData.roomId || !roomData.name) {
+            return res.status(400).json({
+                success: false,
+                error: 'Dữ liệu không hợp lệ. Vui lòng cung cấp đầy đủ thông tin roomId và name!'
+            });
+        }
+
+        // Gọi controller và xử lý phản hồi
+        const response = await addRoom(roomData);
+        res.status(201).json({
+            success: true,
+            message: 'Thêm phòng thành công!',
+            data: response,
+        });
+    } catch (error) {
+        console.error('Lỗi trong route /addRoom:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 // Lấy danh sách phòng: done
 router.get('/roomList', async (req, res) => {
     try {
@@ -168,14 +189,35 @@ router.get('/config', async (req, res) => {
     }
 });
 
-// Xóa lịch sử
-router.post('/resetHistory', async (req, res) => {
+// Lấy tất cả bản ghi lịch sử: Done
+router.get('/getAllHisLog', async (req, res) => {
     try {
-        const response = await resetHistory();
-        res.status(200).json(response);
+        const result = await getAllHistoryLogs();
+        res.status(200).json(result);
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ error: error.message });
     }
 });
+
+// Lấy một bản ghi lịch sử theo ID : Done
+router.get('/getHisLog/:id', async (req, res) => {
+    try {
+        const result = await getHistoryLogById(req.params.id);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(404).json({ error: error.message });
+    }
+});
+
+// Xóa một bản ghi lịch sử theo ID : done
+router.delete('/deleteHisLog/:id', async (req, res) => {
+    try {
+        const result = await removeHistoryLogById(req.params.id);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(404).json({ error: error.message });
+    }
+});
+
 
 export default router;
