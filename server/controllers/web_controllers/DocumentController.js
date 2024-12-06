@@ -22,7 +22,12 @@ function checkFile(file) {
   const fileExtension = path.extname(file.originalname).toLowerCase();
 
   if (!allowedExtensions.includes(fileExtension)) {
-    throw new Error("File type not supported for uploading.");
+    throw new Error("Định dạng file không phù hợp để in.");
+  }
+
+  const fileSizeKB = file.size / 1024;
+  if (fileSizeKB > 5000) {  //(KB) limit fileSize 5MB
+    throw new Error("Kích cỡ file không phù hợp để in")
   }
   return true;
 }
@@ -50,7 +55,7 @@ export const uploadDoc = async (file, ownerId, description, numPages) => {
       },
     });
 
-    await drive.permissions.create({
+    await googleDrive.permissions.create({
       fileId: response.data.id,
       requestBody: { role: "reader", type: "anyone" },
     });
@@ -59,7 +64,7 @@ export const uploadDoc = async (file, ownerId, description, numPages) => {
 
     const date = new Date();
     const time = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-    const newDoc = new document(
+    const newDoc = new Document(
       response.data.id,
       ownerId,
       file.originalname,
@@ -75,6 +80,8 @@ export const uploadDoc = async (file, ownerId, description, numPages) => {
       .collection(process.env.DOCUMENTS_COLLECTION)
       .doc(newDoc.docId)
       .set(newDoc.convertToJson());
+
+    
 
     return true;
   } catch (error) {
@@ -105,9 +112,9 @@ export const deleteDoc = async (documentId) => {
       throw new Error("Tài liệu không tồn tại để xóa");
     }
 
-    await drive.files.delete({ fileId: documentId });
+    await googleDrive.files.delete({ fileId: documentId });
 
-    await db
+    await firestore
       .collection(process.env.DOCUMENTS_COLLECTION)
       .doc(documentId)
       .delete();
@@ -210,13 +217,7 @@ export const createPrintTask = async (documentId, roomId) => {
       .doc(printTaskId)
       .set(printTask.convertToJson());
 
-    const newPrinter = new Printer(printerId, roomId, {}, {}, [], []);
-    newPrinter.addTask(printTaskId);
 
-    await firestore
-      .collection(process.env.PRINTERS_COLLECTION)
-      .doc(printerSnapshot.docs[0].id)
-      .set(newPrinter.convertToJson());
 
     return true;
   } catch (error) {
