@@ -1,67 +1,35 @@
-import Wallet from './Wallet.js';
-
-class IPayment {
-    constructor(paymentId, ownerId, charge, date) {
-        //if (this.constructor === IPayment) {
-        //    throw new Error("Cannot instantiate interface");
-        //}
-        this.paymentId = paymentId;
+export default class Payment {
+    constructor (
+        transactionId,
+        ownerId,
+        amount,
+        status,
+        paymentMethod,
+        createAt,
+    ) {
+        this.transactionId = transactionId;
         this.ownerId = ownerId;
-        this.charge = charge;
-        this.date = date;
+        this.amount = amount;
+        this.status = status;
+        this.paymentMethod = paymentMethod;
+        this.createAt = createAt;
     }
-
-    convertToJson(){
+    convertToJson() {
         return {
-            paymentId: this.paymentId,
+            transactionId: this.transactionId,
             ownerId: this.ownerId,
-            charge: this.charge,
-            date: this.date
+            amount: this.amount,
+            status: this.status,
+            paymentMethod: this.paymentMethod,
+            createAt: this.createAt,
         };
     }
-
-    setInfoFromJson(json){
-        this.paymentId = json.paymentId;
-        this.ownerId = json.ownerId;
-        this.charge = json.charge;
-        this.date = json.date;
-    }
-}
-
-class PrintPayment extends IPayment {
-    constructor(paymentId, ownerId, charge, date) {
-        super(paymentId, ownerId, charge, date);
-        this.documentId = json.documentId;
-    }
-
-    convertToJson() {
-        const json = super.convertToJson();
-        json.pageNum = this.pageNum;
-        return json;
-    }
-
-    setInfoFromJson(json){
-        super.setInfoFromJson(json);
-        this.pageNum = json.pageNum;
-    }
-}
-
-class PagePayment extends IPayment {
-    constructor(paymentId, ownerId, charge, date, pageNum) {
-        super(paymentId, ownerId, charge, date);
-        this.pageNum = pageNum;
-    }
-
-    convertToJson() {
-        const json = super.convertToJson();
-        json.pageNum = this.pageNum;
-        return json;
-    }
-
     setInfoFromJson(json) {
-        super.setInfoFromJson(json);
-        this.pageNum = json.pageNum;
+        this.transactionId = json.transactionId;
+        this.ownerId = json.ownerId;
+        this.amount = json.amount;
+        this.status = json.status;
+        this.paymentMethod = json.paymentMethod;
+        this.createAt = json.createAt;
     }
 }
-
-export { PrintPayment, PagePayment };
