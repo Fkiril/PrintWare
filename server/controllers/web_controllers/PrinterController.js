@@ -1,6 +1,5 @@
 import {firestore} from '../../services/FirebaseAdminSDK.js';
 import PrintTask from '../../models/PrintTask.js';
-import connectedUsers from '../../utils/sseManager.js';
 
 
 // Cập nhật thông tin của Printer
@@ -178,13 +177,13 @@ export async function print(taskId) {
     await printerRef.update({ jobQueue: updatedJobQueue });
 
     // 8. Gửi thông báo qua SSE cho user nếu có kết nối
-    const userId = taskData.ownerId;
-    if (connectedUsers[userId]) {
-      connectedUsers[userId].write(
-        `data: ${JSON.stringify({ taskId: taskData.taskId, status: "completed" })}\n\n`
-      );
+    // const userId = taskData.ownerId;
+    // if (connectedUsers[userId]) {
+    //   connectedUsers[userId].write(
+    //     `data: ${JSON.stringify({ taskId: taskData.taskId, status: "completed" })}\n\n`
+    //   );
       
-    }
+    // }
 
     // 9. Trả về kết quả thành công
     return { success: true, message: `Task ${taskId} printed successfully` };
