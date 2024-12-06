@@ -32,26 +32,7 @@ class Printer {
     this.historyDocRepo = json.historyDocRepo || [];
     
   }
-
-  // Thêm tác vụ
-  addTask(taskId) {
-    if (!this.jobQueue.includes(taskId)) {
-      this.jobQueue.push(taskId);
-    }
-  }
-
-  // Xóa tác vụ
-  removeTask(taskId) {
-    this.jobQueue = this.jobQueue.filter((id) => id !== taskId);
-  }
-
-  // Hoàn tất tác vụ
-  completeTask(taskId) {
-    this.removeTask(taskId);
-    if (!this.historyDocRepo.includes(taskId)) {
-      this.historyDocRepo.push(taskId);
-    }
-  }
+ 
 }
 
 export default Printer;

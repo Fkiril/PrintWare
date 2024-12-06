@@ -42,23 +42,24 @@ router.put('/:printerId', async (req, res) => {
     }
   });
 //addTask(done)  
-  router.post('/:printerId/task', async (req, res) => {
-    const { printerId } = req.params;
-    const taskData = req.body;
-  
-    try {
-      const result = await addTask(printerId, taskData);
-      res.status(201).json(result);
-    } catch (error) {
-      if (error.message === "Invalid input data") {
-        res.status(400).json({ success: false, message: error.message });
-      } else if (error.message === "Printer not found") {
-        res.status(404).json({ success: false, message: error.message });
-      } else {
-        res.status(500).json({ success: false, message: "An error occurred. Please try again later." });
-      }
+router.post('/:printerId/task', async (req, res) => {
+  const { printerId } = req.params;
+  const { taskId } = req.body;
+
+  try {
+    const result = await addTask(printerId, taskId);
+    res.status(201).json(result);
+  } catch (error) {
+    if (error.message === "Invalid input data") {
+      res.status(400).json({ success: false, message: error.message });
+    } else if (error.message === "Printer not found") {
+      res.status(404).json({ success: false, message: error.message });
+    } else {
+      res.status(500).json({ success: false, message: "An error occurred. Please try again later." });
     }
-  });
+  }
+});
+
 //removeTask(done)
 router.delete('/:printerId/task/:taskId', async (req, res) => {
   const { printerId, taskId } = req.params;
