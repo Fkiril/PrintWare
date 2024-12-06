@@ -1,4 +1,4 @@
-import { PrintPayment, PagePayment } from '../../models/Payment.js';
+// import { PrintPayment, PagePayment } from '../../models/Payment.js';
 import Wallet from '../../models/Wallet.js';
 class PaymentController {
     constructor() {
