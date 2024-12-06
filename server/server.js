@@ -2,6 +2,7 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import express from 'express';
+
 // import serveIndex from 'serve-index';
 
 // Load environment variables
@@ -82,7 +83,10 @@ app.use('/document', Document);
 
 import Payment from './routes/web_routes/PaymentRoutes.js';
 app.use('/payment', Payment);
-    
+
+import SSE from './routes/web_routes/SSERoutes.js';
+app.use('/sse', SSE);
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
