@@ -47,6 +47,7 @@ export async function register(paramBody) {
         const user = new Customer();
         const validFields = Object.keys(user).filter(key => key !== 'constructor');
         const invalidFields = Object.keys(paramBody).filter(key => !validFields.includes(key));
+        invalidFields.filter(field => field === 'password');
         if (invalidFields.length > 0) {
             return { status: 400, body: { ok: false, message: `The following fields are invalid: ${invalidFields.join(', ')}.` } };
         }

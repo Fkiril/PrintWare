@@ -20,9 +20,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Apply authentication middleware
+app.options('*', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.sendStatus(200);
+});
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  next();
+})
+
 import Authenticate from './middlewares/AuthenMiddleware.js';
 
-const whitelist = ['/', '/favicon.ico', '/enroll-events'];
+const whitelist = ['/', '/favicon.ico', '/enroll-events', '/hcmut-sso/register'];
 
 // app.use((req, res, next) => {
 //   console.log('Time: ', Date.now());
