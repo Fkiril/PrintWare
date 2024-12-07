@@ -29,7 +29,7 @@ export async function register(paramBody) {
         const checkUserQuery = firestore.collection(process.env.USERS_COLLECTION).where('email', '==', paramBody.email);
         checkUserQuery.get().then((checkUserSnapshot) => {
             if (!checkUserSnapshot.empty) {
-                return { status: 409, body: { message: 'Email already exists.' } };
+                return { status: 409, body: { ok: false, message: 'Email already exists.' } };
             }
         });
 
@@ -45,6 +45,12 @@ export async function register(paramBody) {
         const userRecord = await adminAuth.createUser(createRequest);
 
         const user = new Customer();
+        const validFields = Object.keys(user).filter(key => key !== 'constructor');
+        const invalidFields = Object.keys(paramBody).filter(key => !validFields.includes(key));
+        if (invalidFields.length > 0) {
+            return { status: 400, body: { ok: false, message: `The following fields are invalid: ${invalidFields.join(', ')}.` } };
+        }
+
         user.setInfoFromJSON(paramBody);
         // const wallet = new Wallet();
         // wallet.setInfoFromJson({ ownerId: userRecord.uid });
@@ -61,15 +67,15 @@ export async function register(paramBody) {
 
         return await batch.commit().then(() => {
             user.userId = userRecord.uid;
-            return { status: 201, body: { message: 'User created successfully.', data: user.convertToJSON() } };
+            return { status: 201, body: { ok: false, message: 'User created successfully.', data: user.convertToJSON() } };
         }).catch((error) => {
             console.log('Error updating database for new user:', error);
-            return { status: 500, body: { message: error.message } };
+            return { status: 500, body: { ok: false, message: error.message } };
         });
     }
     catch (error) {
         console.log('Error creating new user:', error);
-        return { status: 500, body: { message: error.message } };
+        return { status: 500, body: { ok: false, message: error.message } };
     }
 }
 

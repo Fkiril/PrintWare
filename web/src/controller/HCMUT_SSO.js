@@ -36,10 +36,11 @@ export async function loginWithEmailAndPassword(email, password) {
 }
 
 export async function logout() {
-    await signOut(clientAuth)
+    return await signOut(clientAuth).then(() => {
+            return { ok: true, message: 'Logout successfully' };
+        })
         .catch((error) => {
-            console.log(error);
-            throw error;
+            return { ok: false, message: error.message };
         });
 }
 
@@ -47,39 +48,43 @@ export async function changePassword(email, oldPassword, newPassword) {
     const user = clientAuth.currentUser;
     
     const credential = EmailAuthProvider.credential(email, oldPassword);
-    await reauthenticateWithCredential(user, credential)
-        .catch((error) => {
-            console.log("reauthenticateWithCredential error: ", error);
-            throw error;
-        });
-    
-    await updatePassword(clientAuth.currentUser, newPassword)
+    const result = await reauthenticateWithCredential(user, credential)
         .then(() => {
-            console.log('Password changed successfully');
+            return { ok: true, message: 'Reauthenticated successfully' };
         })
         .catch((error) => {
-            console.log("updatePassword error: ", error);
-            throw error;
+            return { ok: false, message: error.message };
+        });
+    if (!result.ok) {
+        return result;
+    }
+    
+    return await updatePassword(clientAuth.currentUser, newPassword)
+        .then(() => {
+            return { ok: true, message: 'Password changed successfully' };
+        })
+        .catch((error) => {
+            return { ok: false, message: error.message };
         });
 }
 
 export async function sendCustomPasswordResetEmail(email) {
     return await sendPasswordResetEmail(email)
         .then(() => {
-            return { oke: true, message: 'Password reset email sent successfully' };
+            return { ok: true, message: 'Password reset email sent successfully' };
         })
         .catch((error) => {
-            return { oke: false, message: error.message };
+            return { ok: false, message: error.message };
         });
 }
 
 export async function resetPassword(oodcode, email) {
     return await confirmPasswordReset(clientAuth, oodcode, email)
         .then(() => {
-            return { oke: true, message: 'Password reset email sent successfully' };
+            return { ok: true, message: 'Password reset successfully' };
         })
         .catch((error) => {
-            return { oke: false, message: error.message };
+            return { ok: false, message: error.message };
         });
 }
 
