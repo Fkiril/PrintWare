@@ -80,9 +80,7 @@ export const uploadDoc = async (file, ownerId, description, numPages) => {
       .collection(process.env.DOCUMENTS_COLLECTION)
       .doc(newDoc.docId)
       .set(newDoc.convertToJson());
-
     
-
     return true;
   } catch (error) {
     console.error("Error in uploadDoc:", error);
@@ -208,16 +206,14 @@ export const createPrintTask = async (documentId, roomId) => {
       documentId,
       printerId,
       document.ownerId,
-      `${date.getDate()}/${date.getMonth()}/${date.getFullYear()} ${time}`, // date (thời gian tạo)
-      "pending" // state (trạng thái ban đầu là pending)
+      `${date.getDate()}/${date.getMonth()}/${date.getFullYear()} ${time}`, 
+      "pending" 
     );
 
     await firestore
       .collection(process.env.PRINT_TASKS_COLLECTION)
       .doc(printTaskId)
       .set(printTask.convertToJson());
-
-
 
     return true;
   } catch (error) {
