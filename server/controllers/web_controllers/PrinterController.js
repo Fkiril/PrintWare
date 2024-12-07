@@ -1,6 +1,6 @@
 import {firestore} from '../../services/FirebaseAdminSDK.js';
 import PrintTask from '../../models/PrintTask.js';
-import connectedUsers from '../../utils/sseManager.js';
+import EnrollUser from '../../utils/EnrollUser.js';
 import HistoryLog from '../../models/HistoryLog.js';
 
 // Cập nhật thông tin của Printer
@@ -205,14 +205,22 @@ export async function print(taskId) {
 
     // 11. Gửi thông báo qua SSE cho user nếu có kết nối
     const userId = taskData.ownerId;
-    if (connectedUsers[userId]) {
-      connectedUsers[userId].write(
-        `data: ${JSON.stringify({ taskId: taskData.taskId, status: "completed" })}\n\n`
-      );
-    }
+    // if (connectedUsers[userId]) {
+    //   connectedUsers[userId].write(
+    //     `data: ${JSON.stringify({ taskId: taskData.taskId, status: "completed" })}\n\n`
+    //   );
+    // }
+    // const sseResult = EnrollUser.getInstance().InvokeNewEvent(userId, "printTaskCompleted", { taskId: taskData.taskId });
+    const enrollUserInstance = EnrollUser.getInstance();
+    const sseResult = enrollUserInstance.InvokeNewEvent(userId, "printTaskCompleted", { taskId: taskData.taskId });
 
     // 12. Trả về kết quả thành công
-    return { success: true, message: `Task ${taskId} printed successfully` };
+    if (sseResult.ok) {
+      return { success: true, message: `Task ${taskId} printed successfully` };
+    }
+    else {
+      return { success: true, message: `Task ${taskId} printed successfully. But can not send SSE to user because ${sseResult.message}` }; 
+    }
   } catch (error) {
     console.error("Error printing task:", error);
     throw new Error(error.message || "An error occurred while printing");
