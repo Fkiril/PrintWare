@@ -28,21 +28,20 @@ export default function Login({ onLogin }) {
       setLoading(true); // Bắt đầu trạng thái loading
       let convert = emailOrusername.toLowerCase();
 
-      loginWithEmailAndPassword(convert, password).then((result) => {
-        setError('');
-        const { user, customToken} = result;
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('accessToken', customToken);
-        localStorage.setItem('isLoggedIn', 'true');
-        console.log(result);
+      const result = await loginWithEmailAndPassword(convert, password);
+      console.log(result);
+      
+      setError('');
+      const { user, customToken} = result.data;
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('accessToken', customToken);
+      localStorage.setItem('isLoggedIn', 'true');
 
-        onLogin(true);
-        navigate('/home');
-      }).catch((error) => {
-        setError(error);
-      });
+      onLogin(true);
+      navigate('/home');
     } catch (error) {
-      setError('Failed to connect to the server');
+      console.error('Error when login:', error);
+      setError(error.message || 'Failed to connect to the server');
     } finally {
       setLoading(false); // Kết thúc trạng thái loading
     }

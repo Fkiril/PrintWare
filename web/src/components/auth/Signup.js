@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextField, Button, Box, Typography, Modal, Paper } from '@mui/material';
+import { TextField, Button, Box, Typography, Modal, Paper, setRef } from '@mui/material';
 import LoadingSpinner from '../ui/Loading/LoadingSpinner';
 
 import axios from 'axios';
@@ -86,17 +86,12 @@ export default function Signup({ onClose }) {
       
       const result = await sendCustomPasswordResetEmail(email);
 
-      if (result.ok) {
-        setSuccess('Verification code sent to your email.');
-        setError('');
-        setIsModalOpen(true);  // Open verification modal
-      } else {
-        console.error('Error:', result.message);
-        setError(result.message || 'Failed to request verification code');
-      }
+      setSuccess(result.message);
+      setError('');
+      setIsModalOpen(true);  // Open verification modal
     } catch (error) {
-      console.error('Error:', error);
-      setError('Failed to connect to the server');
+      console.error('Error when send code:', error);
+      setError(error.message || 'Failed to connect to the server');
     }finally {
       setLoading(false); // Kết thúc loading
     }
@@ -110,15 +105,18 @@ export default function Signup({ onClose }) {
       
       const result = await resetPassword(verificationCode, email);
 
-      if (result.ok) {
-        Signup();
-      } else {
-        console.error('Error:', result.message);
-        setError(result.message || 'Failed to verify code');
-      }
+      setSuccess(result.message);
+      setError('');
+
+      // Close modal after 1 second
+      setTimeout(() => {
+        setSuccess('');
+        setIsModalOpen(false);
+        onClose(); // Call onClose to close the signup dialog
+      }, 1000);
     } catch (error) {
       console.error('Error:', error);
-      setError('Failed to connect to the server');
+      setError(error.message || 'Failed to connect to the server');
     }
     finally {
       setLoading(false); // Kết thúc loading

@@ -4,6 +4,9 @@ import {
   Dialog, DialogActions, DialogContent, DialogTitle
 } from '@mui/material';
 import LoadingSpinner from '../ui/Loading/LoadingSpinner';
+
+import { sendCustomPasswordResetEmail, resetPassword} from '../../controller/HCMUT_SSO.js';
+
 export default function Forget({ open, onClose }) {
   const [step, setStep] = useState('request'); // Các bước: 'request', 'verify', 'resetPassword'
   const [emailOrusername, setEmailOrUsername] = useState('');
@@ -18,23 +21,15 @@ export default function Forget({ open, onClose }) {
   const handleRequest = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/email/send-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ emailOrusername }),
-      });
-      const result = await response.json();
-      if (response.ok) {
-        setError('');
-        setStep('verify');
-        setSuccess('Instructions for resetting your password have been sent.');
-      } else {
-        setError(result.error);
-      }
+      
+      const result = await sendCustomPasswordResetEmail(emailOrusername);
+
+      setStep('verify');
+      setSuccess('Instructions for resetting your password have been sent.');
+      // setSuccess(result.message);
     } catch (error) {
-      setError(error);
+      console.log('Error when request:', error);
+      setError(error.message || 'Failed to connect to the server');
     }finally {
       setLoading(false); // Kết thúc loading
     }
@@ -43,23 +38,15 @@ export default function Forget({ open, onClose }) {
   const handleVerify = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/email/confirm-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ emailOrusername, verificationCode }),
-      });
-      const result = await response.json();
-      if (response.ok) {
-        setError('');
-        setSuccess('Verification successful.');
-        setStep('resetPassword');
-      } else {
-        setError(result.error);
-      }
+      
+      const result = await resetPassword(verificationCode, newPassword);
+
+      setError('');
+      setSuccess('Verification successful.');
+      setStep('resetPassword');
     } catch (error) {
-      setError(error);
+      console.log('Error when verify:', error);
+      setError(error.message || 'Failed to connect to the server');
     }
     finally {
       setLoading(false); // Kết thúc loading
@@ -67,32 +54,19 @@ export default function Forget({ open, onClose }) {
   };
 
   const handleResetPassword = async () => {
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
     // eslint-disable-next-line no-const-assign
     emailOrusername = emailOrusername.toLowerCase();
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/forgot-password', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ emailOrusername, newPassword }),
-      });
-      const result = await response.json();
-      if (response.ok) {
-        setError('');
-        setSuccess('Password reset successful. Redirecting to login...');
-        setTimeout(() => {
-          onClose();
-          window.location.href = '/';
-        }, 2000);
-      } else {
-        setError(result.error);
-      }
+      
+      const result = await resetPassword(verificationCode, newPassword);
+
+      setError('');
+      setSuccess('Password reset successful. Redirecting to login...');
+      setTimeout(() => {
+        onClose();
+        window.location.href = '/';
+      }, 2000);
     } catch (error) {
       setError(error);
     }

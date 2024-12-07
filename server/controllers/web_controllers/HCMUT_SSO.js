@@ -44,7 +44,7 @@ export async function register(paramBody) {
         
         const user = new Customer();
         const validFields = Object.keys(user).filter(key => key !== 'constructor');
-        const invalidFields = Object.keys(paramBody).filter(key => !validFields.includes(key));
+        let invalidFields = Object.keys(paramBody).filter(key => !validFields.includes(key));
         invalidFields = invalidFields.filter(field => field !== 'password');
         if (invalidFields.length > 0) {
             return { status: 400, body: { ok: false, message: `The following fields are invalid: ${invalidFields.join(', ')}.` } };
@@ -106,7 +106,7 @@ export async function adminRegister(paramBody) {
         
         const admin = new SPSO();
         const validFields = Object.keys(admin).filter(key => key !== 'constructor');
-        const invalidFields = Object.keys(paramBody).filter(key => !validFields.includes(key));
+        let invalidFields = Object.keys(paramBody).filter(key => !validFields.includes(key));
         invalidFields = invalidFields.filter(field => field !== 'password');
         if (invalidFields.length > 0) {
             return { status: 400, body: { message: `The following fields are invalid: ${invalidFields.join(', ')}.` } };
