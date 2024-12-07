@@ -11,24 +11,11 @@ export async function loginWithEmailAndPassword(email, password) {
     const result = await signInWithEmailAndPassword(clientAuth,email, password)
         .then( async (userCredential) => {
             const user = userCredential.user;
-            console.log('User logged in:', user);
 
             const customToken = await user.getIdToken();
-            console.log('Custom token:', customToken);
-            return { user, customToken };
+            return { message: 'Login successfully', data: { user, customToken } };
         })
         .catch((error) => {
-            const errorCode = error.code;
-            const errorMessage = error.message;
-            console.log(errorCode, errorMessage);
-            if (errorCode === 'auth/user-not-found') {
-                console.log('User not found');
-            } else if (errorCode === 'auth/wrong-password') {
-                console.log('Wrong password');
-            } else if (errorCode === 'auth/too-many-requests') {
-                console.log('Too many requests');
-            }
-
             throw error;
         });
 
@@ -37,10 +24,10 @@ export async function loginWithEmailAndPassword(email, password) {
 
 export async function logout() {
     return await signOut(clientAuth).then(() => {
-            return { ok: true, message: 'Logout successfully' };
+            return { message: 'Logout successfully' };
         })
         .catch((error) => {
-            return { ok: false, message: error.message };
+            throw error;
         });
 }
 
@@ -50,31 +37,31 @@ export async function changePassword(email, oldPassword, newPassword) {
     const credential = EmailAuthProvider.credential(email, oldPassword);
     const result = await reauthenticateWithCredential(user, credential)
         .then(() => {
-            return { ok: true, message: 'Reauthenticated successfully' };
+            return { message: 'Reauthenticated successfully' };
         })
         .catch((error) => {
-            return { ok: false, message: error.message };
+            throw error;
         });
-    if (!result.ok) {
+    if (result) {
         return result;
     }
     
     return await updatePassword(clientAuth.currentUser, newPassword)
         .then(() => {
-            return { ok: true, message: 'Password changed successfully' };
+            return { message: 'Password changed successfully' };
         })
         .catch((error) => {
-            return { ok: false, message: error.message };
+            throw error;
         });
 }
 
 export async function sendCustomPasswordResetEmail(email) {
     return await sendPasswordResetEmail(email)
         .then(() => {
-            return { ok: true, message: 'Password reset email sent successfully' };
+            return { message: 'Password reset email sent successfully' };
         })
         .catch((error) => {
-            return { ok: false, message: error.message };
+            throw error;
         });
 }
 
@@ -84,7 +71,7 @@ export async function resetPassword(oodcode, email) {
             return { ok: true, message: 'Password reset successfully' };
         })
         .catch((error) => {
-            return { ok: false, message: error.message };
+            throw error;
         });
 }
 
@@ -96,9 +83,8 @@ export async function loginWithGoogleAccount() {
         const credential = credentialFromResult(result);
         const googleAccessToken = credential.accessToken;
 
-        return { user, customToken, googleAccessToken };
+        return { message: 'Login successfully', data: { user, customToken, googleAccessToken } };
     }).catch((error) => {
-        console.log("loginWithGoogleAccount error: ", error);
         throw error;
     })
 }
