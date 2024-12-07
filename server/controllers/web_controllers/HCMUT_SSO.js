@@ -103,10 +103,17 @@ export async function adminRegister(paramBody) {
         if (paramBody.phoneNum) {
             createRequest.phoneNumber = paramBody.phoneNum;
         }
+        
+        const admin = new SPSO();
+        const validFields = Object.keys(admin).filter(key => key !== 'constructor');
+        const invalidFields = Object.keys(paramBody).filter(key => !validFields.includes(key));
+        invalidFields.filter(field => field === 'password');
+        if (invalidFields.length > 0) {
+            return { status: 400, body: { message: `The following fields are invalid: ${invalidFields.join(', ')}.` } };
+        }
 
         const userRecord = await adminAuth.createUser(createRequest);
 
-        const admin = new SPSO();
         admin.setInfoFromJSON(paramBody);
 
         const batch = firestore.batch();
