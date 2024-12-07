@@ -49,24 +49,26 @@ export default function Signup({ onClose }) {
           'Content-Type': 'application/json'
         }
       });
+
       const result = response.data;
 
-      if (result.ok) {
-        setSuccess('Account created successfully!');
-        setError('');
+      setSuccess(result.message);
+      setError('');
 
-        // Close modal after 1 second
-        setTimeout(() => {
-          setSuccess('');
-          setIsModalOpen(false);
-          onClose(); // Call onClose to close the signup dialog
-        }, 1000);
-      } else {
-        setError(result.message || 'Failed to create account');
-      }
+      // Close modal after 1 second
+      setTimeout(() => {
+        setSuccess('');
+        setIsModalOpen(false);
+        onClose(); // Call onClose to close the signup dialog
+      }, 1000);
     }
     catch (error) {
-      setError('Failed to connect to the server');
+      const response = error.response;
+      if (response && response.data && response.data.message) {
+        setError(response.data.message);
+      } else {
+        setError('Failed to connect to the server');
+      }
     }finally {
       setLoading(false); // Kết thúc loading
     }
