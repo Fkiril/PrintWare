@@ -1,12 +1,6 @@
 import { clientAuth, googleProvider, credentialFromResult } from '../services/FirebaseClientSDK.js';
 import { signInWithEmailAndPassword, signOut, reauthenticateWithCredential, confirmPasswordReset, EmailAuthProvider, updatePassword, sendPasswordResetEmail, signInWithRedirect, signInWithPopup, getRedirectResult } from 'firebase/auth';
 
-/**
- * Login with email and password using Firebase Client Auth, it will return the user and the custom token that used for authentication with the server
- * @param {string} email 
- * @param {string} password 
- * @returns {Promise<{user: import('firebase/auth').User, customToken: string}>}
- */
 export async function loginWithEmailAndPassword(email, password) {
     const result = await signInWithEmailAndPassword(clientAuth,email, password)
         .then( async (userCredential) => {
@@ -68,7 +62,7 @@ export async function sendCustomPasswordResetEmail(email) {
 export async function resetPassword(oodcode, email) {
     return await confirmPasswordReset(clientAuth, oodcode, email)
         .then(() => {
-            return { ok: true, message: 'Password reset successfully' };
+            return { message: 'Password reset successfully' };
         })
         .catch((error) => {
             throw error;
