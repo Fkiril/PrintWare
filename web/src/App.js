@@ -24,109 +24,39 @@ import Order from './Pages/User/Order/Order';
 import Payment from './Pages/User/Payment/Payment';
 
 import Dashboard from './Pages/Admin/Dashboard/Dashboard';
-import PRINT from './Pages/Admin/ManagePrinter/ManagePrint_er';
+import PRINT from './Pages/Admin/managePrinter/ManagePrint_er';
 import USER from './Pages/Admin/manageUser/ManageUser';
+
+import axios from 'axios';
+import { logout } from './controller/HCMUT_SSO';
 
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-  const verryAccessToken = async (token) => {
-    const refreshToken = localStorage.getItem('refreshToken');
+  const fetchProfileData = async (userId, token) => {
     try {
-      const response = await fetch('http://localhost:8080/verify-token', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        if (refreshToken) {
-          await refreshAccessToken('connect');  
-        } else {
-          console.error('No refresh token available');
-        }
-      }
-    }
-    catch (error) {
-      console.error('Error during access token refresh:', error);
-    }
-  };
-
-  const refreshAccessToken = async (state) => {
-    const refreshToken = localStorage.getItem('refreshToken');
-    try {
-      const response = await fetch('http://localhost:8080/refresh-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        const { accessToken } = result;
-        localStorage.setItem('accessToken', accessToken);
-      } else {
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        setIsLoggedIn(false);
-      }
-    } catch (error) {
-      console.error('Error during access token refresh:', error);
-    }
-  };
-
-  
-  const fechLogout = async (token) => {
-    try {
-      const response = await fetch('http://localhost:8080/logout', {
+      const response = await axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-user-profile-by-id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-      });
-      const result = await response.json();
-      if (response.ok) {
-        setIsLoggedIn(false);
-        localStorage.clear();
-        setSidebarOpen(false);
-        console.log('Logged out successfully');
-      } else {
-        console.error(result.error);
-        if (response.status === 403) {
-          await refreshAccessToken('disconnect');
-        }
-      }
-    } catch (error) {
-      console.error('Error disconnecting from server:', error);
-    }
-  }
-
-  const fetchProfileData = async (token) => {
-    try {
-      const response = await fetch('http://localhost:8080/profile', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+        params: {
+          userId: userId,
         },
       });
+
       const result = await response.json();
       if (response.ok) {
-        localStorage.setItem('username', result.data.username !== undefined ? result.data.username : '');
-        localStorage.setItem('fullname', result.data.fullname !== undefined ? result.data.fullname : '');
+        localStorage.setItem('username', result.data.userName !== undefined ? result.data.userName : '');
         localStorage.setItem('email', result.data.email !== undefined ? result.data.email : '');
-        localStorage.setItem('phone_number', result.data.phone_number !== undefined ? result.data.phone_number : '');
+        localStorage.setItem('phone_number', result.data.phoneNum !== undefined ? result.data.phoneNum : '');
 
-        localStorage.setItem('AIO_USERNAME', result.data.AIO_USERNAME !== undefined ? result.data.AIO_USERNAME : '');
-        localStorage.setItem('AIO_KEY', result.data.AIO_KEY !== undefined ? result.data.AIO_KEY : '');
-        localStorage.setItem('webServerIp', result.data.webServerIp !== undefined ? result.data.webServerIp : '');
+        // localStorage.setItem('AIO_USERNAME', result.data.AIO_USERNAME !== undefined ? result.data.AIO_USERNAME : '');
+        // localStorage.setItem('AIO_KEY', result.data.AIO_KEY !== undefined ? result.data.AIO_KEY : '');
+        // localStorage.setItem('webServerIp', result.data.webServerIp !== undefined ? result.data.webServerIp : '');
 
         setImageInLocalStorage('avatar', result.data.avatar);
         setImageInLocalStorage('coverPhoto', result.data.coverPhoto);
@@ -152,20 +82,15 @@ function App() {
   useEffect(() => {
     const storedLoggedInStatus = localStorage.getItem('isLoggedIn');
     const accessToken = localStorage.getItem('accessToken');
+    const userId = localStorage.getItem('userId');
+
     if (storedLoggedInStatus === 'true') {
       if (performance.navigation.type === 1) {
         localStorage.setItem('connected', 'false');
       }
       setIsLoggedIn(true);
      
-      fetchProfileData(accessToken);
-     
-      verryAccessToken(accessToken);
-      const intervalId = setInterval(() => {
-        
-        verryAccessToken(accessToken);
-      }, 1000);
-      return () => clearInterval(intervalId);
+      fetchProfileData(userId, accessToken);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
@@ -175,8 +100,17 @@ function App() {
   };
 
   const handleLogout = () => {
-    const accessToken = localStorage.getItem('accessToken');
-    fechLogout(accessToken);
+    try {
+      logout();
+      setIsLoggedIn(false);
+      localStorage.clear();
+      setSidebarOpen(false);
+      console.log('Logged out successfully');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      //TODO: Handle the error here
+      return;
+    }
   };
 
   const toggleSidebar = () => {

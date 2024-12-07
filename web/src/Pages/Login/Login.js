@@ -7,6 +7,8 @@ import Signup from '../../components/auth/Signup';
 import Forget from '../../components/auth/Forget';
 import LoadingSpinner from '../../components/ui/Loading/LoadingSpinner'; // Import LoadingSpinner
 
+import { loginWithEmailAndPassword } from '../../controller/HCMUT_SSO.js';
+
 export default function Login({ onLogin }) {
   const [emailOrusername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -25,34 +27,20 @@ export default function Login({ onLogin }) {
       }
       setLoading(true); // Bắt đầu trạng thái loading
       let convert = emailOrusername.toLowerCase();
-      const response = await fetch('http://localhost:8080/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ emailOrusername: convert, password }),
-        
-      });
 
-      const result = await response.json();
-
-      if (response.ok) {
+      loginWithEmailAndPassword(convert, password).then((result) => {
         setError('');
-        const { accessToken, refreshToken , profile} = result;
-        const { role } = profile;
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
+        const { user, customToken} = result;
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('accessToken', customToken);
         localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('role', role); 
         console.log(result);
-        console.log(result.profile);
-        console.log(profile.role);
 
         onLogin(true);
         navigate('/home');
-      } else {
-        setError(result.error);
-      }
+      }).catch((error) => {
+        setError(error);
+      });
     } catch (error) {
       setError('Failed to connect to the server');
     } finally {

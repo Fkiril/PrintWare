@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { TextField, Button, Box, Typography, Modal, Paper } from '@mui/material';
 import LoadingSpinner from '../ui/Loading/LoadingSpinner';
+
+import axios from 'axios';
+import { sendCustomPasswordResetEmail, resetPassword } from '../../controller/HCMUT_SSO.js';
+
 export default function Signup({ onClose }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -20,15 +24,35 @@ export default function Signup({ onClose }) {
     let convert_email = email.toLowerCase();
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/register', {
+
+      if (!password || password !== confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
+
+      if (!convert_username || !convert_email || !password || !confirmPassword || !idstudent || !Faculty || !phone) {
+        setError('All fields are required');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('userName', convert_username);
+      formData.append('email', convert_email);
+      formData.append('password', password);
+      formData.append('hcmutId', idstudent);
+      formData.append('faculty', Faculty);
+      formData.append('phoneNum', phone);
+      
+      const response = await axios.post(`${process.env.REACT_APP_SERVER_URL}/register`, formData, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username: convert_username, email: convert_email, password, idstudent, Faculty, phone }),
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        }
       });
-      const result = await response.json();
-      if (response.ok) {
+      const result = response.data;
+
+      if (result.ok) {
         setSuccess('Account created successfully!');
         setError('');
 
@@ -58,17 +82,10 @@ export default function Signup({ onClose }) {
 
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/email/send-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email })
-      });
+      
+      const result = await sendCustomPasswordResetEmail(email);
 
-      const result = await response.json();
-
-      if (response.ok) {
+      if (result.ok) {
         setSuccess('Verification code sent to your email.');
         setError('');
         setIsModalOpen(true);  // Open verification modal
@@ -89,17 +106,10 @@ export default function Signup({ onClose }) {
 
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/email/confirm-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, verificationCode }),
-      });
+      
+      const result = await resetPassword(verificationCode, email);
 
-      const result = await response.json();
-
-      if (response.ok) {
+      if (result.ok) {
         Signup();
       } else {
         console.error('Error:', result.message);

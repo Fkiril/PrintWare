@@ -64,24 +64,22 @@ export async function changePassword(email, oldPassword, newPassword) {
 }
 
 export async function sendCustomPasswordResetEmail(email) {
-    await sendPasswordResetEmail(email)
+    return await sendPasswordResetEmail(email)
         .then(() => {
-            console.log('Password reset email sent successfully');
+            return { oke: true, message: 'Password reset email sent successfully' };
         })
         .catch((error) => {
-            console.log("sendPasswordResetEmail error: ", error);
-            throw error;
+            return { oke: false, message: error.message };
         });
 }
 
 export async function resetPassword(oodcode, email) {
-    await confirmPasswordReset(clientAuth, oodcode, email)
+    return await confirmPasswordReset(clientAuth, oodcode, email)
         .then(() => {
-            console.log('Password reset email sent successfully');
+            return { oke: true, message: 'Password reset email sent successfully' };
         })
         .catch((error) => {
-            console.log("confirmPasswordReset error: ", error);
-            throw error;
+            return { oke: false, message: error.message };
         });
 }
 
