@@ -24,7 +24,7 @@ import Order from './Pages/User/Order/Order';
 import Payment from './Pages/User/Payment/Payment';
 
 import Dashboard from './Pages/Admin/Dashboard/Dashboard';
-import PRINT from './Pages/Admin/ManagePrinter/ManagePrint_er';
+import PRINT from './Pages/Admin/managePrinter/ManagePrint_er';
 import USER from './Pages/Admin/manageUser/ManageUser';
 
 

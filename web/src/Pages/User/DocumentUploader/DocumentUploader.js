@@ -11,17 +11,14 @@ import {
   List,
   ListItem,
   ListItemText,
-  Dialog,
-  DialogTitle,
-  DialogActions,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 const DocumentUploader = () => {
   const [documents, setDocuments] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [deleteIndex, setDeleteIndex] = useState(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [fileType, setFileType] = useState("all"); // State cho loại file
   const navigate = useNavigate();
 

@@ -45,6 +45,7 @@ export default function Navbar({ onLogout }) {
       navigate(-1); // Quay lại trang trước
     };
   return (
+    
     <Box
       sx={{
         width: '100%',
@@ -58,6 +59,7 @@ export default function Navbar({ onLogout }) {
         borderBottom: '2px solid #ddd',
       }}
     >
+      
       <Box
         sx={{
           display: 'flex',
@@ -226,11 +228,12 @@ export default function Navbar({ onLogout }) {
           )}
         </Box>
       </Box>
+      {role === 'admin' || role === 'user' || role === 'printer' ? (
       <Box
       sx={{
         width: '100%',
         backgroundColor: '#fff',
-        padding: '1px 40px',
+        padding: '0px 0px 0px 40px',
         display: 'flex',
         alignItems: 'center',
       }}
@@ -252,6 +255,7 @@ export default function Navbar({ onLogout }) {
         </Typography>
       ))}
     </Box>
+    ): null}
     </Box>
   );
 }

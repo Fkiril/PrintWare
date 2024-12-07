@@ -5,14 +5,14 @@ import {
 } from '@mui/material';
 import LoadingSpinner from '../ui/Loading/LoadingSpinner';
 export default function Forget({ open, onClose }) {
-  const [step, setStep] = useState('request'); // Các bước: 'request', 'verify', 'resetPassword'
+  const [step, setStep] = useState('request'); // Các bước: 'request', 'reset'
   const [emailOrusername, setEmailOrUsername] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
 
 
   const handleRequest = async () => {
@@ -28,8 +28,8 @@ export default function Forget({ open, onClose }) {
       const result = await response.json();
       if (response.ok) {
         setError('');
-        setStep('verify');
-        setSuccess('Instructions for resetting your password have been sent.');
+        setSuccess('Verification code sent to your email.');
+        setStep('reset');
       } else {
         setError(result.error);
       }
@@ -40,47 +40,23 @@ export default function Forget({ open, onClose }) {
     }
   };
 
-  const handleVerify = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('http://localhost:8080/email/confirm-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ emailOrusername, verificationCode }),
-      });
-      const result = await response.json();
-      if (response.ok) {
-        setError('');
-        setSuccess('Verification successful.');
-        setStep('resetPassword');
-      } else {
-        setError(result.error);
-      }
-    } catch (error) {
-      setError(error);
-    }
-    finally {
-      setLoading(false); // Kết thúc loading
-    }
-  };
-
-  const handleResetPassword = async () => {
+  const handleVerifyAndReset = async () => {
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-    // eslint-disable-next-line no-const-assign
-    emailOrusername = emailOrusername.toLowerCase();
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/forgot-password', {
-        method: 'PATCH',
+      const response = await fetch('http://localhost:8080/email/verify-and-reset', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ emailOrusername, newPassword }),
+        body: JSON.stringify({
+          emailOrusername,
+          verificationCode,
+          newPassword,
+        }),
       });
       const result = await response.json();
       if (response.ok) {
@@ -94,10 +70,9 @@ export default function Forget({ open, onClose }) {
         setError(result.error);
       }
     } catch (error) {
-      setError(error);
-    }
-    finally {
-      setLoading(false); // Kết thúc loading
+      setError(error.message || 'An error occurred.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -122,10 +97,10 @@ export default function Forget({ open, onClose }) {
               />
             </>
           )}
-          {step === 'verify' && (
+          {step === 'reset' && (
             <>
               <Typography variant="h6" sx={{ mb: 3 }}>
-                Enter the verification code sent to your email or phone
+                Enter the verification code and your new password
               </Typography>
               <TextField
                 label="Verification Code"
@@ -134,13 +109,6 @@ export default function Forget({ open, onClose }) {
                 fullWidth
                 sx={{ mb: 2 }}
               />
-            </>
-          )}
-          {step === 'resetPassword' && (
-            <>
-              <Typography variant="h6" sx={{ mb: 3 }}>
-                Enter your new password
-              </Typography>
               <TextField
                 label="New Password"
                 type="password"
@@ -165,16 +133,11 @@ export default function Forget({ open, onClose }) {
         <Button onClick={onClose}>Close</Button>
         {step === 'request' && (
           <Button variant="contained" color="primary" onClick={handleRequest}>
-           {loading ? <LoadingSpinner /> : 'Submit'} 
+            {loading ? <LoadingSpinner /> : 'Submit'}
           </Button>
         )}
-        {step === 'verify' && (
-          <Button variant="contained" color="primary" onClick={handleVerify}>
-            {loading ? <LoadingSpinner /> : 'Verify'}
-          </Button>
-        )}
-        {step === 'resetPassword' && (
-          <Button variant="contained" color="primary" onClick={handleResetPassword}>
+        {step === 'reset' && (
+          <Button variant="contained" color="primary" onClick={handleVerifyAndReset}>
             {loading ? <LoadingSpinner /> : 'Reset Password'}
           </Button>
         )}

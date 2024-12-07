@@ -16,7 +16,7 @@ const Footer = () => {
       }}
     >
       <Typography variant="body2">
-        © 2024 My Website. All Rights Reserved.
+        © 2024 PrintWare. Best Sites You Can Choose!
       </Typography>
     </Box>
   );

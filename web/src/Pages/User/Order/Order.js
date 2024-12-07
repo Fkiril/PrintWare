@@ -22,6 +22,7 @@ const Order = () => {
     );
   };
 
+  // eslint-disable-next-line no-unused-vars
   const totalPrice = documents.reduce(
     (sum, doc) => sum + doc.price * doc.copies,
     0
