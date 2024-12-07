@@ -18,6 +18,7 @@ class IUser {
 export class Customer extends IUser {
     phoneNum = '';
     hcmutId = '';
+    faculty = '';
     major = '';
     academicYear = '';
     classId = '';
@@ -25,10 +26,11 @@ export class Customer extends IUser {
     coverPhoto = '';
     documents = [];
 
-    constructor(userName = '', userId = '', userRole = '', email = '', phoneNum = '', studentId = '', major = '', academicYear = '', classId = '', avatar = '', coverPhoto = '', documents = []) {
+    constructor(userName = '', userId = '', userRole = '', email = '', phoneNum = '', hcmutId = '', faculty, major = '', academicYear = '', classId = '', avatar = '', coverPhoto = '', documents = []) {
         super(userName, userId, userRole, email);
         this.phoneNum = phoneNum;
-        this.hcmutId = studentId;
+        this.hcmutId = hcmutId;
+        this.faculty = faculty;
         this.major = major;
         this.academicYear = academicYear;
         this.classId = classId;
@@ -44,7 +46,8 @@ export class Customer extends IUser {
             userRole: this.userRole?? "",
             email: this.email?? "",
             phoneNum: this.phoneNum?? "",
-            studentId: this.hcmutId?? "",
+            hcmutId: this.hcmutId?? "",
+            faculty: this.faculty?? "",
             major: this.major?? "",
             academicYear: this.academicYear?? "",
             classId: this.classId?? "",
@@ -60,7 +63,8 @@ export class Customer extends IUser {
         this.userRole = json.userRole?? "";
         this.email = json.email?? "";
         this.phoneNum = json.phoneNum?? "";
-        this.hcmutId = json.studentId?? "";
+        this.hcmutId = json.hcmutId?? "";
+        this.faculty = json.faculty?? "";
         this.major = json.major?? "";
         this.academicYear = json.academicYear?? "";
         this.classId = json.classId?? "";
