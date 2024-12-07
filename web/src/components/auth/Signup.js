@@ -43,11 +43,10 @@ export default function Signup({ onClose }) {
       formData.append('faculty', Faculty);
       formData.append('phoneNum', phone);
       
-      const response = await axios.post(`${process.env.REACT_APP_SERVER_URL}/register`, formData, {
+      const response = await axios.post(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/register`, formData, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json'
         }
       });
       const result = response.data;
@@ -183,7 +182,7 @@ export default function Signup({ onClose }) {
         {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
         {success && <Typography color="success" sx={{ mb: 2 }}>{success}</Typography>}
 
-        <Button variant="contained" color="primary" onClick={handleSendCode} fullWidth>
+        <Button variant="contained" color="primary" onClick={Signup} fullWidth>
           Create Account
         </Button>
       </Box>

@@ -15,7 +15,7 @@ router.post('/admin-register', upload.single(''), async (req, res) => {
     const body = req.body;
 
     if (!body || !body.email || !body.password || !body.userName) {
-        res.status(400).json({ oke: false, message: 'Missing required parameters.' });
+        res.status(400).json({ ok: false, message: 'Missing required parameters.' });
         return;
     }
 
@@ -32,7 +32,7 @@ router.post('/register', upload.single(''), async (req, res) => {
     const body = req.body;
 
     if (!body || !body.email || !body.password || !body.userName) {
-        res.status(400).json({ oke: false, message: 'Missing required parameters.' });
+        res.status(400).json({ ok: false, message: 'Missing required parameters.' });
         return;
     }
 
@@ -48,7 +48,7 @@ router.delete('/delete-account', async (req, res) => {
 
     const query = req.query;
     if (!query || !query.userId) {
-        res.status(400).json({ oke: false, message: 'Missing required parameters.' });
+        res.status(400).json({ ok: false, message: 'Missing required parameters.' });
         return;
     }
 
@@ -66,7 +66,7 @@ router.patch('/update-profile', upload.single(''), async (req, res) => {
     const body = req.body;
     const query = req.query;
     if (!body || Object.keys(body).length === 0 || !query || !query.userId) {
-        res.status(400).json({ oke: false, message: 'Missing required parameters.' });
+        res.status(400).json({ ok: false, message: 'Missing required parameters.' });
         return;
     }
 
@@ -83,7 +83,7 @@ router.get('/get-user-profile-by-id', async (req, res) => {
 
     const query = req.query;
     if (!query || !query.userId) {
-        res.status(400).json({ oke: false, message: 'Missing required parameters.' });
+        res.status(400).json({ ok: false, message: 'Missing required parameters.' });
         return;
     }
 
@@ -100,7 +100,7 @@ router.get('/get-user-profile-by-email', async (req, res) => {
 
     const query = req.query;
     if (!query || !query.email) {
-        res.status(400).json({ oke: false, message: 'Missing required parameters.' });
+        res.status(400).json({ ok: false, message: 'Missing required parameters.' });
         return;
     }
 
@@ -117,7 +117,7 @@ router.get('/get-user-id-by-email', async (req, res) => {
 
     const query = req.query;
     if (!query || !query.email) {
-        res.status(400).json({ oke: false, message: 'Missing required parameters.' });
+        res.status(400).json({ ok: false, message: 'Missing required parameters.' });
         return;
     }
 
@@ -138,7 +138,7 @@ router.post('/upload-picture', upload.single('file'), async (req, res) => {
     const query = req.query;
     console.log(file, query);
     if (!file || !query || !query.userId || !query.type) {
-        res.status(400).json({ oke: false, message: 'Missing required parameters.' });
+        res.status(400).json({ ok: false, message: 'Missing required parameters.' });
         return;
     }
 
@@ -156,7 +156,7 @@ router.get('/get-picture', async (req, res) => {
 
     const query = req.query;
     if (!query || !query.userId || !query.type) {
-        res.status(400).json({ oke: false, message: 'Missing required parameters.' });
+        res.status(400).json({ ok: false, message: 'Missing required parameters.' });
         return;
     }
 
@@ -178,7 +178,7 @@ router.get('/get-picture', async (req, res) => {
         })
         .on('error', (error) => {
             console.log('Error pipe: ', error);
-            res.status(500).json({ oke: false, message: error.message });
+            res.status(500).json({ ok: false, message: error.message });
         })
         .pipe(res);
 })
@@ -192,7 +192,7 @@ router.get('/get-reset-password-link', async (req, res) => {
 
     const query = req.query;
     if (!query || !query.email) {
-        res.status(400).json({ oke: false, message: 'Missing required parameters.' });
+        res.status(400).json({ ok: false, message: 'Missing required parameters.' });
         return;
     }
 
@@ -209,7 +209,7 @@ router.get('/get-email-verification-link', async (req, res) => {
 
     const query = req.query;
     if (!query || !query.email) {
-        res.status(400).json({ oke: false, message: 'Missing required parameters.' });
+        res.status(400).json({ ok: false, message: 'Missing required parameters.' });
         return;
     }
 
@@ -227,7 +227,7 @@ router.get('/get-doc-id-list', async (req, res) => {
 
     const query = req.query;
     if (!query || !query.userId) {
-        res.status(400).json({ oke: false, message: 'Missing required parameters.' });
+        res.status(400).json({ ok: false, message: 'Missing required parameters.' });
         return;
     }
 

@@ -21,9 +21,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Apply authentication middleware
+app.options('*', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.sendStatus(204);
+});
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  next();
+})
+
 import Authenticate from './middlewares/AuthenMiddleware.js';
 
-const whitelist = ['/', '/favicon.ico', '/enroll-events'];
+const whitelist = ['/', '/favicon.ico', '/enroll-events', 'hcmut-sso/register'];
 
 // app.use((req, res, next) => {
 //   console.log('Time: ', Date.now());
@@ -79,6 +90,7 @@ import Printer from './routes/web_routes/PrinterRoutes.js';
 app.use('/printer', Printer);
 
 import Document from './routes/web_routes/DocumentRoutes.js';
+import { accessapproval } from 'googleapis/build/src/apis/accessapproval/index.js';
 app.use('/document', Document);
 
 // import Payment from './routes/web_routes/PaymentRoutes.js';
