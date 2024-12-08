@@ -14,7 +14,6 @@ export default class Payment {
         this.paymentMethod = paymentMethod;
         this.createAt = createAt;
     }
-
     convertToJson() {
         return {
             transactionId: this.transactionId,
@@ -25,7 +24,6 @@ export default class Payment {
             createAt: this.createAt,
         };
     }
-
     setInfoFromJson(json) {
         this.transactionId = json.transactionId;
         this.ownerId = json.ownerId;
@@ -34,5 +32,4 @@ export default class Payment {
         this.paymentMethod = json.paymentMethod;
         this.createAt = json.createAt;
     }
-
 }

@@ -1,6 +1,7 @@
 import {firestore} from '../../services/FirebaseAdminSDK.js';
 import PrintTask from '../../models/PrintTask.js';
-
+import EnrollUser from '../../utils/EnrollUser.js';
+import HistoryLog from '../../models/HistoryLog.js';
 
 // Cập nhật thông tin của Printer
 export async function updatePrinterInfo(printerId, newDetails) {
@@ -48,29 +49,16 @@ export async function takeDocList(printerId) {
   return printTasksSnapshot.docs.map((doc) => doc.data().docId);
 }
 // Thêm tác vụ in
-export async function addTask(printerId, taskData) {
-  console.log("Task data:", taskData);
-  console.log("Printer ID:", printerId);
-
-  if (!taskData.taskId || !printerId) {
+export async function addTask(printerId, taskId) {
+  if (!printerId || !taskId) {
     throw new Error("Invalid input data");
   }
 
   try {
     // Kiểm tra taskId hợp lệ
-    if (!taskData.taskId || !taskData.taskId.trim()) {
+    if (!taskId.trim()) {
       throw new Error("taskId cannot be empty");
     }
-
-    // Tạo PrintTask từ dữ liệu
-    const printTask = new PrintTask({ ...taskData, printerId });
-    console.log("PrintTask:", printTask);
-    if (!printTask.taskId) {
-      throw new Error("Invalid taskId");
-    }
-
-    // Lưu PrintTask vào Firestore
-    await firestore.collection('printTasks').doc(printTask.taskId).set(printTask.convertToJson());
 
     // Lấy Printer hiện tại để cập nhật jobQueue
     const printerRef = firestore.collection('Printers').doc(printerId);
@@ -81,19 +69,19 @@ export async function addTask(printerId, taskData) {
     }
 
     const printerData = printerSnapshot.data();
-    const updatedJobQueue = [...(printerData.jobQueue || []), printTask.taskId];
+    const updatedJobQueue = [...(printerData.jobQueue || []), taskId];
 
     // Cập nhật jobQueue của Printer
     await printerRef.update({ jobQueue: updatedJobQueue });
 
     // Trả về kết quả
-    return { success: true, message: "Task added successfully" };
-
+    return { success: true, message: `Task ${taskId} added successfully to Printer ${printerId}` };
   } catch (error) {
     console.error("Error adding task:", error);
     throw error; 
+  }
 }
-}
+
 // Xóa tác vụ in
 export async function removeTask(printerId, taskId) {
   if (!taskId || !printerId) {
@@ -131,10 +119,13 @@ export async function removeTask(printerId, taskId) {
   }
 }
 // Thực hiện tác vụ in
+
 export async function print(taskId) {
   if (!taskId) {
     throw new Error("Task ID is required");
   }
+
+  const batch = firestore.batch();
 
   try {
     // 1. Lấy thông tin chi tiết của printTask từ Firestore
@@ -166,31 +157,75 @@ export async function print(taskId) {
     // 4. Cập nhật trạng thái của tác vụ thành "PRINTING"
     await taskRef.update({ state: PrintTask.STATES.PRINTING });
 
-    // 5. Thực hiện quá trình in
+    // 5. Thực hiện quá trình in (giả lập)
     console.log(`Printing task ${taskData.taskId} for document ${taskData.docId}`);
 
     // 6. Cập nhật trạng thái của tác vụ thành "COMPLETED"
-    await taskRef.update({ state: PrintTask.STATES.COMPLETED });
+    batch.update(taskRef, { state: PrintTask.STATES.COMPLETED });
 
     // 7. Cập nhật lại `jobQueue` của máy in (loại bỏ taskId vừa in xong)
     const updatedJobQueue = jobQueue.filter((id) => id !== taskId);
-    await printerRef.update({ jobQueue: updatedJobQueue });
+    batch.update(printerRef, { jobQueue: updatedJobQueue });
 
-    // 8. Gửi thông báo qua SSE cho user nếu có kết nối
-    // const userId = taskData.ownerId;
+    // 8. Thêm docId vào historyDocRepo của Printer
+    const updatedHistoryDocRepo = [...(printerData.historyDocRepo || []), taskData.docId];
+    batch.update(printerRef, { historyDocRepo: updatedHistoryDocRepo });
+
+    // 9. Thêm docId vào printedDocRepo của HistoryLog
+    const historyLogCollection = firestore.collection('HistoryLogs');
+
+// Truy vấn để kiểm tra xem đã có HistoryLog nào với ownerId trùng với taskData.ownerId hay chưa
+    const historyLogQuerySnapshot = await historyLogCollection
+      .where('ownerId', '==', taskData.ownerId)
+      .get();
+
+    if (historyLogQuerySnapshot.empty) {
+      // Nếu không tìm thấy HistoryLog nào, tạo mới
+      const newHistoryLog = new HistoryLog();
+      newHistoryLog.hisLogId = taskData.ownerId; // Sử dụng ownerId làm ID
+      newHistoryLog.ownerId = taskData.ownerId;
+      newHistoryLog.paymentRepo = [];
+      newHistoryLog.printedDocRepo = [taskData.docId];
+      
+      const newHistoryLogRef = historyLogCollection.doc(); // Tạo tài liệu mới với ID ngẫu nhiên
+      batch.set(newHistoryLogRef, newHistoryLog.toJson());
+    } else {
+      
+      const existingHistoryLogDoc = historyLogQuerySnapshot.docs[0];
+      const existingHistoryLogData = existingHistoryLogDoc.data();
+      
+      // Cập nhật printedDocRepo
+      const updatedPrintedDocRepo = [...(existingHistoryLogData.printedDocRepo || []), taskData.docId];
+      batch.update(existingHistoryLogDoc.ref, { printedDocRepo: updatedPrintedDocRepo });
+    }
+
+
+    // 10. Commit batch write
+    await batch.commit();
+
+    // 11. Gửi thông báo qua SSE cho user nếu có kết nối
+    const userId = taskData.ownerId;
     // if (connectedUsers[userId]) {
     //   connectedUsers[userId].write(
     //     `data: ${JSON.stringify({ taskId: taskData.taskId, status: "completed" })}\n\n`
     //   );
-      
     // }
+    // const sseResult = EnrollUser.getInstance().InvokeNewEvent(userId, "printTaskCompleted", { taskId: taskData.taskId });
+    const enrollUserInstance = EnrollUser.getInstance();
+    const sseResult = enrollUserInstance.InvokeNewEvent(userId, "printTaskCompleted", { taskId: taskData.taskId });
 
-    // 9. Trả về kết quả thành công
-    return { success: true, message: `Task ${taskId} printed successfully` };
+    // 12. Trả về kết quả thành công
+    if (sseResult.ok) {
+      return { success: true, message: `Task ${taskId} printed successfully` };
+    }
+    else {
+      return { success: true, message: `Task ${taskId} printed successfully. But can not send SSE to user because ${sseResult.message}` }; 
+    }
   } catch (error) {
     console.error("Error printing task:", error);
     throw new Error(error.message || "An error occurred while printing");
   }
 }
+
 
 

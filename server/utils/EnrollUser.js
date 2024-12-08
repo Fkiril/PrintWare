@@ -45,7 +45,7 @@ export default class EnrollUser {
         console.log('InvokeNewEvent');
 
         if (!data || data.length === 0) {
-            return { status: 400, body: { message: 'Missing required parameters.' } };
+            return { ok: false, message: 'Missing required parameters.' };
         }
 
         if (EnrollUser.getInstance().IsInEnrolledUsers(userId)) {
@@ -59,14 +59,14 @@ export default class EnrollUser {
                     user.res.write(`data: ${JSON.stringify(data)}\n\n`);
                 }
 
-                return { status: 200, body: { message: 'Invoked event successfully.' } };
+                return { ok: true, message: 'Invoked event successfully.' };
             }
             else {
-                return { status: 401, body: { message: 'Can not invoke event.' } };
+                return { ok: false, message: 'Can not get enrolled user.' };
             }
         }
         else {
-            return { status: 400, body: { message: 'Can not invoke event.' } };
+            return { ok: false, message: 'This user is not enrolled.' };
         }
     }
 }
