@@ -3,24 +3,26 @@ import { TextField, Button, Box, Typography, Modal, Paper, setRef } from '@mui/m
 import LoadingSpinner from '../ui/Loading/LoadingSpinner';
 
 import axios from 'axios';
-import { sendCustomPasswordResetEmail, resetPassword } from '../../controller/HCMUT_SSO.js';
+import { sendCustomPasswordResetEmail, resetPassword } from '../../controllers/HCMUT_SSO.js';
+import { CustomerModelKeys } from '../../models/User.js';
 
 export default function Signup({ onClose }) {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [idstudent, setidstudent] = useState('');
-  const [Faculty, setFaculty] = useState('');
-  const [phone, setPhone] = useState(''); // Thêm state cho số điện thoại
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [loading, setLoading] = useState(false); 
+  const [ userName, setUserName ] = useState('');
+  const [ email, setEmail ] = useState('');
+  const [ password, setPassword ] = useState('');
+  const [ confirmPassword, setConfirmPassword ] = useState('');
+  const [ hcmutId, setHcmutId ] = useState('');
+  const [ faculty, setFaculty ] = useState('');
+  const [ phoneNum, setPhoneNum ] = useState(''); // Thêm state cho số điện thoại
+
+  const [ error, setError ] = useState('');
+  const [ success, setSuccess ] = useState('');
+  const [ isModalOpen, setIsModalOpen ] = useState(false);
+  const [ verificationCode, setVerificationCode ] = useState('');
+  const [ loading, setLoading ] = useState(false); 
 
   const Signup = async () => {
-    let convert_username = username.toLowerCase();
+    let convert_username = userName.toLowerCase();
     let convert_email = email.toLowerCase();
     try {
       setLoading(true);
@@ -30,18 +32,18 @@ export default function Signup({ onClose }) {
         return;
       }
 
-      if (!convert_username || !convert_email || !password || !confirmPassword || !idstudent || !Faculty || !phone) {
+      if (!convert_username || !convert_email || !password || !confirmPassword || !hcmutId || !faculty || !phoneNum) {
         setError('All fields are required');
         return;
       }
 
       const formData = new FormData();
-      formData.append('userName', convert_username);
-      formData.append('email', convert_email);
+      formData.append(CustomerModelKeys.userName, convert_username);
+      formData.append(CustomerModelKeys.email, convert_email);
       formData.append('password', password);
-      formData.append('hcmutId', idstudent);
-      formData.append('faculty', Faculty);
-      formData.append('phoneNum', phone);
+      formData.append(CustomerModelKeys.hcmutId, hcmutId);
+      formData.append(CustomerModelKeys.faculty, faculty);
+      formData.append(CustomerModelKeys.phoneNum, phoneNum);
       
       const response = await axios.post(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/register`, formData, {
         method: 'POST',
@@ -128,9 +130,9 @@ export default function Signup({ onClose }) {
       <Box sx={{ maxWidth: '400px', margin: '0 auto', textAlign: 'center' }}>
         <Typography variant="h4" sx={{ mb: 3 }}></Typography>
         <TextField
-          label="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          label="userName"
+          value={userName}
+          onChange={(e) => setUserName(e.target.value)}
           fullWidth
           sx={{ mb: 2 }}
         />
@@ -159,22 +161,22 @@ export default function Signup({ onClose }) {
         />
         <TextField
           label="ID Student"
-          value={idstudent}
-          onChange={(e) => setidstudent(e.target.value)}
+          value={hcmutId}
+          onChange={(e) => setHcmutId(e.target.value)}
           fullWidth
           sx={{ mb: 2 }}
         />
         <TextField
-          label="Faculty"
-          value={Faculty}
+          label="faculty"
+          value={faculty}
           onChange={(e) => setFaculty(e.target.value)}
           fullWidth
           sx={{ mb: 2 }}
         />
         <TextField
-          label="Phone"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          label="phoneNum"
+          value={phoneNum}
+          onChange={(e) => setPhoneNum(e.target.value)}
           fullWidth
           sx={{ mb: 2 }}
         />

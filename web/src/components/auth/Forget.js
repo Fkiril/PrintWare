@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import LoadingSpinner from '../ui/Loading/LoadingSpinner';
 
-import { sendCustomPasswordResetEmail, resetPassword} from '../../controller/HCMUT_SSO.js';
+import { sendCustomPasswordResetEmail, resetPassword} from '../../controllers/HCMUT_SSO.js';
 
 export default function Forget({ open, onClose }) {
   const [step, setStep] = useState('request'); // Các bước: 'request', 'verify', 'resetPassword'
@@ -19,6 +19,11 @@ export default function Forget({ open, onClose }) {
 
 
   const handleRequest = async () => {
+    if (!!!emailOrusername) {
+      setError("Email is required!");
+      return;
+    }
+
     try {
       setLoading(true);
       
@@ -36,6 +41,15 @@ export default function Forget({ open, onClose }) {
   };
 
   const handleVerify = async () => {
+    if (!!!verificationCode) {
+      setError("Verification code is required!");
+      return;
+    }
+    if (!!!newPassword) {
+      setError("New password is required!");
+      return;
+    }
+
     try {
       setLoading(true);
       

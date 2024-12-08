@@ -7,7 +7,7 @@ import Signup from '../../components/auth/Signup';
 import Forget from '../../components/auth/Forget';
 import LoadingSpinner from '../../components/ui/Loading/LoadingSpinner'; // Import LoadingSpinner
 
-import { loginWithEmailAndPassword } from '../../controller/HCMUT_SSO.js';
+import { loginWithEmailAndPassword } from '../../controllers/HCMUT_SSO.js';
 
 export default function Login({ onLogin }) {
   const [emailOrusername, setEmailOrUsername] = useState('');

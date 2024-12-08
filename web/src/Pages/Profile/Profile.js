@@ -8,6 +8,10 @@ import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import LoadingSpinner from '../../components/ui/Loading/LoadingSpinner';
 const token = localStorage.getItem('accessToken');
 
+import axios from 'axios';
+import { CustomerModelKeys } from '../../models/User';
+import { response } from 'express';
+
 const showAlert = (message, type) => {
   Swal.fire({
     icon: type,
@@ -18,40 +22,45 @@ const showAlert = (message, type) => {
 };
 
 const Profile = () => {
-  const [username, setUsername] = useState('');
-  const [fullname, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone_number, setPhone] = useState('');
-  const [Class, setClass] = useState('');
+  const [ userName, setUsername ] = useState('');
+  const [ email, setEmail ] = useState('');
+  const [ phoneNum, setPhone ] = useState('');
+  const [ classId, setClass ] = useState('');
+  const [ hcmutId, setidstudent ] = useState('');
+  const [ faculty, setFaculty ] = useState('');
+  const [ major, setMajor ] = useState('')
+  const [ academicYear, setAcademicYear ] = useState('')
+  const [ avatar, setAvatar ] = useState('');
+  const [ originalAvatar, setOriginalAvatar ] = useState('');
+  const [ coverPhoto, setCoverPhoto ] = useState('');
+  const [ originalCoverPhoto, setOriginalCoverPhoto ] = useState('');
 
-  const [idstudent, setidstudent] = useState('');
-  const [Faculty, setFaculty] = useState('');
-  const [avatar, setAvatar] = useState('');
-  const [originalAvatar, setOriginalAvatar] = useState('');
-  const [coverPhoto, setCoverPhoto] = useState('');
-  const [originalCoverPhoto, setOriginalCoverPhoto] = useState('');
-  const [isEditable, setIsEditable] = useState(false);
-  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
-  const [isPasswordConfirmed, setIsPasswordConfirmed] = useState(false);
-  const [loading, setLoading] = useState(false); 
+  const [ isEditable, setIsEditable ] = useState(false);
+  const [ isPasswordDialogOpen, setIsPasswordDialogOpen ] = useState(false);
+  const [ isPasswordConfirmed, setIsPasswordConfirmed ] = useState(false);
+  const [ loading, setLoading ] = useState(false); 
+
   const loadData = () => {
-    setUsername(localStorage.getItem('username'));
-    setFullName(localStorage.getItem('fullname'));
-    setEmail(localStorage.getItem('email'));
-    setPhone(localStorage.getItem('phone_number'));
-    setClass(localStorage.getItem('Class'));
-    setidstudent(localStorage.getItem('idstudent'));
-    setFaculty(localStorage.getItem('Faculty'));
-    if (localStorage.getItem('avatar')) {
-      setAvatar(localStorage.getItem('avatar'));
-      setOriginalAvatar(localStorage.getItem('avatar'));
+    setUsername(localStorage.getItem(CustomerModelKeys.userId));
+    setFullName(localStorage.getItem(CustomerModelKeys.userName));
+    setEmail(localStorage.getItem(CustomerModelKeys.email));
+    setPhone(localStorage.getItem(CustomerModelKeys.phoneNum));
+    setClass(localStorage.getItem(CustomerModelKeys.classId));
+    setidstudent(localStorage.getItem(CustomerModelKeys.hcmutId));
+    setFaculty(localStorage.getItem(CustomerModelKeys.faculty));
+    setMajor(localStorage.getItem(CustomerModelKeys.major));
+    setAcademicYear(localStorage.getItem(CustomerModelKeys.academicYear));
+
+    if (localStorage.getItem(CustomerModelKeys.avatar)) {
+      setAvatar(localStorage.getItem(CustomerModelKeys.avatar));
+      setOriginalAvatar(localStorage.getItem(CustomerModelKeys.avatar));
     } else {
       setAvatar('');
       setOriginalAvatar('');
     }
-    if (localStorage.getItem('coverPhoto')) {
-      setCoverPhoto(localStorage.getItem('coverPhoto'));
-      setOriginalCoverPhoto(localStorage.getItem('coverPhoto'));
+    if (localStorage.getItem(CustomerModelKeys.coverPhoto)) {
+      setCoverPhoto(localStorage.getItem(CustomerModelKeys.coverPhoto));
+      setOriginalCoverPhoto(localStorage.getItem(CustomerModelKeys.coverPhoto));
     } else {
       setCoverPhoto('');
       setOriginalCoverPhoto('');
@@ -59,22 +68,31 @@ const Profile = () => {
   };
 
   const fetchProfileEdit = async () => {
-    if (!username) {
-      showAlert('Username is required', 'error');
+    if (!localStorage.getItem(CustomerModelKeys.userId)) {
+      showAlert('User not found', 'error');
       return;
     }
-    if (!idstudent || !Faculty) {
-      showAlert('AIO Username and AIO Key are required', 'error');
+    if (!userName) {
+      showAlert('userName is required', 'error');
       return;
     }
+    if (!hcmutId || !faculty) {
+      showAlert('HcmutId and faculty are required', 'error');
+      return;
+    }
+
+    setLoading(true);
+
     const formData = new FormData();
-    formData.append('username', username);
-    formData.append('fullname', fullname);
-    formData.append('email', email);
-    formData.append('phone_number', phone_number);
-    formData.append('idstudent', idstudent);
-    formData.append('Faculty', Faculty);
-    formData.append('Class', Class);
+    formData.append(CustomerModelKeys.userName, userName);
+    formData.append(CustomerModelKeys.email, email);
+    formData.append(CustomerModelKeys.phoneNum, phoneNum);
+    formData.append(CustomerModelKeys.hcmutId, hcmutId);
+    formData.append(CustomerModelKeys.classId, classId);
+    formData.append(CustomerModelKeys.faculty, faculty);
+    formData.append(CustomerModelKeys.major, major);
+    formData.append(CustomerModelKeys.academicYear, academicYear);
+
     const fileInputAvatar = document.querySelector('input[name="avatar"]');
     const fileInputCover = document.querySelector('input[name="coverPhoto"]');
     if (fileInputAvatar && fileInputAvatar.files[0]) {
@@ -83,43 +101,76 @@ const Profile = () => {
     if (fileInputCover && fileInputCover.files[0]) {
       formData.append('coverPhoto', fileInputCover.files[0]);
     }
-    try {
-      setLoading(true);
-      const response = await fetch('http://localhost:8080/profile/edit', {
+
+    const responses = await Promise.allSettled([
+      axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/update-profile`, formData, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
-        body: formData
-      });
-      const result = await response.json();
-      if (response.ok) {
-        setIsEditable(false);
-        localStorage.setItem('username', result.data.username || '');
-        localStorage.setItem('fullname', result.data.fullname || '');
-        localStorage.setItem('email', result.data.email || '');
-        localStorage.setItem('phone_number', result.data.phone_number || '');
-        localStorage.setItem('idstudent', result.data.idstudent || '');
-        localStorage.setItem('Faculty', result.data.Faculty || '');
-        localStorage.setItem('Class', result.data.Class || '');
-        if (result.data.avatar) {
-          const avatarSrc = `data:${result.data.avatar.contentType};base64,${result.data.avatar.data}`;
-          localStorage.setItem('avatar', avatarSrc);
+        params: {
+          userId: localStorage.getItem(CustomerModelKeys.userId)
         }
-        if (result.data.coverPhoto) {
-          const coverPhotoSrc = `data:${result.data.coverPhoto.contentType};base64,${result.data.coverPhoto.data}`;
-          localStorage.setItem('coverPhoto', coverPhotoSrc);
+      }),
+      formData.has('avatar') && axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-picture`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        params: {
+          userId: localStorage.getItem(CustomerModelKeys.userId),
+          type: 'avatar'
         }
-        toast.success('Profile saved!');
-        loadData();
-      } else {
-        console.error('Error saving profile:', result.error);
+      }),
+      formData.has('coverPhoto') && axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-picture`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        params: {
+          userId: localStorage.getItem(CustomerModelKeys.userId),
+          type: 'coverPhoto'
+        }
+      })
+    ]);
+
+    responses.forEach((response, index) => {
+      if (response !== undefined) {
+        if (response.status === 'fulfilled') {
+          if (index === 0) {
+            const result = response.value.data;
+            setIsEditable(false);
+            localStorage.setItem(CustomerModelKeys.userName, result.data.userName || '');
+            localStorage.setItem(CustomerModelKeys.email, result.data.email || '');
+            localStorage.setItem(CustomerModelKeys.phoneNum, result.data.phoneNum || '');
+            localStorage.setItem(CustomerModelKeys.hcmutId, result.data.hcmutId || '');
+            localStorage.setItem(CustomerModelKeys.faculty, result.data.faculty || '');
+            localStorage.setItem(CustomerModelKeys.major, result.data.major || '');
+            localStorage.setItem(CustomerModelKeys.classId, result.data.classId || '');
+            localStorage.setItem(CustomerModelKeys.academicYear, result.data.academicYear || '');
+          }
+          else {
+            const imageResponse = response.value.data;
+            setImageInLocalStorage(index === 1 ? 'avatar' : 'coverPhoto', { contentType: imageResponse.headers['Content-Type'], data: imageResponse.data });
+          }
+        }
+        else if (response.status === 'rejected') {
+          if (index === 0) {
+            console.error("Error update profile data: ", response.reason, response.value.data)
+          }
+          else if (index === 1) {
+            console.error("Error update avatar data: ", response.reason, response.value.data)
+          }
+          else {
+            console.error("Error update cover photo data: ", response.reason, response.value.data)
+          }
+        }
       }
-    } catch (error) {
-      console.error('Error fetching profile data:', error);
-    }finally {
-      setLoading(false); // Kết thúc loading
-    }
+    });
+
+    loadData();
+
+    setLoading(false);
   };
 
   const handleSave = () => {
@@ -165,9 +216,9 @@ const Profile = () => {
     loadData();
   }, []);
 
-  const obfuscatePhone = (phone_number) => {
-    if (!phone_number) return '';
-    const digits = phone_number.replace(/\D/g, '');
+  const obfuscatePhone = (phoneNum) => {
+    if (!phoneNum) return '';
+    const digits = phoneNum.replace(/\D/g, '');
     return `${digits.slice(0, 4)}-${digits.slice(4, 7)}-${digits.slice(7)}`;
   };
 
@@ -264,8 +315,8 @@ const Profile = () => {
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
-              label="Username"
-              value={username || ''}
+              label="userName"
+              value={userName || ''}
               onChange={(e) => setUsername(e.target.value)}
               fullWidth
               InputProps={{
@@ -307,7 +358,7 @@ const Profile = () => {
           <Grid item xs={12}>
             <TextField
               label="Phone Number"
-              value={isEditable ? phone_number : obfuscatePhone(phone_number)}
+              value={isEditable ? phoneNum : obfuscatePhone(phoneNum)}
               fullWidth
               InputProps={{
                 readOnly: true, // Phone number is always read-only
@@ -345,7 +396,7 @@ const Profile = () => {
           <Grid item xs={12}>
             <TextField
               label="ID Student"
-              value={idstudent || ''}
+              value={hcmutId || ''}
               onChange={(e) => setidstudent(e.target.value)}
               fullWidth
               InputProps={{
@@ -358,8 +409,8 @@ const Profile = () => {
           </Grid>
           <Grid item xs={12}>
             <TextField
-              label="Class" 
-              value={Class || ''}
+              label="classId" 
+              value={classId || ''}
               onChange={(e) => setClass(e.target.value)}
               fullWidth
               InputProps={{
@@ -372,8 +423,8 @@ const Profile = () => {
           </Grid>
           <Grid item xs={12}>
             <TextField
-              label="Faculty"
-              value={Faculty || ''}
+              label="faculty"
+              value={faculty || ''}
               onChange={(e) => setFaculty(e.target.value)}
               fullWidth
               InputProps={{

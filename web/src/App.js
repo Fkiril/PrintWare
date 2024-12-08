@@ -28,16 +28,29 @@ import PRINT from './Pages/Admin/managePrinter/ManagePrint_er';
 import USER from './Pages/Admin/manageUser/ManageUser';
 
 import axios from 'axios';
-import { logout } from './controller/HCMUT_SSO';
+import { logout } from './controllers/HCMUT_SSO';
+import { CustomerModelKeys } from './models/User';
 
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-  const fetchProfileData = async (userId, token) => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-user-profile-by-id}`, {
+  const fetchProfileData = async () => {
+    if (!localStorage.getItem(CustomerModelKeys.userId)) {
+      console.error('User ID not found in local storage.');
+      return;
+    }
+    if (!localStorage.getItem('accessToken')) {
+      console.error('Access token not found in local storage.');
+      return;
+    }
+
+    const userId = localStorage.getItem(CustomerModelKeys.userId);
+    const token = localStorage.getItem('accessToken');
+
+    const responses = await Promise.allSettled([
+      axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-user-profile-by-id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -45,30 +58,62 @@ function App() {
         },
         params: {
           userId: userId,
+        }
+      }),
+      axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-picture`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
         },
-      });
+        params: {
+          userId: userId,
+          type: 'avatar',
+        }
+      }),
+      axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-picture`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        params: {
+          userId: userId,
+          type: 'coverPhoto',
+        }
+      })
+    ]);
 
-      const result = await response.json();
-      if (response.ok) {
-        localStorage.setItem('username', result.data.userName !== undefined ? result.data.userName : '');
-        localStorage.setItem('email', result.data.email !== undefined ? result.data.email : '');
-        localStorage.setItem('phone_number', result.data.phoneNum !== undefined ? result.data.phoneNum : '');
+    responses.forEach((response, index) => {
+      if (response.status === 'fulfilled') {
+        if (index === 0) {
+          const profileResponse = response.value.data;
 
-        // localStorage.setItem('AIO_USERNAME', result.data.AIO_USERNAME !== undefined ? result.data.AIO_USERNAME : '');
-        // localStorage.setItem('AIO_KEY', result.data.AIO_KEY !== undefined ? result.data.AIO_KEY : '');
-        // localStorage.setItem('webServerIp', result.data.webServerIp !== undefined ? result.data.webServerIp : '');
-
-        setImageInLocalStorage('avatar', result.data.avatar);
-        setImageInLocalStorage('coverPhoto', result.data.coverPhoto);
-      } else {
-        console.error(result.error);
+          localStorage.setItem(CustomerModelKeys.userRole, profileResponse.data.userRole || '');
+          localStorage.setItem(CustomerModelKeys.userName, profileResponse.data.userName || '');
+          localStorage.setItem(CustomerModelKeys.email, profileResponse.data.email || '');
+          localStorage.setItem(CustomerModelKeys.phoneNum, profileResponse.data.phoneNum || '');
+          localStorage.setItem(CustomerModelKeys.hcmutId, profileResponse.data.hcmutId || '');
+          localStorage.setItem(CustomerModelKeys.faculty, profileResponse.data.faculty || '');
+          localStorage.setItem(CustomerModelKeys.major, profileResponse.data.major || '');
+          localStorage.setItem(CustomerModelKeys.classId, profileResponse.data.classId || '');
+          localStorage.setItem(CustomerModelKeys.academicYear, profileResponse.data.academicYear || '');
+        } else {
+          const imageResponse = response.value.data;
+          setImageInLocalStorage(index === 1 ? 'avatar' : 'coverPhoto', { contentType: imageResponse.headers['Content-Type'], data: imageResponse.data });
+        }
       }
-    } catch (error) {
-      console.error('Error fetching profile data:', error);
-    }
+      else {
+        if (index === 0) {
+          console.error("Error fetching profile data: ", response.reason, response.value.data)
+        }
+        else if (index === 1) {
+          console.error("Error fetching avatar data: ", response.reason, response.value.data)
+        }
+        else {
+          console.error("Error fetching cover photo data: ", response.reason, response.value.data)
+        }
+      }
+    });
   };
-
- 
 
   const setImageInLocalStorage = (key, data) => {
     if (data) {
@@ -81,8 +126,6 @@ function App() {
 
   useEffect(() => {
     const storedLoggedInStatus = localStorage.getItem('isLoggedIn');
-    const accessToken = localStorage.getItem('accessToken');
-    const userId = localStorage.getItem('userId');
 
     if (storedLoggedInStatus === 'true') {
       if (performance.navigation.type === 1) {
@@ -90,7 +133,7 @@ function App() {
       }
       setIsLoggedIn(true);
      
-      fetchProfileData(userId, accessToken);
+      fetchProfileData();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
@@ -116,8 +159,6 @@ function App() {
   const toggleSidebar = () => {
     setSidebarOpen((prev) => !prev);
   };
-
-
 
   return (
     <Box sx={{backgroundColor:'#f0f0f0'}}>
