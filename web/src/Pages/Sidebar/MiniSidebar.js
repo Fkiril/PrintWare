@@ -4,6 +4,7 @@ import { Box, IconButton, Avatar, Typography, Menu, MenuItem } from '@mui/materi
 import PersonIcon from '@mui/icons-material/Person';
 import HistoryIcon from '@mui/icons-material/History'; // Icon lịch sử
 import LogoutIcon from '@mui/icons-material/Logout'; // Icon logout
+import { CustomerModelKeys, UserRoles } from '../../models/User';
 
 export default function Navbar({ onLogout }) {
   const [avatar, setAvatar] = useState('');
@@ -13,8 +14,8 @@ export default function Navbar({ onLogout }) {
   const location = useLocation();
   
   const loadData = async () => {
-    const savedAvatar = localStorage.getItem('avatar');
-    const savedRole = localStorage.getItem('role'); // Lấy role từ localStorage
+    const savedAvatar = localStorage.getItem(CustomerModelKeys.avatar);
+    const savedRole = localStorage.getItem(CustomerModelKeys.userRole); // Lấy role từ localStorage
     setAvatar(savedAvatar || '');
     setRole(savedRole || '');
   };
@@ -87,7 +88,7 @@ export default function Navbar({ onLogout }) {
           </Box>
 
           {/* Hiển thị menu khác nhau dựa trên role */}
-          {role === 'user' && (
+          {role === UserRoles.USER && (
             <Box
             sx={{
               display: 'flex', // Đặt các phần tử con trong cùng một hàng
@@ -124,7 +125,7 @@ export default function Navbar({ onLogout }) {
           
           )}
 
-          {role === 'printer' && (
+          {role === UserRoles.SPSO && (
             <>
               <Box>
                 <Link to="/manage-printer" style={{ textDecoration: 'none' }}>
@@ -143,7 +144,7 @@ export default function Navbar({ onLogout }) {
             </>
           )}
 
-          {role === 'admin' && (
+          {role === UserRoles.ADMIN && (
             <>
               <Box>
                 <Link to="/dashboard" style={{ textDecoration: 'none' }}>
@@ -193,18 +194,18 @@ export default function Navbar({ onLogout }) {
         </Box>
     
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {role === 'user' ? (
+          {role === UserRoles.USER ? (
             <IconButton onClick={handleAvatarClick} sx={{ marginRight: 2 ,marginTop:'5px'}}>
               <Avatar src={avatar} sx={{ width: 35, height: 35 }} />
             </IconButton>
-          ) : role === 'printer' ||  role === 'admin'? (
+          ) : role === UserRoles.SPSO ||  role === UserRoles.ADMIN? (
             <IconButton onClick={onLogout} sx={{ marginRight: 2 }}>
               <LogoutIcon sx={{ color: '#d32f2f', fontSize: 30 }} />
             </IconButton>
           ) : null}
 
 
-          {role === 'user' && (
+          {role === UserRoles.USER && (
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
