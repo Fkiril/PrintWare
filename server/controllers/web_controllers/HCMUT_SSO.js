@@ -84,7 +84,7 @@ export async function register(paramBody) {
 // Checked
 export async function adminRegister(paramBody) {
     try {
-        paramBody['userRole'] = 'admin';
+        paramBody['userRole'] = 'spso';
         boparamBodydparamBodyy['highestAuthority'] = false;
         console.log('Body: ', paramBody);
 
