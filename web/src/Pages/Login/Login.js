@@ -8,6 +8,7 @@ import Forget from '../../components/auth/Forget';
 import LoadingSpinner from '../../components/ui/Loading/LoadingSpinner'; // Import LoadingSpinner
 
 import { loginWithEmailAndPassword } from '../../controllers/HCMUT_SSO.js';
+import { CustomerModelKeys } from '../../models/User.js';
 
 export default function Login({ onLogin }) {
   const [emailOrusername, setEmailOrUsername] = useState('');
@@ -29,11 +30,12 @@ export default function Login({ onLogin }) {
       let convert = emailOrusername.toLowerCase();
 
       const result = await loginWithEmailAndPassword(convert, password);
-      console.log(result);
+      console.log('login result: ', result);
       
       setError('');
       const { user, customToken} = result.data;
       localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem(CustomerModelKeys.userId, user.uid);
       localStorage.setItem('accessToken', customToken);
       localStorage.setItem('isLoggedIn', 'true');
 

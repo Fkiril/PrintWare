@@ -24,7 +24,7 @@ app.use(express.json());
 app.options('*', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', process.env.CLIENT_URL);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.sendStatus(204);
 });
 app.use((req, res, next) => {

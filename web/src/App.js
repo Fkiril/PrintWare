@@ -50,7 +50,7 @@ function App() {
     const token = localStorage.getItem('accessToken');
 
     const responses = await Promise.allSettled([
-      axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-user-profile-by-id}`, {
+      axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-user-profile-by-id`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -97,19 +97,19 @@ function App() {
           localStorage.setItem(CustomerModelKeys.classId, profileResponse.data.classId || '');
           localStorage.setItem(CustomerModelKeys.academicYear, profileResponse.data.academicYear || '');
         } else {
-          const imageResponse = response.value.data;
-          setImageInLocalStorage(index === 1 ? 'avatar' : 'coverPhoto', { contentType: imageResponse.headers['Content-Type'], data: imageResponse.data });
+          const imageResponse = response.value;
+          setImageInLocalStorage(index === 1 ? 'avatar' : 'coverPhoto', { contentType: imageResponse.headers.getContentType(), data: imageResponse.data });
         }
       }
       else {
         if (index === 0) {
-          console.error("Error fetching profile data: ", response.reason, response.value.data)
+          console.error("Error fetching profile data: ", response.reason)
         }
         else if (index === 1) {
-          console.error("Error fetching avatar data: ", response.reason, response.value.data)
+          console.error("Error fetching avatar data: ", response.reason)
         }
         else {
-          console.error("Error fetching cover photo data: ", response.reason, response.value.data)
+          console.error("Error fetching cover photo data: ", response.reason)
         }
       }
     });
@@ -253,9 +253,6 @@ function App() {
                 : <Navigate to="/" />
             }
           />
-
-
-
 
           {/* printer */}
            <Route

@@ -6,11 +6,11 @@ import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import LoadingSpinner from '../../components/ui/Loading/LoadingSpinner';
-const token = localStorage.getItem('accessToken');
 
 import axios from 'axios';
 import { CustomerModelKeys } from '../../models/User';
-import { response } from 'express';
+
+const token = localStorage.getItem('accessToken');
 
 const showAlert = (message, type) => {
   Swal.fire({
@@ -26,7 +26,7 @@ const Profile = () => {
   const [ email, setEmail ] = useState('');
   const [ phoneNum, setPhone ] = useState('');
   const [ classId, setClass ] = useState('');
-  const [ hcmutId, setidstudent ] = useState('');
+  const [ hcmutId, setHcmutId ] = useState('');
   const [ faculty, setFaculty ] = useState('');
   const [ major, setMajor ] = useState('')
   const [ academicYear, setAcademicYear ] = useState('')
@@ -41,12 +41,11 @@ const Profile = () => {
   const [ loading, setLoading ] = useState(false); 
 
   const loadData = () => {
-    setUsername(localStorage.getItem(CustomerModelKeys.userId));
-    setFullName(localStorage.getItem(CustomerModelKeys.userName));
+    setUsername(localStorage.getItem(CustomerModelKeys.userName));
     setEmail(localStorage.getItem(CustomerModelKeys.email));
     setPhone(localStorage.getItem(CustomerModelKeys.phoneNum));
     setClass(localStorage.getItem(CustomerModelKeys.classId));
-    setidstudent(localStorage.getItem(CustomerModelKeys.hcmutId));
+    setHcmutId(localStorage.getItem(CustomerModelKeys.hcmutId));
     setFaculty(localStorage.getItem(CustomerModelKeys.faculty));
     setMajor(localStorage.getItem(CustomerModelKeys.major));
     setAcademicYear(localStorage.getItem(CustomerModelKeys.academicYear));
@@ -61,7 +60,8 @@ const Profile = () => {
     if (localStorage.getItem(CustomerModelKeys.coverPhoto)) {
       setCoverPhoto(localStorage.getItem(CustomerModelKeys.coverPhoto));
       setOriginalCoverPhoto(localStorage.getItem(CustomerModelKeys.coverPhoto));
-    } else {
+    }
+    else {
       setCoverPhoto('');
       setOriginalCoverPhoto('');
     }
@@ -112,8 +112,8 @@ const Profile = () => {
           userId: localStorage.getItem(CustomerModelKeys.userId)
         }
       }),
-      formData.has('avatar') && axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-picture`, {
-        method: 'GET',
+      formData.has('avatar') && axios.post(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/upload-picture`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -122,8 +122,8 @@ const Profile = () => {
           type: 'avatar'
         }
       }),
-      formData.has('coverPhoto') && axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-picture`, {
-        method: 'GET',
+      formData.has('coverPhoto') && axios.post(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/upload-picture`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -171,6 +171,15 @@ const Profile = () => {
     loadData();
 
     setLoading(false);
+  };
+
+  const setImageInLocalStorage = (key, data) => {
+    if (data) {
+      const src = `data:${data.contentType};base64,${data.data}`;
+      localStorage.setItem(key, src);
+    } else {
+      localStorage.setItem(key, '');
+    }
   };
 
   const handleSave = () => {
@@ -281,6 +290,9 @@ const Profile = () => {
               mb: 2,
             }}
           >
+            <img 
+              id='test-img'/>
+
             <Avatar src={avatar} sx={{ width: 100, height: 100,top:15, }} />
             {isEditable && (
               <Button
@@ -318,20 +330,6 @@ const Profile = () => {
               label="userName"
               value={userName || ''}
               onChange={(e) => setUsername(e.target.value)}
-              fullWidth
-              InputProps={{
-                readOnly: !isEditable,
-              }}
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              label="Full Name"
-              value={fullname || ''}
-              onChange={(e) => setFullName(e.target.value)}
               fullWidth
               InputProps={{
                 readOnly: !isEditable,
@@ -397,7 +395,7 @@ const Profile = () => {
             <TextField
               label="ID Student"
               value={hcmutId || ''}
-              onChange={(e) => setidstudent(e.target.value)}
+              onChange={(e) => setHcmutId(e.target.value)}
               fullWidth
               InputProps={{
                 readOnly: !isEditable,
