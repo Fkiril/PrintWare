@@ -200,6 +200,14 @@ export async function updateProfile(paramUserId, paramBody) {
 
 // Checked
 export async function getUserProfileById(paramUserId) {
+    // Check for admin account first
+    const adminRef = firestore.collection(process.env.ADMINS_COLLECTION).doc(paramUserId);
+
+    const adminSnapshot = await adminRef.get();
+    if (adminSnapshot.data() !== undefined) {
+        return { status: 200, body: { message: 'Admin account found.', data: adminSnapshot.data() } };
+    }
+
     const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
 
     return await userRef.get().then((userSnapshot) => {
