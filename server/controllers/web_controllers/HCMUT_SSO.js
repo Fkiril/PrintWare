@@ -301,7 +301,7 @@ export async function uploadPicture(paramFile, paramUserId, paramType) {
         }
     }
 
-    const fileBuffer = Buffer.from(paramFile.buffer);
+    const fileBuffer = Buffer.from(paramFile.buffer, 'base64');
     const fileStream = new Readable();
     fileStream.push(fileBuffer);
     fileStream.push(null);

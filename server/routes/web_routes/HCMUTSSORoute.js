@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { response, Router } from 'express';
 const router = Router();
 import { adminRegister, register, deleteAccount, updateProfile, getUserProfileById, getUserProfileByEmail, getUserIdByEmail, uploadPicture, getPicture, createResetPasswordLink, createEmailVertificationLink, getDocIdList} from '../../controllers/web_controllers/HCMUT_SSO.js';
 
@@ -12,8 +12,9 @@ const upload = multer({ storage: storage });
 // Output: user information as JSON
 router.post('/admin-register', upload.single(''), async (req, res) => {
     console.log('Received a admin register request!');
-    const body = req.body;
 
+    const body = req.body;
+    console.log('body: ', body);
     if (!body || !body.email || !body.password || !body.userName) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
@@ -22,6 +23,8 @@ router.post('/admin-register', upload.single(''), async (req, res) => {
     const result = await adminRegister(body);
 
     res.status(result.status).json(result.body);
+    
+    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -29,8 +32,9 @@ router.post('/admin-register', upload.single(''), async (req, res) => {
 // Output: user information as JSON
 router.post('/register', upload.single(''), async (req, res) => {
     console.log('Received a register request!');
-    const body = req.body;
 
+    const body = req.body;
+    console.log('body: ', body);
     if (!body || !body.email || !body.password || !body.userName) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
@@ -38,7 +42,9 @@ router.post('/register', upload.single(''), async (req, res) => {
 
     const result = await register(body);
 
-    res.status(result.status).json(result.body); 
+    res.status(result.status).json(result.body);
+    
+    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -47,6 +53,7 @@ router.delete('/delete-account', async (req, res) => {
     console.log('Received a delete account request!');
 
     const query = req.query;
+    console.log('query: ', query);
     if (!query || !query.userId) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
@@ -55,6 +62,8 @@ router.delete('/delete-account', async (req, res) => {
     const result = await deleteAccount(query.userId);
 
     res.status(result.status).json(result.body);
+    
+    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -65,6 +74,7 @@ router.patch('/update-profile', upload.single(''), async (req, res) => {
 
     const body = req.body;
     const query = req.query;
+    console.log('body: ', body, 'query: ', query);
     if (!body || Object.keys(body).length === 0 || !query || !query.userId) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
@@ -73,6 +83,8 @@ router.patch('/update-profile', upload.single(''), async (req, res) => {
     const result = await updateProfile(query.userId, body);
 
     res.status(result.status).json(result.body);
+    
+    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -82,6 +94,7 @@ router.get('/get-user-profile-by-id', async (req, res) => {
     console.log('Received a get user profile by id request!');
 
     const query = req.query;
+    console.log('query: ', query);
     if (!query || !query.userId) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
@@ -90,6 +103,8 @@ router.get('/get-user-profile-by-id', async (req, res) => {
     const result = await getUserProfileById(query.userId);
 
     res.status(result.status).json(result.body);
+    
+    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -99,6 +114,7 @@ router.get('/get-user-profile-by-email', async (req, res) => {
     console.log('Received a get user profile by email request!');
 
     const query = req.query;
+    console.log('query: ', query);
     if (!query || !query.email) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
@@ -107,6 +123,8 @@ router.get('/get-user-profile-by-email', async (req, res) => {
     const result = await getUserProfileByEmail(query.email);
 
     res.status(result.status).json(result.body);
+    
+    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -116,6 +134,7 @@ router.get('/get-user-id-by-email', async (req, res) => {
     console.log('Received a get user id by email request!');
 
     const query = req.query;
+    console.log('query: ', query);
     if (!query || !query.email) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
@@ -124,6 +143,8 @@ router.get('/get-user-id-by-email', async (req, res) => {
     const result = await getUserIdByEmail(query.email);
 
     res.status(result.status).json(result.body);
+    
+    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -136,7 +157,7 @@ router.post('/upload-picture', upload.single('file'), async (req, res) => {
 
     const file = req.file;
     const query = req.query;
-    console.log(file, query);
+    console.log('file: ', file, 'query: ', query);
     if (!file || !query || !query.userId || !query.type) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
@@ -145,6 +166,8 @@ router.post('/upload-picture', upload.single('file'), async (req, res) => {
     const result = await uploadPicture(file, query.userId, query.type);
 
     res.status(result.status).json(result.body);
+
+    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -155,6 +178,7 @@ router.get('/get-picture', async (req, res) => {
     console.log('Received a get picture request!');
 
     const query = req.query;
+    console.log('query: ', query);
     if (!query || !query.userId || !query.type) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
@@ -169,7 +193,7 @@ router.get('/get-picture', async (req, res) => {
     
     res.set({
         'Content-Type': result.body.data.contentType,
-        'Content-Disposition': `attachment; filename="${result.body.data.fileId}"`,
+        'Content-Disposition': `attachment; filename="${result.body.data.fileId}"`
     });
 
     result.body.file
@@ -181,6 +205,9 @@ router.get('/get-picture', async (req, res) => {
             res.status(500).json({ message: error.message });
         })
         .pipe(res);
+
+    
+    console.log('----------------------------', '\n');
 })
 
 
@@ -191,6 +218,7 @@ router.get('/get-reset-password-link', async (req, res) => {
     console.log('Received a get reset password link request!');
 
     const query = req.query;
+    console.log('query: ', query);
     if (!query || !query.email) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
@@ -199,6 +227,8 @@ router.get('/get-reset-password-link', async (req, res) => {
     const result = await createResetPasswordLink(query.email);
 
     res.status(result.status).json(result.body);
+    
+    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -208,6 +238,7 @@ router.get('/get-email-verification-link', async (req, res) => {
     console.log('Received a get email verification link request!');
 
     const query = req.query;
+    console.log('query: ', query);
     if (!query || !query.email) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
@@ -216,6 +247,8 @@ router.get('/get-email-verification-link', async (req, res) => {
     const result = await createEmailVertificationLink(query.email);
 
     res.status(result.status).json(result.body);
+    
+    console.log('----------------------------', '\n');
 })
 
 
@@ -226,6 +259,7 @@ router.get('/get-doc-id-list', async (req, res) => {
     console.log('Received a get doc id list request!');
 
     const query = req.query;
+    console.log('query: ', query);
     if (!query || !query.userId) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
@@ -234,6 +268,8 @@ router.get('/get-doc-id-list', async (req, res) => {
     const result = await getDocIdList(query.userId);
 
     res.status(result.status).json(result.body);
+    
+    console.log('----------------------------', '\n');
 })
 
 export default router;
