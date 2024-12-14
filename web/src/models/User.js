@@ -25,6 +25,6 @@ export const SPSOModelKeys = {
 
 export const UserRoles =  {
     ADMIN: 'admin',
-    USER: 'user',
+    USER: 'customer',
     SPSO: 'spso'
 }

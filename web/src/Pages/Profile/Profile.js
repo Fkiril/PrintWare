@@ -10,8 +10,6 @@ import LoadingSpinner from '../../components/ui/Loading/LoadingSpinner';
 import axios from 'axios';
 import { CustomerModelKeys } from '../../models/User';
 
-const token = localStorage.getItem('accessToken');
-
 const showAlert = (message, type) => {
   Swal.fire({
     icon: type,
@@ -67,9 +65,13 @@ const Profile = () => {
     }
   };
 
-  const fetchProfileEdit = async () => {
+  const fetchProfileEdit = async (isProfileChanged) => {
     if (!localStorage.getItem(CustomerModelKeys.userId)) {
       showAlert('User not found', 'error');
+      return;
+    }
+    if (!localStorage.getItem('accessToken')) {
+      showAlert('Access token not found', 'error');
       return;
     }
     if (!userName) {
@@ -83,36 +85,46 @@ const Profile = () => {
 
     setLoading(true);
 
+    const token = localStorage.getItem('accessToken');
+
     const formData = new FormData();
-    formData.append(CustomerModelKeys.userName, userName);
-    formData.append(CustomerModelKeys.email, email);
-    formData.append(CustomerModelKeys.phoneNum, phoneNum);
-    formData.append(CustomerModelKeys.hcmutId, hcmutId);
-    formData.append(CustomerModelKeys.classId, classId);
-    formData.append(CustomerModelKeys.faculty, faculty);
-    formData.append(CustomerModelKeys.major, major);
-    formData.append(CustomerModelKeys.academicYear, academicYear);
+    if (document.querySelector('input[name="userName"]').value) formData.append(CustomerModelKeys.userName, document.querySelector('input[name="userName"]').value);
+    if (document.querySelector('input[name="phoneNum"]').value) formData.append(CustomerModelKeys.phoneNum, document.querySelector('input[name="phoneNum"]').value);
+    if (document.querySelector('input[name="hcmutId"]').value) formData.append(CustomerModelKeys.hcmutId, document.querySelector('input[name="hcmutId"]').value);
+    if (document.querySelector('input[name="faculty"]').value) formData.append(CustomerModelKeys.faculty, document.querySelector('input[name="faculty"]').value);
+    // if (document.querySelector('input[name="major"]').value) formData.append(CustomerModelKeys.major, document.querySelector('input[name="major"]').value);
+    // if (document.querySelector('input[name="academicYear"]').value) formData.append(CustomerModelKeys.academicYear, document.querySelector('input[name="academicYear"]').value);
+    if (document.querySelector('input[name="classId"]').value) formData.append(CustomerModelKeys.classId, document.querySelector('input[name="classId"]').value);
+
+    const avaFormData = new FormData();
+    const coverFormData = new FormData();
 
     const fileInputAvatar = document.querySelector('input[name="avatar"]');
     const fileInputCover = document.querySelector('input[name="coverPhoto"]');
     if (fileInputAvatar && fileInputAvatar.files[0]) {
-      formData.append('avatar', fileInputAvatar.files[0]);
+      avaFormData.append('file', fileInputAvatar.files[0]);
     }
     if (fileInputCover && fileInputCover.files[0]) {
-      formData.append('coverPhoto', fileInputCover.files[0]);
+      coverFormData.append('file', fileInputCover.files[0]);
+    }
+
+    if (!avaFormData.has('file') && !coverFormData.has('file') && !isProfileChanged) {
+      setLoading(false);
+      showAlert('No changes detected', 'warning');
+      return;
     }
 
     const responses = await Promise.allSettled([
-      axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/update-profile`, formData, {
+      isProfileChanged && axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/update-profile`, formData, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
         params: {
           userId: localStorage.getItem(CustomerModelKeys.userId)
         }
       }),
-      formData.has('avatar') && axios.post(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/upload-picture`, {
+      avaFormData.has('file') && axios.post(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/upload-picture`, avaFormData, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -122,7 +134,7 @@ const Profile = () => {
           type: 'avatar'
         }
       }),
-      formData.has('coverPhoto') && axios.post(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/upload-picture`, {
+      coverFormData.has('file') && axios.post(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/upload-picture`, coverFormData, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -139,30 +151,39 @@ const Profile = () => {
         if (response.status === 'fulfilled') {
           if (index === 0) {
             const result = response.value.data;
+            console.log('Update profile result: ', result);
             setIsEditable(false);
-            localStorage.setItem(CustomerModelKeys.userName, result.data.userName || '');
-            localStorage.setItem(CustomerModelKeys.email, result.data.email || '');
-            localStorage.setItem(CustomerModelKeys.phoneNum, result.data.phoneNum || '');
-            localStorage.setItem(CustomerModelKeys.hcmutId, result.data.hcmutId || '');
-            localStorage.setItem(CustomerModelKeys.faculty, result.data.faculty || '');
-            localStorage.setItem(CustomerModelKeys.major, result.data.major || '');
-            localStorage.setItem(CustomerModelKeys.classId, result.data.classId || '');
-            localStorage.setItem(CustomerModelKeys.academicYear, result.data.academicYear || '');
+
+            if (formData.has(CustomerModelKeys.userName)) localStorage.setItem(CustomerModelKeys.userName, formData.get(CustomerModelKeys.userName));
+            if (formData.has(CustomerModelKeys.email)) localStorage.setItem(CustomerModelKeys.email, formData.get(CustomerModelKeys.email));
+            if (formData.has(CustomerModelKeys.phoneNum)) localStorage.setItem(CustomerModelKeys.phoneNum, formData.get(CustomerModelKeys.phoneNum));
+            if (formData.has(CustomerModelKeys.hcmutId)) localStorage.setItem(CustomerModelKeys.hcmutId, formData.get(CustomerModelKeys.hcmutId));
+            if (formData.has(CustomerModelKeys.faculty)) localStorage.setItem(CustomerModelKeys.faculty, formData.get(CustomerModelKeys.faculty));
+            if (formData.has(CustomerModelKeys.major)) localStorage.setItem(CustomerModelKeys.major, formData.get(CustomerModelKeys.major));
+            if (formData.has(CustomerModelKeys.classId)) localStorage.setItem(CustomerModelKeys.classId, formData.get(CustomerModelKeys.classId));
+            if (formData.has(CustomerModelKeys.academicYear)) localStorage.setItem(CustomerModelKeys.academicYear, formData.get(CustomerModelKeys.academicYear));
           }
           else {
-            const imageResponse = response.value.data;
-            setImageInLocalStorage(index === 1 ? 'avatar' : 'coverPhoto', { contentType: imageResponse.headers['Content-Type'], data: imageResponse.data });
+            const result = response.value.data;
+            if (index === 1) {
+              console.log('Update avatar result: ', result);
+              if (avatar) localStorage.setItem(CustomerModelKeys.avatar, avatar);
+            }
+            else if (index === 2) {
+              console.log('Update cover photo result: ', result);
+              if (coverPhoto) localStorage.setItem(CustomerModelKeys.coverPhoto, coverPhoto);
+            }
           }
         }
         else if (response.status === 'rejected') {
           if (index === 0) {
-            console.error("Error update profile data: ", response.reason, response.value.data)
+            console.error("Error update profile data: ", response.reason)
           }
           else if (index === 1) {
-            console.error("Error update avatar data: ", response.reason, response.value.data)
+            console.error("Error update avatar data: ", response.reason)
           }
           else {
-            console.error("Error update cover photo data: ", response.reason, response.value.data)
+            console.error("Error update cover photo data: ", response.reason)
           }
         }
       }
@@ -173,17 +194,35 @@ const Profile = () => {
     setLoading(false);
   };
 
-  const setImageInLocalStorage = (key, data) => {
-    if (data) {
-      const src = `data:${data.contentType};base64,${data.data}`;
-      localStorage.setItem(key, src);
-    } else {
-      localStorage.setItem(key, '');
-    }
+  const checkProfileChanged = () => {
+    return new Promise((resolve) => {
+      const currentUserName = document.querySelector('input[name="userName"]').value;
+      const currentPhoneNum = document.querySelector('input[name="phoneNum"]').value;
+      const currentHcmutId = document.querySelector('input[name="hcmutId"]').value;
+      const currentFaculty = document.querySelector('input[name="faculty"]').value;
+      // const currentMajor = document.querySelector('input[name="major"]').value;
+      // const currentAcademicYear = document.querySelector('input[name="academicYear"]').value;
+      const currentClassId = document.querySelector('input[name="classId"]').value;
+  
+      if (
+        currentUserName !== userName ||
+        currentPhoneNum !== phoneNum ||
+        currentHcmutId !== hcmutId ||
+        currentFaculty !== faculty ||
+        // currentMajor !== major ||
+        // currentAcademicYear !== academicYear ||
+        currentClassId !== classId
+      ) {
+        resolve(true);
+      }
+      else resolve(false);
+    });
   };
 
   const handleSave = () => {
-    fetchProfileEdit();
+    checkProfileChanged().then((result) => {
+      fetchProfileEdit(result);
+    });
   };
 
   const handleCancel = () => {
@@ -328,8 +367,9 @@ const Profile = () => {
           <Grid item xs={12}>
             <TextField
               label="userName"
-              value={userName || ''}
-              onChange={(e) => setUsername(e.target.value)}
+              name="userName"
+              value={isEditable ? null : userName}
+              // onChange={(e) => setUsername(e.target.value)}
               fullWidth
               InputProps={{
                 readOnly: !isEditable,
@@ -342,11 +382,12 @@ const Profile = () => {
           <Grid item xs={12}>
             <TextField
               label="Email"
+              name="email"
               value={isEditable ? email : obfuscateEmail(email)}
-              onChange={(e) => setEmail(e.target.value)}
+              // onChange={(e) => setEmail(e.target.value)}
               fullWidth
               InputProps={{
-                readOnly: !isEditable,
+                readOnly: true, // Email is always read-only
               }}
               InputLabelProps={{
                 shrink: true,
@@ -356,10 +397,11 @@ const Profile = () => {
           <Grid item xs={12}>
             <TextField
               label="Phone Number"
+              name="phoneNum"
               value={isEditable ? phoneNum : obfuscatePhone(phoneNum)}
               fullWidth
               InputProps={{
-                readOnly: true, // Phone number is always read-only
+                readOnly: !isEditable,
               }}
               InputLabelProps={{
                 shrink: true, // Always keep the label on top
@@ -394,8 +436,9 @@ const Profile = () => {
           <Grid item xs={12}>
             <TextField
               label="ID Student"
-              value={hcmutId || ''}
-              onChange={(e) => setHcmutId(e.target.value)}
+              name="hcmutId"
+              value={isEditable ? null : hcmutId}
+              // onChange={(e) => setHcmutId(e.target.value)}
               fullWidth
               InputProps={{
                 readOnly: !isEditable,
@@ -407,9 +450,10 @@ const Profile = () => {
           </Grid>
           <Grid item xs={12}>
             <TextField
-              label="classId" 
-              value={classId || ''}
-              onChange={(e) => setClass(e.target.value)}
+              label="classId"
+              name="classId"
+              value={isEditable ? null : classId}
+              // onChange={(e) => setClass(e.target.value)}
               fullWidth
               InputProps={{
                 readOnly: !isEditable,
@@ -422,8 +466,9 @@ const Profile = () => {
           <Grid item xs={12}>
             <TextField
               label="faculty"
-              value={faculty || ''}
-              onChange={(e) => setFaculty(e.target.value)}
+              name="faculty"
+              value={isEditable ? null : faculty}
+              // onChange={(e) => setFaculty(e.target.value)}
               fullWidth
               InputProps={{
                 readOnly: !isEditable,

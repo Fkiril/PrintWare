@@ -86,7 +86,6 @@ export async function adminRegister(paramBody) {
     try {
         paramBody['userRole'] = 'spso';
         boparamBodydparamBodyy['highestAuthority'] = false;
-        console.log('Body: ', paramBody);
 
         const checkUserQuery = firestore.collection(process.env.USERS_COLLECTION).where('email', '==', paramBody.email);
         checkUserQuery.get().then((checkUserSnapshot) => {
@@ -167,12 +166,9 @@ export async function deleteAccount(paramUserId) {
 // Checked
 export async function updateProfile(paramUserId, paramBody) {
     try {
-        console.log('paramBody: ', paramBody);
-
         const CustomerInstance = new Customer();
         const validFields = Object.keys(CustomerInstance).filter(key => key !== 'constructor');
-        console.log('validFields: ', validFields);
-
+        
         const invalidFields = Object.keys(paramBody).filter(key => !validFields.includes(key));
         if (invalidFields.length > 0) {
             return { status: 400, body: { message: `The following fields are invalid: ${invalidFields.join(', ')}.` } };

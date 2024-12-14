@@ -68,7 +68,8 @@ function App() {
         params: {
           userId: userId,
           type: 'avatar',
-        }
+        },
+        responseType: 'arraybuffer'
       }),
       axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-picture`, {
         method: 'GET',
@@ -78,7 +79,8 @@ function App() {
         params: {
           userId: userId,
           type: 'coverPhoto',
-        }
+        },
+        responseType: 'arraybuffer'
       })
     ]);
 
@@ -98,7 +100,10 @@ function App() {
           localStorage.setItem(CustomerModelKeys.academicYear, profileResponse.data.academicYear || '');
         } else {
           const imageResponse = response.value;
-          setImageInLocalStorage(index === 1 ? 'avatar' : 'coverPhoto', { contentType: imageResponse.headers.getContentType(), data: imageResponse.data });
+          const imgData = btoa(String.fromCharCode.apply(null, new Uint8Array(imageResponse.data)));
+          const imgType = imageResponse.headers.getContentType();
+
+          setImageInLocalStorage(index === 1 ? 'avatar' : 'coverPhoto', { contentType: imgType, data: imgData });
         }
       }
       else {
