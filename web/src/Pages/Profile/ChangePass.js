@@ -15,13 +15,14 @@ const PasswordDialog = ({ open, onClose, onConfirm }) => {
       setError('Passwords do not match.');
       return;
     }
-    if (!localStorage.getItem(CustomerModelKeys.email)) {
+    const email = localStorage.getItem(CustomerModelKeys.email);
+    if (!email) {
       setError('Email is required.');
       return;
     }
 
     try {
-      const result = await changePassword(currentPassword, newPassword, localStorage.getItem(CustomerModelKeys.email));
+      const result = await changePassword(email, currentPassword, newPassword);
       console.log(result.message);
       
       setError('');

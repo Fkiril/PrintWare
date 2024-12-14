@@ -29,20 +29,15 @@ export async function changePassword(email, oldPassword, newPassword) {
     const user = clientAuth.currentUser;
     
     const credential = EmailAuthProvider.credential(email, oldPassword);
-    const result = await reauthenticateWithCredential(user, credential)
-        .then(() => {
-            return { message: 'Reauthenticated successfully' };
-        })
-        .catch((error) => {
-            throw error;
-        });
-    if (result) {
-        return result;
-    }
-    
-    return await updatePassword(clientAuth.currentUser, newPassword)
-        .then(() => {
-            return { message: 'Password changed successfully' };
+    return reauthenticateWithCredential(user, credential)
+        .then(async () => {
+            return await updatePassword(clientAuth.currentUser, newPassword)
+                .then(() => {
+                    return { message: 'Password changed successfully' };
+                })
+                .catch((error) => {
+                    throw error;
+                });
         })
         .catch((error) => {
             throw error;
