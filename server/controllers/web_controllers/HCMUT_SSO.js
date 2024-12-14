@@ -1,25 +1,73 @@
 import { Readable } from 'stream';
 
 import { adminAuth, firestore } from '../../services/FirebaseAdminSDK.js';
+import { FieldValue } from 'firebase-admin/firestore';
 import { googleDrive } from '../../services/GoogleSDK.js';
 
 import { Customer, SPSO } from '../../models/User.js';
 import Wallet from '../../models/Wallet.js';
 
-// export async function login(req, res) {
-//     console.log('Received a login request!\n');
-    
-//     const query = req.query;
-//     if (!query || !query.email || !query.password) {
-//         res.status(400).json({ message: 'Missing required parameters.' });
-//         return;
-//     }
-// }
+export async function updateLoginCount(paramUserId) {
+    try {
+        // Check for admin account first
+        const adminRef = firestore.collection(process.env.ADMINS_COLLECTION).doc(paramUserId);
 
-// export function logout(req, res) {
-//     console.log('logout');
-//     res.send('This is the logout page.');
-// }
+        const adminSnapshot = await adminRef.get();
+        if (!adminSnapshot.data() !== undefined) {
+            return await adminRef.update({ loginCount: FieldValue.increment(1) })
+                .then(() => {
+                    return { status: 201, body: { message: "Update login count successfully." }};
+                })
+                .catch((error) => {
+                    console.log('Error updating document:', error);
+                    return { status: 500, body: { message: error.message } };
+                })
+        }
+
+        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
+
+        const userSnapshot = await userRef.get();
+        if (userSnapshot.data() === undefined) {
+            return { status: 404, body: { message: 'Account not found.' } };
+        }
+
+        return await userRef.update({ loginCount: FieldValue.increment(1) })
+            .then(() => {
+                return { status: 201, body: { message: "Update login count successfully." } };
+            })
+            .catch((error) => {
+                console.log('Error updating document:', error);
+                return { status: 500, body: { message: error.message } };
+            })
+    }
+    catch (error) {
+        console.log('Error updating login count:', error);
+        return { status: 500, body: { message: error.message } };
+    }
+}
+
+export async function updateLastLogin(paramUserId) {
+    try {
+        const adminRef = firestore.collection(process.env.ADMINS_COLLECTION).doc(paramUserId);
+        const adminSnapshot = await adminRef.get();
+        if (adminSnapshot.data() === undefined) {
+            return { status: 404, body: { message: 'Admin not found.' } };
+        }
+        
+        return await adminRef.update({ lastLogin: FieldValue.serverTimestamp() })
+            .then(() => {
+                return { status: 201, body: { message: "Update last login successfully." } };
+            })
+            .catch((error) => {
+                console.log('Error updating document:', error);
+                return { status: 500, body: { message: error.message } };
+            })
+    }
+    catch (error) {
+        console.log('Error updating last login:', error);
+        return { status: 500, body: { message: error.message } };
+    }
+}
 
 // Checked
 export async function register(paramBody) {
