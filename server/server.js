@@ -36,16 +36,16 @@ import Authenticate from './middlewares/AuthenMiddleware.js';
 
 const whitelist = ['/', '/favicon.ico', '/enroll-events', '/hcmut-sso/register'];
 
-app.use((req, res, next) => {
-  if (!whitelist.includes(req.path)) {
-    console.log('Authenticating...');
-    return Authenticate(req, res, next);
-  }
-  else {
-    console.log('Skipping authentication...');
-  }
-  next();
-});
+// app.use((req, res, next) => {
+//   if (!whitelist.includes(req.path)) {
+//     console.log('Authenticating...');
+//     return Authenticate(req, res, next);
+//   }
+//   else {
+//     console.log('Skipping authentication...');
+//   }
+//   next();
+// });
 
 import EnrollUser from './utils/EnrollUser.js';
 
