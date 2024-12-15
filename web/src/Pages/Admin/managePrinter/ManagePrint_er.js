@@ -34,35 +34,66 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const AdminDashboard = () => {
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      employeeId: "EMP001",
-      name: "John Doe",
-      email: "john@example.com",
-      address: "123 Main Street, New York",
-      lastLogin: "2023-12-01 10:00:00",
-      loginCount: 12,
-    },
-    {
-      id: 2,
-      employeeId: "EMP002",
-      name: "Jane Smith",
-      email: "jane@example.com",
-      address: "456 Elm Street, Los Angeles",
-      lastLogin: "2023-12-03 14:45:00",
-      loginCount: 8,
-    },
-    {
-      id: 3,
-      employeeId: "EMP003",
-      name: "Michael Brown",
-      email: "michael@example.com",
-      address: "789 Oak Street, Chicago",
-      lastLogin: "2023-12-02 09:30:00",
-      loginCount: 15,
-    },
-  ]);
+  // const [employees, setEmployees] = useState([
+  //   {
+  //     id: 1,
+  //     employeeId: "EMP001",
+  //     name: "John Doe",
+  //     email: "john@example.com",
+  //     address: "123 Main Street, New York",
+  //     lastLogin: "2023-12-01 10:00:00",
+  //     loginCount: 12,
+  //   },
+  //   {
+  //     id: 2,
+  //     employeeId: "EMP002",
+  //     name: "Jane Smith",
+  //     email: "jane@example.com",
+  //     address: "456 Elm Street, Los Angeles",
+  //     lastLogin: "2023-12-03 14:45:00",
+  //     loginCount: 8,
+  //   },
+  //   {
+  //     id: 3,
+  //     employeeId: "EMP003",
+  //     name: "Michael Brown",
+  //     email: "michael@example.com",
+  //     address: "789 Oak Street, Chicago",
+  //     lastLogin: "2023-12-02 09:30:00",
+  //     loginCount: 15,
+  //   },
+  // ]);
+  const [employees, setEmployees] = useState([]);
+
+  async function fetchUsersProfile() {
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+      console.error('Access token not found');
+      return false;
+    }
+
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-all-user-profiles`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params: {
+          userType: 'spso'
+        }
+      });
+
+      setEmployees(response.data.data);
+
+      return true;
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return false;
+    }
+  }
+
+  useEffect(() => {
+    fetchUsersProfile();
+  }, []);
 
   const chartRef = useRef(null); // Tham chiếu biểu đồ
 
@@ -154,10 +185,10 @@ const AdminDashboard = () => {
           </TableHead>
           <TableBody>
             {employees.map((emp) => (
-              <TableRow key={emp.id}>
-                <TableCell>{emp.id}</TableCell>
+              <TableRow key={emp.userId}>
+                <TableCell>{emp.userId}</TableCell>
                 <TableCell>{emp.employeeId}</TableCell>
-                <TableCell>{emp.name}</TableCell>
+                <TableCell>{emp.userName}</TableCell>
                 <TableCell>{emp.email}</TableCell>
                 <TableCell>{emp.address}</TableCell>
                 <TableCell>{emp.lastLogin}</TableCell>
