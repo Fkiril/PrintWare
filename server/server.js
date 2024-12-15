@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 
 // import serveIndex from 'serve-index';
 
@@ -31,6 +32,16 @@ const corsOptions = {
   optionsSuccessStatus: 204
 }
 app.use(cors(corsOptions));
+
+// Prevent XSS attacks
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many requests from this IP, please try again after 15 minutes"
+});
+app.use(limiter);
 
 // Apply authentication middleware
 import Authenticate from './middlewares/AuthenMiddleware.js';
