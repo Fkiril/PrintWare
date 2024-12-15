@@ -1,5 +1,5 @@
 import { clientAuth, googleProvider, credentialFromResult } from '../services/FirebaseClientSDK.js';
-import { signInWithEmailAndPassword, signOut, reauthenticateWithCredential, confirmPasswordReset, EmailAuthProvider, updatePassword, sendPasswordResetEmail, signInWithRedirect, signInWithPopup, getRedirectResult } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut, reauthenticateWithCredential, confirmPasswordReset, EmailAuthProvider, updatePassword, sendPasswordResetEmail, signInWithPopup } from 'firebase/auth';
 
 export async function loginWithEmailAndPassword(email, password) {
     const result = await signInWithEmailAndPassword(clientAuth,email, password)
@@ -29,20 +29,15 @@ export async function changePassword(email, oldPassword, newPassword) {
     const user = clientAuth.currentUser;
     
     const credential = EmailAuthProvider.credential(email, oldPassword);
-    const result = await reauthenticateWithCredential(user, credential)
-        .then(() => {
-            return { message: 'Reauthenticated successfully' };
-        })
-        .catch((error) => {
-            throw error;
-        });
-    if (result) {
-        return result;
-    }
-    
-    return await updatePassword(clientAuth.currentUser, newPassword)
-        .then(() => {
-            return { message: 'Password changed successfully' };
+    return reauthenticateWithCredential(user, credential)
+        .then(async () => {
+            return await updatePassword(clientAuth.currentUser, newPassword)
+                .then(() => {
+                    return { message: 'Password changed successfully' };
+                })
+                .catch((error) => {
+                    throw error;
+                });
         })
         .catch((error) => {
             throw error;
@@ -50,7 +45,7 @@ export async function changePassword(email, oldPassword, newPassword) {
 }
 
 export async function sendCustomPasswordResetEmail(email) {
-    return await sendPasswordResetEmail(email)
+    return await sendPasswordResetEmail(clientAuth, email)
         .then(() => {
             return { message: 'Password reset email sent successfully' };
         })
@@ -59,8 +54,8 @@ export async function sendCustomPasswordResetEmail(email) {
         });
 }
 
-export async function resetPassword(oodcode, email) {
-    return await confirmPasswordReset(clientAuth, oodcode, email)
+export async function resetPassword(oodcode, newPassword) {
+    return await confirmPasswordReset(clientAuth, oodcode, newPassword)
         .then(() => {
             return { message: 'Password reset successfully' };
         })

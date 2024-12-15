@@ -3,12 +3,14 @@ class IUser {
     userId = '';
     userRole = '';
     email = '';
+    loginCount = 0;
 
-    constructor(userName = '', userId = '', userRole = '', email = '') {
+    constructor(userName = '', userId = '', userRole = '', email = '', loginCount = 0) {
         this.userName = userName;
         this.userId = userId;
         this.userRole = userRole;
         this.email = email;
+        this.loginCount = loginCount;
     }
 
     convertToJSON() {}
@@ -26,8 +28,8 @@ export class Customer extends IUser {
     coverPhoto = '';
     documents = [];
 
-    constructor(userName = '', userId = '', userRole = '', email = '', phoneNum = '', hcmutId = '', faculty, major = '', academicYear = '', classId = '', avatar = '', coverPhoto = '', documents = []) {
-        super(userName, userId, userRole, email);
+    constructor(userName = '', userId = '', userRole = '', email = '', loginCount = 0, phoneNum = '', hcmutId = '', faculty, major = '', academicYear = '', classId = '', avatar = '', coverPhoto = '', documents = []) {
+        super(userName, userId, userRole, email, loginCount);
         this.phoneNum = phoneNum;
         this.hcmutId = hcmutId;
         this.faculty = faculty;
@@ -45,6 +47,7 @@ export class Customer extends IUser {
             userId: this.userId?? '',
             userRole: this.userRole?? '',
             email: this.email?? '',
+            loginCount: this.loginCount,
             phoneNum: this.phoneNum?? '',
             hcmutId: this.hcmutId?? '',
             faculty: this.faculty?? '',
@@ -62,6 +65,7 @@ export class Customer extends IUser {
         this.userId = json.userId?? '';
         this.userRole = json.userRole?? '';
         this.email = json.email?? '';
+        this.loginCount = parseInt(json.loginCount) || 0;
         this.phoneNum = json.phoneNum?? '';
         this.hcmutId = json.hcmutId?? '';
         this.faculty = json.faculty?? '';
@@ -76,10 +80,16 @@ export class Customer extends IUser {
 
 export class SPSO extends IUser {
     highestAuthority = false;
+    employeeId = '';
+    address = '';
+    lastLogin = '';
 
-    constructor(userName = '', userId = '', userRole = '', email = '', highestAuthority = false) {
-        super(userName, userId, userRole, email);
+    constructor(userName = '', userId = '', userRole = '', email = '', loginCount = 0, highestAuthority = false, employeeId = '', address = '', lastLogin = '') {
+        super(userName, userId, userRole, email, loginCount);
         this.highestAuthority = highestAuthority;
+        this.employeeId = employeeId;
+        this.address = address;
+        this.lastLogin = lastLogin;
     }
 
     convertToJSON() {
@@ -88,7 +98,11 @@ export class SPSO extends IUser {
             userId: this.userId?? '',
             userRole: this.userRole?? '',
             email: this.email?? '',
-            highestAuthority: this.highestAuthority?? false
+            loginCount: this.loginCount?? 0,
+            highestAuthority: this.highestAuthority?? false,
+            employeeId: this.employeeId?? '',
+            address: this.address?? '',
+            lastLogin: this.lastLogin?? ''
         };
     }
 
@@ -97,6 +111,10 @@ export class SPSO extends IUser {
         this.userId = json.userId?? '';
         this.userRole = json.userRole?? '';
         this.email = json.email?? '';
+        this.loginCount = parseInt(json.loginCount) || 0;
         this.highestAuthority = json.highestAuthority?? false;
+        this.employeeId = json.employeeId?? '';
+        this.address = json.address?? '';
+        this.lastLogin = json.lastLogin?? '';
     }
 }
