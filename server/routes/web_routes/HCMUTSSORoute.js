@@ -1,6 +1,6 @@
 import { response, Router } from 'express';
 const router = Router();
-import { adminRegister, register, deleteAccount, updateProfile, getUserProfileById, getUserProfileByEmail, getUserIdByEmail, uploadPicture, getPicture, createResetPasswordLink, createEmailVertificationLink, getDocIdList} from '../../controllers/web_controllers/HCMUT_SSO.js';
+import { adminRegister, register, deleteAccount, updateProfile, getUserProfileById, getUserProfileByEmail, getUserIdByEmail, uploadPicture, getPicture, createResetPasswordLink, createEmailVertificationLink, getDocIdList, updateLoginCount, updateLastLogin, getAllUserProfiles} from '../../controllers/web_controllers/HCMUT_SSO.js';
 
 import multer from 'multer';
 const storage = multer.memoryStorage();
@@ -23,8 +23,6 @@ router.post('/admin-register', upload.single(''), async (req, res) => {
     const result = await adminRegister(body);
 
     res.status(result.status).json(result.body);
-    
-    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -43,8 +41,6 @@ router.post('/register', upload.single(''), async (req, res) => {
     const result = await register(body);
 
     res.status(result.status).json(result.body);
-    
-    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -62,8 +58,6 @@ router.delete('/delete-account', async (req, res) => {
     const result = await deleteAccount(query.userId);
 
     res.status(result.status).json(result.body);
-    
-    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -83,8 +77,6 @@ router.patch('/update-profile', upload.single(''), async (req, res) => {
     const result = await updateProfile(query.userId, body);
 
     res.status(result.status).json(result.body);
-    
-    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -103,8 +95,6 @@ router.get('/get-user-profile-by-id', async (req, res) => {
     const result = await getUserProfileById(query.userId);
 
     res.status(result.status).json(result.body);
-    
-    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -123,8 +113,6 @@ router.get('/get-user-profile-by-email', async (req, res) => {
     const result = await getUserProfileByEmail(query.email);
 
     res.status(result.status).json(result.body);
-    
-    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -143,8 +131,6 @@ router.get('/get-user-id-by-email', async (req, res) => {
     const result = await getUserIdByEmail(query.email);
 
     res.status(result.status).json(result.body);
-    
-    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -166,8 +152,6 @@ router.post('/upload-picture', upload.single('file'), async (req, res) => {
     const result = await uploadPicture(file, query.userId, query.type);
 
     res.status(result.status).json(result.body);
-
-    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -206,8 +190,6 @@ router.get('/get-picture', async (req, res) => {
         })
         .pipe(res);
 
-    
-    console.log('----------------------------', '\n');
 })
 
 
@@ -227,8 +209,6 @@ router.get('/get-reset-password-link', async (req, res) => {
     const result = await createResetPasswordLink(query.email);
 
     res.status(result.status).json(result.body);
-    
-    console.log('----------------------------', '\n');
 })
 
 // Input:
@@ -247,8 +227,6 @@ router.get('/get-email-verification-link', async (req, res) => {
     const result = await createEmailVertificationLink(query.email);
 
     res.status(result.status).json(result.body);
-    
-    console.log('----------------------------', '\n');
 })
 
 
@@ -268,8 +246,52 @@ router.get('/get-doc-id-list', async (req, res) => {
     const result = await getDocIdList(query.userId);
 
     res.status(result.status).json(result.body);
-    
-    console.log('----------------------------', '\n');
+})
+
+
+router.patch('/login-count', async (req, res) => {
+    console.log('Received a login count request!');
+
+    const query = req.query;
+    console.log('query: ', query);
+    if (!query || !query.userId) {
+        res.status(400).json({ message: 'Missing required parameters.' });
+        return;
+    }
+
+    const result = await updateLoginCount(query.userId);
+
+    res.status(result.status).json(result.body);
+})
+
+router.patch('/last-login', async (req, res) => {
+    console.log('Received a last login request!');
+
+    const query = req.query;
+    console.log('query: ', query);
+    if (!query || !query.userId) {
+        res.status(400).json({ message: 'Missing required parameters.' });
+        return;
+    }
+
+    const result = await updateLastLogin(query.userId);
+
+    res.status(result.status).json(result.body);
+})
+
+router.get('/get-all-user-profiles', async (req, res) => {
+    console.log('Received a get all user profiles request!');
+
+    const query = req.query;
+    console.log('query: ', query);
+    if (!query || !query.userType) {
+        res.status(400).json({ message: 'Missing required parameters.' });
+        return;
+    }
+
+    const result = await getAllUserProfiles(query.userType);
+
+    res.status(result.status).json(result.body);
 })
 
 export default router;

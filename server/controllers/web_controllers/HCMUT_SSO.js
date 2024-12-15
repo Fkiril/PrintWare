@@ -1,25 +1,11 @@
 import { Readable } from 'stream';
 
 import { adminAuth, firestore } from '../../services/FirebaseAdminSDK.js';
+import { FieldValue } from 'firebase-admin/firestore';
 import { googleDrive } from '../../services/GoogleSDK.js';
 
 import { Customer, SPSO } from '../../models/User.js';
 import Wallet from '../../models/Wallet.js';
-
-// export async function login(req, res) {
-//     console.log('Received a login request!\n');
-    
-//     const query = req.query;
-//     if (!query || !query.email || !query.password) {
-//         res.status(400).json({ message: 'Missing required parameters.' });
-//         return;
-//     }
-// }
-
-// export function logout(req, res) {
-//     console.log('logout');
-//     res.send('This is the logout page.');
-// }
 
 // Checked
 export async function register(paramBody) {
@@ -86,7 +72,6 @@ export async function adminRegister(paramBody) {
     try {
         paramBody['userRole'] = 'spso';
         boparamBodydparamBodyy['highestAuthority'] = false;
-        console.log('Body: ', paramBody);
 
         const checkUserQuery = firestore.collection(process.env.USERS_COLLECTION).where('email', '==', paramBody.email);
         checkUserQuery.get().then((checkUserSnapshot) => {
@@ -167,12 +152,9 @@ export async function deleteAccount(paramUserId) {
 // Checked
 export async function updateProfile(paramUserId, paramBody) {
     try {
-        console.log('paramBody: ', paramBody);
-
         const CustomerInstance = new Customer();
         const validFields = Object.keys(CustomerInstance).filter(key => key !== 'constructor');
-        console.log('validFields: ', validFields);
-
+        
         const invalidFields = Object.keys(paramBody).filter(key => !validFields.includes(key));
         if (invalidFields.length > 0) {
             return { status: 400, body: { message: `The following fields are invalid: ${invalidFields.join(', ')}.` } };
@@ -204,6 +186,14 @@ export async function updateProfile(paramUserId, paramBody) {
 
 // Checked
 export async function getUserProfileById(paramUserId) {
+    // Check for admin account first
+    const adminRef = firestore.collection(process.env.ADMINS_COLLECTION).doc(paramUserId);
+
+    const adminSnapshot = await adminRef.get();
+    if (adminSnapshot.data() !== undefined) {
+        return { status: 200, body: { message: 'Admin account found.', data: adminSnapshot.data() } };
+    }
+
     const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
 
     return await userRef.get().then((userSnapshot) => {
@@ -442,6 +432,94 @@ export async function getDocIdList(paramUserId) {
     }
     catch (error) {
         console.log('Error getting docIdList: ', error);
+        return { status: 500, body: { message: error.message } };
+    }
+}
+
+
+export async function updateLoginCount(paramUserId) {
+    try {
+        // Check for admin account first
+        const adminRef = firestore.collection(process.env.ADMINS_COLLECTION).doc(paramUserId);
+
+        const adminSnapshot = await adminRef.get();
+        if (adminSnapshot.exists) {
+            return await adminRef.update({ loginCount: FieldValue.increment(1) })
+                .then(() => {
+                    return { status: 201, body: { message: "Update login count successfully." }};
+                })
+                .catch((error) => {
+                    console.log('Error updating document:', error);
+                    return { status: 500, body: { message: error.message } };
+                })
+        }
+
+        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
+
+        const userSnapshot = await userRef.get();
+        if (userSnapshot.data() === undefined) {
+            return { status: 404, body: { message: 'Account not found.' } };
+        }
+
+        return await userRef.update({ loginCount: FieldValue.increment(1) })
+            .then(() => {
+                return { status: 201, body: { message: "Update login count successfully." } };
+            })
+            .catch((error) => {
+                console.log('Error updating document:', error);
+                return { status: 500, body: { message: error.message } };
+            })
+    }
+    catch (error) {
+        console.log('Error updating login count:', error);
+        return { status: 500, body: { message: error.message } };
+    }
+}
+
+export async function updateLastLogin(paramUserId) {
+    try {
+        const adminRef = firestore.collection(process.env.ADMINS_COLLECTION).doc(paramUserId);
+        const adminSnapshot = await adminRef.get();
+        if (adminSnapshot.data() === undefined) {
+            return { status: 404, body: { message: 'Admin aacount not found.' } };
+        }
+        
+        return await adminRef.update({ lastLogin: FieldValue.serverTimestamp() })
+            .then(() => {
+                return { status: 201, body: { message: "Update last login successfully." } };
+            })
+            .catch((error) => {
+                console.log('Error updating document:', error);
+                return { status: 500, body: { message: error.message } };
+            })
+    }
+    catch (error) {
+        console.log('Error updating last login:', error);
+        return { status: 500, body: { message: error.message } };
+    }
+}
+
+export async function getAllUserProfiles(paramUserType) {
+    if (paramUserType !== 'spso' && paramUserType !== 'customer') {
+        return { status: 400, body: { message: 'Invalid user type.' } };
+    }
+
+    try {
+        if (paramUserType === 'customer') {
+            const querySnapshot = await firestore.collection(process.env.USERS_COLLECTION).get();
+            const userProfiles = querySnapshot.docs.map(doc => doc.data());
+            
+            return { status: 200, body: { message: 'All customer profiles retrieved successfully.', data: userProfiles } };
+        }
+        else {
+            const querySnapshot = await firestore.collection(process.env.ADMINS_COLLECTION).where('highestAuthority', '==', false).get();
+            const spsoProfiles = querySnapshot.docs.map(doc => doc.data());
+            
+            return { status: 200, body: { message: 'All spso profiles retrieved successfully.', data: spsoProfiles } };
+        }
+    }
+    catch (error) {
+        console.log('Error getting user profiles:', error);
         return { status: 500, body: { message: error.message } };
     }
 }
