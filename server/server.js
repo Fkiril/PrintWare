@@ -34,11 +34,11 @@ app.use((req, res, next) => {
 
 import Authenticate from './middlewares/AuthenMiddleware.js';
 
-const whitelist = ['/', '/favicon.ico', '/enroll-events', '/hcmut-sso/register'];
+const whitelist = ['/', '/favicon.ico', '/enroll-events', '/hcmut-sso/register', '/hcmut-sso/login-count', '/hcmut-sso/last-login'];
 
 app.use((req, res, next) => {
   if (!whitelist.includes(req.path)) {
-    console.log('Authenticating...');
+    console.log(`Authenticating ${req.path}...`);
     return Authenticate(req, res, next);
   }
   else {

@@ -1,5 +1,5 @@
 import { clientAuth, googleProvider, credentialFromResult } from '../services/FirebaseClientSDK.js';
-import { signInWithEmailAndPassword, signOut, reauthenticateWithCredential, confirmPasswordReset, EmailAuthProvider, updatePassword, sendPasswordResetEmail, signInWithRedirect, signInWithPopup, getRedirectResult } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut, reauthenticateWithCredential, confirmPasswordReset, EmailAuthProvider, updatePassword, sendPasswordResetEmail, signInWithPopup } from 'firebase/auth';
 
 export async function loginWithEmailAndPassword(email, password) {
     const result = await signInWithEmailAndPassword(clientAuth,email, password)

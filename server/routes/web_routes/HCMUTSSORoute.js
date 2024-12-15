@@ -1,41 +1,11 @@
 import { response, Router } from 'express';
 const router = Router();
-import { updateLoginCount, updateLastLogin, adminRegister, register, deleteAccount, updateProfile, getUserProfileById, getUserProfileByEmail, getUserIdByEmail, uploadPicture, getPicture, createResetPasswordLink, createEmailVertificationLink, getDocIdList} from '../../controllers/web_controllers/HCMUT_SSO.js';
+import { adminRegister, register, deleteAccount, updateProfile, getUserProfileById, getUserProfileByEmail, getUserIdByEmail, uploadPicture, getPicture, createResetPasswordLink, createEmailVertificationLink, getDocIdList, updateLoginCount, updateLastLogin, getAllUserProfiles} from '../../controllers/web_controllers/HCMUT_SSO.js';
 
 import multer from 'multer';
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 // const upload_file = multer({ dest: 'file-uploads' });
-
-router.patch('/login-count', async (req, res) => {
-    console.log('Received a login count request!');
-
-    const query = req.query;
-    console.log('query: ', query);
-    if (!query || !query.userId) {
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
-
-    const result = await updateLoginCount(query.userId);
-
-    res.status(result.status).json(result.body);
-})
-
-router.patch('/last-login', async (req, res) => {
-    console.log('Received a last login request!');
-
-    const query = req.query;
-    console.log('query: ', query);
-    if (!query || !query.userId) {
-        res.status(400).json({ message: 'Missing required parameters.' });
-        return;
-    }
-
-    const result = await updateLastLogin(query.userId);
-
-    res.status(result.status).json(result.body);
-})
 
 // Input:
     // form-data: email, password, userName
@@ -274,6 +244,52 @@ router.get('/get-doc-id-list', async (req, res) => {
     }
 
     const result = await getDocIdList(query.userId);
+
+    res.status(result.status).json(result.body);
+})
+
+
+router.patch('/login-count', async (req, res) => {
+    console.log('Received a login count request!');
+
+    const query = req.query;
+    console.log('query: ', query);
+    if (!query || !query.userId) {
+        res.status(400).json({ message: 'Missing required parameters.' });
+        return;
+    }
+
+    const result = await updateLoginCount(query.userId);
+
+    res.status(result.status).json(result.body);
+})
+
+router.patch('/last-login', async (req, res) => {
+    console.log('Received a last login request!');
+
+    const query = req.query;
+    console.log('query: ', query);
+    if (!query || !query.userId) {
+        res.status(400).json({ message: 'Missing required parameters.' });
+        return;
+    }
+
+    const result = await updateLastLogin(query.userId);
+
+    res.status(result.status).json(result.body);
+})
+
+router.get('/get-all-user-profiles', async (req, res) => {
+    console.log('Received a get all user profiles request!');
+
+    const query = req.query;
+    console.log('query: ', query);
+    if (!query || !query.userType) {
+        res.status(400).json({ message: 'Missing required parameters.' });
+        return;
+    }
+
+    const result = await getAllUserProfiles(query.userType);
 
     res.status(result.status).json(result.body);
 })
