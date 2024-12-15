@@ -30,27 +30,18 @@ export default function Login({ onLogin }) {
       setLoading(true); // Bắt đầu trạng thái loading
       let convert = emailOrusername.toLowerCase();
 
-      loginWithEmailAndPassword(convert, password).then((result) => {
-        console.log('login result: ', result);
-        setError('');
-        const { user, customToken } = result.data;
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem(CustomerModelKeys.userId, user.uid);
-        localStorage.setItem('accessToken', customToken);
-        localStorage.setItem('isLoggedIn', 'true');
-        
-        axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/login-count`, new FormData(), {
-          method: 'PATCH',
-          headers: {
-          },
-          params: {
-            userId: user.uid
-          }
-        });
-        
-        onLogin(true);
-        navigate('/home');
-      });
+      const result = await loginWithEmailAndPassword(convert, password);
+      
+      console.log('login result: ', result);
+      setError('');
+      const { user, customToken } = result.data;
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem(CustomerModelKeys.userId, user.uid);
+      localStorage.setItem('accessToken', customToken);
+      localStorage.setItem('isLoggedIn', 'true');
+      
+      onLogin(true);
+      navigate('/home');
     } catch (error) {
       console.error('Error when login:', error);
       setError(error.message || 'Failed to connect to the server');

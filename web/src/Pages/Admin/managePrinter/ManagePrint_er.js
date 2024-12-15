@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -30,39 +30,12 @@ import {
   Legend,
 } from "chart.js";
 
+import axios from "axios";
+
 // Đăng ký các thành phần cần thiết của Chart.js
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const AdminDashboard = () => {
-  // const [employees, setEmployees] = useState([
-  //   {
-  //     id: 1,
-  //     employeeId: "EMP001",
-  //     name: "John Doe",
-  //     email: "john@example.com",
-  //     address: "123 Main Street, New York",
-  //     lastLogin: "2023-12-01 10:00:00",
-  //     loginCount: 12,
-  //   },
-  //   {
-  //     id: 2,
-  //     employeeId: "EMP002",
-  //     name: "Jane Smith",
-  //     email: "jane@example.com",
-  //     address: "456 Elm Street, Los Angeles",
-  //     lastLogin: "2023-12-03 14:45:00",
-  //     loginCount: 8,
-  //   },
-  //   {
-  //     id: 3,
-  //     employeeId: "EMP003",
-  //     name: "Michael Brown",
-  //     email: "michael@example.com",
-  //     address: "789 Oak Street, Chicago",
-  //     lastLogin: "2023-12-02 09:30:00",
-  //     loginCount: 15,
-  //   },
-  // ]);
   const [employees, setEmployees] = useState([]);
 
   async function fetchUsersProfile() {
@@ -80,7 +53,7 @@ const AdminDashboard = () => {
         params: {
           userType: 'spso'
         }
-      });
+      }); 
 
       setEmployees(response.data.data);
 
@@ -99,7 +72,7 @@ const AdminDashboard = () => {
 
   // Dữ liệu cho biểu đồ
   const loginData = {
-    labels: employees.map((emp) => emp.name),
+    labels: employees.map((emp) => emp.userName),
     datasets: [
       {
         label: "Login Counts",

@@ -13,7 +13,7 @@ const ManageUser = () => {
     const accessToken = localStorage.getItem('accessToken');
     if (!accessToken) {
       console.error('Access token not found');
-      return false;
+      return;
     }
 
     try {
@@ -28,66 +28,18 @@ const ManageUser = () => {
 
       setUsers(response.data.data);
 
-      return true;
+      setLoginFrequency(response.data.data.reduce((acc, user) => {
+        acc[user.userName] = user.loginCount;
+        return acc;
+      }, {}));
     } catch (error) {
       console.error('Error fetching users:', error);
-      return false;
     }
   }
 
   // Giả lập fetch dữ liệu người dùng và tần suất đăng nhập
   useEffect(() => {
-    if (!fetchUsersProfile()) {
-      return;
-    }
-
-    const loginFrequency = {};
-
-    users.forEach((user) => {
-      loginFrequency[user.userName] = user.loginCount;
-    })
-    setLoginFrequency(loginFrequency);
-
-    // // Mock danh sách người dùng
-    // const mockUsers = [
-    //   {
-    //     id: 1,
-    //     name: 'Nguyen Van A',
-    //     email: 'nguyenvana@example.com',
-    //     phone: '0912345678',
-    //     studentId: '1234567',
-    //     class: 'MT01KH20',
-    //     faculty: 'MT',
-    //   },
-    //   {
-    //     id: 2,
-    //     name: 'Tran Thi B',
-    //     email: 'tranthib@example.com',
-    //     phone: '0987654321',
-    //     studentId: '2345678',
-    //     class: 'MT02KH21',
-    //     faculty: 'MT',
-    //   },
-    //   {
-    //     id: 3,
-    //     name: 'Le Van C',
-    //     email: 'levanc@example.com',
-    //     phone: '0901122334',
-    //     studentId: '3456789',
-    //     class: 'MT03KH22',
-    //     faculty: 'MT',
-    //   },
-    // ];
-
-    // // Mock dữ liệu tần suất đăng nhập
-    // const mockLoginFrequency = {
-    //   'Nguyen Van A': 10,
-    //   'Tran Thi B': 15,
-    //   'Le Van C': 8,
-    // };
-
-    // setUsers(mockUsers);
-    // setLoginFrequency(mockLoginFrequency);
+    fetchUsersProfile();
   }, []);
 
   // Chuẩn bị dữ liệu cho biểu đồ

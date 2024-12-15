@@ -65,7 +65,7 @@ export class Customer extends IUser {
         this.userId = json.userId?? '';
         this.userRole = json.userRole?? '';
         this.email = json.email?? '';
-        this.loginCount = json.loginCount?? 0;
+        this.loginCount = parseInt(json.loginCount) || 0;
         this.phoneNum = json.phoneNum?? '';
         this.hcmutId = json.hcmutId?? '';
         this.faculty = json.faculty?? '';

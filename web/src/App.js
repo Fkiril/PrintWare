@@ -147,13 +147,49 @@ function App() {
     setIsLoggedIn(status);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
-      logout();
+      const userId = localStorage.getItem(CustomerModelKeys.userId);
+      const token = localStorage.getItem('accessToken');
+      const role = localStorage.getItem(CustomerModelKeys.userRole);
+
+      if (userId && token && role) {
+        const responses = await Promise.allSettled([
+          axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/logout-count`, new FormData(), {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            params: {
+              userId: userId,
+            }
+          }),
+          role === 'spso' && axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/logout-last-login`, new FormData(), {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            params: {
+              userId: userId,
+            }
+          })
+        ]);
+
+        responses.forEach((response, index) => {
+          if (response.status === 'fulfilled') {
+            console.log(response.value.data.message);
+          }
+          else {
+            console.error("Error logging out: ", response.reason)
+          }
+        });
+      }
+
+      const result = await logout();
       setIsLoggedIn(false);
       localStorage.clear();
       setSidebarOpen(false);
-      console.log('Logged out successfully');
+      console.log(result.message);
     } catch (error) {
       console.error('Error logging out:', error);
       //TODO: Handle the error here
