@@ -155,7 +155,7 @@ function App() {
 
       if (userId && token && role) {
         const responses = await Promise.allSettled([
-          axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/logout-count`, new FormData(), {
+          axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/login-count`, new FormData(), {
             method: 'PATCH',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -164,7 +164,7 @@ function App() {
               userId: userId,
             }
           }),
-          role === 'spso' && axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/logout-last-login`, new FormData(), {
+          role === 'spso' && axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/last-login`, new FormData(), {
             method: 'PATCH',
             headers: {
               'Authorization': `Bearer ${token}`,
