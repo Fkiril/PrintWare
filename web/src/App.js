@@ -177,7 +177,7 @@ function App() {
 
         responses.forEach((response, index) => {
           if (response.status === 'fulfilled') {
-            console.log(response.value.data.message);
+            console.log(response.value.data);
           }
           else {
             console.error("Error logging out: ", response.reason)
