@@ -39,18 +39,17 @@ export async function register(paramBody) {
         const userRecord = await adminAuth.createUser(createRequest);
 
         user.setInfoFromJSON(paramBody);
-        // const wallet = new Wallet();
-        // wallet.setInfoFromJson({ ownerId: userRecord.uid });
+        const wallet = new Wallet('', userRecord.uid, 0, new Date().toISOString(), new Date().toISOString(), '');
 
         const batch = firestore.batch();
         const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(userRecord.uid);
-        // const walletRef = firestore.collection(process.env.WALLETS_COLLECTION).doc(userRecord.uid);
+        const walletRef = firestore.collection(process.env.WALLETS_COLLECTION).doc(userRecord.uid);
 
         batch.set(userRef, user.convertToJSON());
         batch.update(userRef, { userId: userRecord.uid })
 
-        // batch.set(walletRef, wallet.convertToJSON());
-        // batch.update(walletRef, { ownerId: userRecord.uid });
+        batch.set(walletRef, wallet.convertToJson());
+        batch.update(walletRef, { ownerId: userRecord.uid });
 
         return await batch.commit().then(() => {
             user.userId = userRecord.uid;

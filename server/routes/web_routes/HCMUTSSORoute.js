@@ -1,6 +1,20 @@
 import { response, Router } from 'express';
 const router = Router();
-import { adminRegister, register, deleteAccount, updateProfile, getUserProfileById, getUserProfileByEmail, getUserIdByEmail, uploadPicture, getPicture, createResetPasswordLink, createEmailVertificationLink, getDocIdList, updateLoginCount, updateLastLogin, getAllUserProfiles} from '../../controllers/web_controllers/HCMUT_SSO.js';
+import { adminRegister,
+    register,
+    deleteAccount,
+    updateProfile,
+    getUserProfileById,
+    getUserProfileByEmail,
+    getUserIdByEmail,
+    uploadPicture,
+    getPicture,
+    createResetPasswordLink,
+    createEmailVertificationLink,
+    getDocIdList,
+    updateLoginCount,
+    updateLastLogin,
+    getAllUserProfiles } from '../../controllers/web_controllers/HCMUT_SSO.js';
 
 import multer from 'multer';
 const storage = multer.memoryStorage();
