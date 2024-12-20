@@ -1,14 +1,20 @@
 /* Wallet.css */
+/* Import Montserrat Font */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+body {
+  font-family: 'Montserrat', sans-serif;
+}
 
 .wallet-container {
-  background-image: url(../innerImg/printing-service.webp);
+  background-image: url(../innerImg/bg.png);
   background-size: cover;
-  width: 90vw;
-  height: 90vh;
-  max-width: 1000px;
+  width: 100vw;
+  height: 100vh;
+  max-width: 1920px;
   margin: 20px auto;
   padding: 20px;
-  background-color: #f3f6f4;
+  background-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -21,22 +27,31 @@
   color: #333;
 }
 
-/* Thông tin của Wallet */
-.wallet-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  padding: 10px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  transition: 0.3s;
-  cursor: pointer;
-  background-color: lightgrey;
+/* Kiểu dáng cho bảng */
+.wallet-info-table {
+  width: 50%;
+  border-collapse: collapse;
+  margin: 50px auto;
 }
 
-.wallet-info p {
-  margin: 5px 0;
+.wallet-info-table th,
+.wallet-info-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.wallet-info-table th {
+  background-color: #f3f6f4;
+  font-weight: bold;
+}
+
+.wallet-info-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.wallet-info-table tr:hover {
+  background-color: #f1f1f1;
 }
 
 /* Các hành động của Wallet */
