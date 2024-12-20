@@ -2,6 +2,8 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import express from 'express';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 
 // import serveIndex from 'serve-index';
 
@@ -20,22 +22,35 @@ app.use(express.static(join(__dirname, '../web/build')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Apply authentication middleware
-app.options('*', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', process.env.CLIENT_URL);
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.sendStatus(204);
+// Enable CORS
+const corsOptions = {
+  origin: process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',') : [],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+}
+app.use(cors(corsOptions));
+
+// Prevent XSS attacks
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many requests from this IP, please try again after 15 minutes"
 });
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', process.env.CLIENT_URL);
-  next();
-})
+app.use(limiter);
 
+// Apply authentication middleware
 import Authenticate from './middlewares/AuthenMiddleware.js';
-
-const whitelist = ['/', '/favicon.ico', '/enroll-events', '/hcmut-sso/register'];
-
+const whitelist = [
+  '/',
+  '/favicon.ico',
+  '/enroll-events',
+  '/hcmut-sso/register'
+];
 app.use((req, res, next) => {
   if (!whitelist.includes(req.path)) {
     console.log(`Authenticating ${req.path}...`);
@@ -47,9 +62,8 @@ app.use((req, res, next) => {
   next();
 });
 
-import EnrollUser from './utils/EnrollUser.js';
-
 // Enpoint for user to enroll and receive notification from server
+import EnrollUser from './utils/EnrollUser.js';
 app.get('/enroll-events', (req, res) => {
   console.log('Received a enroll event request!');
   console.log('Request: ', req.query);
