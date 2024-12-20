@@ -1,0 +1,69 @@
+/* Wallet.css */
+
+.wallet-container {
+  background-image: url(../innerImg/printing-service.webp);
+  background-size: cover;
+  width: 90vw;
+  height: 90vh;
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f3f6f4;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Tiêu đề của Wallet */
+.wallet-title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Thông tin của Wallet */
+.wallet-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  transition: 0.3s;
+  cursor: pointer;
+  background-color: lightgrey;
+}
+
+.wallet-info p {
+  margin: 5px 0;
+}
+
+/* Các hành động của Wallet */
+.wallet-actions {
+  text-align: center;
+}
+
+/* Style cho input và button */
+.wallet-actions input {
+  padding: 10px;
+  font-size: 1rem;
+  width: 200px;
+  margin-right: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.wallet-actions button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  background-color: #ffb13a;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.wallet-actions button:hover {
+  background-color: #e89e31;
+}

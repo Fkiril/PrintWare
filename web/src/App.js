@@ -26,7 +26,7 @@ import Payment from './Pages/User/Payment/Payment';
 import Dashboard from './Pages/Admin/Dashboard/Dashboard';
 import PRINT from './Pages/Admin/managePrinter/ManagePrint_er';
 import USER from './Pages/Admin/manageUser/ManageUser';
-
+import Wallet from './Pages/User/Wallet/Wallet';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -267,7 +267,7 @@ function App() {
            <Route
             path="/payment"
             element={
-              isLoggedIn ?
+              // isLoggedIn ?
                 <SidebarLayout
                   isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
@@ -275,7 +275,21 @@ function App() {
                 >
                   <Payment/>
                 </SidebarLayout>
-                : <Navigate to="/" />
+                // : <Navigate to="/" />
+            }
+          />
+          <Route
+            path="/wallet"
+            element={
+              // isLoggedIn ?
+                <SidebarLayout
+                  isSidebarOpen={isSidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                  onLogout={handleLogout}
+                >
+                  <Wallet/>
+                </SidebarLayout>
+                // : <Navigate to="/" />
             }
           />
 
