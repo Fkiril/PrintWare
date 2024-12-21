@@ -180,6 +180,7 @@ router.get('/get-picture-by-user-id', async (req, res) => {
     console.log('Received a get picture by userId request!');
 
     const query = req.query;
+    console.log('query: ', query);
     if (!query || !query.userId || !query.type) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;

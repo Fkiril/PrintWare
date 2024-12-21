@@ -30,7 +30,7 @@ import USER from './Pages/Admin/manageUser/ManageUser';
 import axios from 'axios';
 import { logout } from './controllers/HCMUT_SSO';
 import { CustomerModelKeys } from './models/User';
-import { saveImage } from './services/IndexDB.js';
+import { saveImage, clearDB } from './services/IndexDB.js';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -83,7 +83,9 @@ function App() {
       })
     ]);
 
-    responses.forEach((response, index) => {
+    const saveImagePromises = [];
+
+    responses.forEach( async (response, index) => {
       if (response.status === 'fulfilled') {
         if (index === 0) {
           const profileResponse = response.value.data;
@@ -99,25 +101,27 @@ function App() {
           localStorage.setItem(CustomerModelKeys.academicYear, profileResponse.data.academicYear || '');
           localStorage.setItem('avatarId', profileResponse.data.avatar || '');
           localStorage.setItem('coverPhotoId', profileResponse.data.coverPhoto || '');
-        } else {
-          try {
-            const imageResponse = response.value;
-            const blob = new Blob([imageResponse.data], { type: imageResponse.headers.getContentType() });
-            const reader = new FileReader();
+        } 
+        else {
+          const imageResponse = response.value;
+          const blob = new Blob([imageResponse.data], { type: imageResponse.headers.getContentType() });
+          const reader = new FileReader();
+
+          reader.onloadend = async () => {
+              const imgData = reader.result.split(',')[1];
+              const imgType = imageResponse.headers.getContentType();
+
+              const saveImagePromise = saveImage(index === 1 ? CustomerModelKeys.avatar : CustomerModelKeys.coverPhoto, { contentType: imgType, data: imgData });
+              saveImagePromises.push(saveImagePromise);
+
+              saveImagePromise.then(() => {
+                console.log('Image saved successfully.');
+              }).catch((error) => {
+                console.error('Error saving image: ', error);
+              });
+          };
   
-            reader.onloadend = async () => {
-                const imgData = reader.result.split(',')[1]; // Get base64 string
-                const imgType = imageResponse.headers.getContentType();
-  
-                await saveImage(index === 1 ? CustomerModelKeys.avatar : CustomerModelKeys.coverPhoto, { contentType: imgType, data: imgData }).then(() => {
-                  console.log('Image saved successfully.');
-                });
-            };
-  
-            reader.readAsDataURL(blob);
-          } catch (error) {
-            console.error('Error saving image data: ', error);
-          }
+          reader.readAsDataURL(blob);
         }
       }
       else {
@@ -127,32 +131,20 @@ function App() {
         }
         else if (index === 1) {
           console.error("Error fetching avatar data: ", response.reason);
-          // setImageInLocalStorage('avatar', null);
         }
         else {
           console.error("Error fetching cover photo data: ", response.reason);
-          // setImageInLocalStorage('coverPhoto', null);
         }
       }
     });
+
+    await Promise.all(saveImagePromises).then(() => {
+      const event = new CustomEvent('profileDataFetched');
+      window.dispatchEvent(event);
+    });
   };
 
-  // const setImageInLocalStorage = (key, data) => {
-  //   if (data) {
-  //     const src = `data:${data.contentType};base64,${data.data}`;
-  //     localStorage.setItem(key, src);
-  //   } else {
-  //     localStorage.setItem(key, '');
-  //   }
-  // };
-
   useEffect(() => {
-    // openDB().then(() => {
-    //   console.log('IndexedDB opened successfully.');
-    // }).catch((error) => {
-    //   console.error('Error opening IndexedDB:', error);
-    // });
-
     const storedLoggedInStatus = localStorage.getItem('isLoggedIn');
 
     if (storedLoggedInStatus === 'true') {
@@ -163,7 +155,6 @@ function App() {
      
       fetchProfileData();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
 
   const handleLogin = (status) => {
@@ -210,10 +201,16 @@ function App() {
       }
 
       const result = await logout();
-      setIsLoggedIn(false);
-      localStorage.clear();
-      setSidebarOpen(false);
       console.log(result.message);
+
+      setIsLoggedIn(false);
+      setSidebarOpen(false);
+      
+      localStorage.clear();
+      await clearDB().then(() => {
+        console.log('Database cleared successfully.');
+        window.location.reload();
+      });
     } catch (error) {
       console.error('Error logging out:', error);
       //TODO: Handle the error here

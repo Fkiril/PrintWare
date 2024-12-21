@@ -18,23 +18,36 @@ export default function Navbar({ onLogout }) {
   const loadData = async () => {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     if (isLoggedIn) {
+      const savedRole = localStorage.getItem(CustomerModelKeys.userRole); // Lấy role từ localStorage
+      setRole(savedRole || '');
+
       // const savedAvatar = localStorage.getItem(CustomerModelKeys.avatar);
       // setAvatar(savedAvatar || '');
       await getImage(CustomerModelKeys.avatar).then((image) => {
-        console.log('Get avatar image from IndexDB: ', image);
         setAvatar(image.src || '');
       }).catch((error) => {
         console.error('Error getting avatar image: ', error);
         setAvatar('');
       });
-      const savedRole = localStorage.getItem(CustomerModelKeys.userRole); // Lấy role từ localStorage
-      setRole(savedRole || '');
     }
   };
 
   useEffect(() => {
-    const intervalId = setInterval(loadData, 60000); // Cập nhật định kỳ
-    return () => clearInterval(intervalId);
+    const intervalId = setInterval(loadData, 30000); // Cập nhật định kỳ
+
+    const handleProfileDataFetched = () => {
+      console.log('Profile data fetched. Reloading data...');
+      loadData();
+    };
+
+    // Add event listener for custom event
+    window.addEventListener('profileDataFetched', handleProfileDataFetched);
+
+    // Cleanup event listener and interval on component unmount
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('profileDataFetched', handleProfileDataFetched);
+    };
   }, []);
 
   const handleAvatarClick = (event) => {
@@ -43,6 +56,13 @@ export default function Navbar({ onLogout }) {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleLogout = async () => {
+    await onLogout();
+    setAnchorEl(null);
+    setAvatar('');
+    setRole('');
   };
 
   const breadcrumbs = location.pathname
@@ -210,7 +230,7 @@ export default function Navbar({ onLogout }) {
               <Avatar src={avatar} sx={{ width: 35, height: 35 }} />
             </IconButton>
           ) : role === UserRoles.SPSO ||  role === UserRoles.ADMIN? (
-            <IconButton onClick={onLogout} sx={{ marginRight: 2 }}>
+            <IconButton onClick={handleLogout} sx={{ marginRight: 2 }}>
               <LogoutIcon sx={{ color: '#d32f2f', fontSize: 30 }} />
             </IconButton>
           ) : null}
@@ -230,7 +250,7 @@ export default function Navbar({ onLogout }) {
                 <HistoryIcon sx={{ marginRight: 1, color: '#1976d2' }} />
                 History
               </MenuItem>
-              <MenuItem onClick={onLogout} sx={{ marginRight: 2 }}>
+              <MenuItem onClick={handleLogout} sx={{ marginRight: 2 }}>
                 <LogoutIcon sx={{ color: '#d32f2f', fontSize: 30 }} />
                 Logout
               </MenuItem>

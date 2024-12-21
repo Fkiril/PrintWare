@@ -57,3 +57,20 @@ export const saveImage = async (id, data) => {
         };
     });
 };
+
+export const clearDB = async () => {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.clear();
+
+        request.onsuccess = () => {
+            resolve();
+        };
+
+        request.onerror = (event) => {
+            reject(event.target.error);
+        };
+    });
+};
