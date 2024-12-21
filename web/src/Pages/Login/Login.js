@@ -43,7 +43,16 @@ export default function Login({ onLogin }) {
       navigate('/home');
     } catch (error) {
       console.error('Error when login:', error);
-      setError(error.message || 'Failed to login!');
+      if (error.code === 'auth/user-not-found') {
+        setError('User not found!');
+      }
+      else if (error.code === 'auth/invalid-email') {
+        setError('Invalid email!');
+      }
+      else if (error.code === 'auth/invalid-credential') {
+        setError('Something is wrong with your email or password!');
+      }
+      else setError(error.message || 'Failed to login!');
     } finally {
       setLoading(false); // Kết thúc trạng thái loading
     }
