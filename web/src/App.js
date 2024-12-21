@@ -204,7 +204,9 @@ function App() {
   };
 
   return (
-    <Box sx={{backgroundColor:'#f0f0f0'}}>
+    <Box sx={{backgroundColor:'#f0f0f0',
+      paddingTop: '100px',
+    }}>
       <Router >
       <MiniSidebar />
         <Routes >
