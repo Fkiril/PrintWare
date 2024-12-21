@@ -12,173 +12,222 @@ import SidebarLayout from './Pages/Sidebar/Sidebarlayout';
 import Footer from './components/ui/Footer/Footer';
 
 import History from './Pages/History/History';
-import ViewLogsAD from './Pages/Admin/ViewLogsAdmin/ViewLogsad';
-import ManagerPrinter from './Pages/Admin/ManagePrinter/ManagePrinter';
-import ManagerConfiguration from './Pages/Admin/ManageConfiguration/ManageConfiguration';
-import ExportStatistics from './Pages/Admin/Export Statistics/ExportStatistics';
+
+import ViewLogsAD from './Pages/Printer/ViewLogsAdmin/ViewLogsad';
+import ManagerPrinter from './Pages/Printer/ManagePrint-er/ManagePrinter';
+import ManagerConfiguration from './Pages/Printer/ManageConfiguration/ManageConfiguration';
+import ExportStatistics from './Pages/Printer/Export Statistics/ExportStatistics';
+
 import DocumentList from './Pages/User/DocumentList/DocumentList';
 import DocumentUp from './Pages/User/DocumentUploader/DocumentUploader';
 import Order from './Pages/User/Order/Order';
 import Payment from './Pages/User/Payment/Payment';
+
+import Dashboard from './Pages/Admin/Dashboard/Dashboard';
+import PRINT from './Pages/Admin/managePrinter/ManagePrint_er';
+import USER from './Pages/Admin/manageUser/ManageUser';
+
+import axios from 'axios';
+import { logout } from './controllers/HCMUT_SSO';
+import { CustomerModelKeys } from './models/User';
+import { saveImage, clearDB } from './services/IndexDB.js';
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-  const verryAccessToken = async (token) => {
-    const refreshToken = localStorage.getItem('refreshToken');
-    try {
-      const response = await fetch('http://localhost:8080/verify-token', {
+  const fetchProfileData = async () => {
+    if (!localStorage.getItem(CustomerModelKeys.userId)) {
+      console.error('User ID not found in local storage.');
+      return;
+    }
+    if (!localStorage.getItem('accessToken')) {
+      console.error('Access token not found in local storage.');
+      return;
+    }
+
+    const userId = localStorage.getItem(CustomerModelKeys.userId);
+    const token = localStorage.getItem('accessToken');
+
+    const responses = await Promise.allSettled([
+      axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-user-profile-by-id`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
-      });
-      if (!response.ok) {
-        if (refreshToken) {
-          await refreshAccessToken('connect');  
-        } else {
-          console.error('No refresh token available');
+        params: {
+          userId: userId,
         }
-      }
-    }
-    catch (error) {
-      console.error('Error during access token refresh:', error);
-    }
-  };
-
-  const refreshAccessToken = async (state) => {
-    const refreshToken = localStorage.getItem('refreshToken');
-    try {
-      const response = await fetch('http://localhost:8080/refresh-token', {
-        method: 'POST',
+      }),
+      axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-picture-by-user-id`, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ refreshToken }),
-      });
+        params: {
+          userId: userId,
+          type: 'avatar',
+        },
+        responseType: 'arraybuffer'
+      }),
+      axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-picture-by-user-id`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        params: {
+          userId: userId,
+          type: 'coverPhoto',
+        },
+        responseType: 'arraybuffer'
+      })
+    ]);
 
-      const result = await response.json();
+    const saveImagePromises = [];
 
-      if (response.ok) {
-        const { accessToken } = result;
-        localStorage.setItem('accessToken', accessToken);
-      } else {
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        setIsLoggedIn(false);
-      }
-    } catch (error) {
-      console.error('Error during access token refresh:', error);
-    }
-  };
+    responses.forEach( async (response, index) => {
+      if (response.status === 'fulfilled') {
+        if (index === 0) {
+          const profileResponse = response.value.data;
 
+          localStorage.setItem(CustomerModelKeys.userRole, profileResponse.data.userRole || '');
+          localStorage.setItem(CustomerModelKeys.userName, profileResponse.data.userName || '');
+          localStorage.setItem(CustomerModelKeys.email, profileResponse.data.email || '');
+          localStorage.setItem(CustomerModelKeys.phoneNum, profileResponse.data.phoneNum || '');
+          localStorage.setItem(CustomerModelKeys.hcmutId, profileResponse.data.hcmutId || '');
+          localStorage.setItem(CustomerModelKeys.faculty, profileResponse.data.faculty || '');
+          localStorage.setItem(CustomerModelKeys.major, profileResponse.data.major || '');
+          localStorage.setItem(CustomerModelKeys.classId, profileResponse.data.classId || '');
+          localStorage.setItem(CustomerModelKeys.academicYear, profileResponse.data.academicYear || '');
+          localStorage.setItem('avatarId', profileResponse.data.avatar || '');
+          localStorage.setItem('coverPhotoId', profileResponse.data.coverPhoto || '');
+        } 
+        else {
+          const imageResponse = response.value;
+          const blob = new Blob([imageResponse.data], { type: imageResponse.headers.getContentType() });
+          const reader = new FileReader();
+
+          reader.onloadend = async () => {
+              const imgData = reader.result.split(',')[1];
+              const imgType = imageResponse.headers.getContentType();
+
+              const saveImagePromise = saveImage(index === 1 ? CustomerModelKeys.avatar : CustomerModelKeys.coverPhoto, { contentType: imgType, data: imgData });
+              saveImagePromises.push(saveImagePromise);
+
+              saveImagePromise.then(() => {
+                console.log('Image saved successfully.');
+              }).catch((error) => {
+                console.error('Error saving image: ', error);
+              });
+          };
   
-  const fechLogout = async (token) => {
-    try {
-      const response = await fetch('http://localhost:8080/logout', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      const result = await response.json();
-      if (response.ok) {
-        setIsLoggedIn(false);
-        localStorage.clear();
-        setSidebarOpen(false);
-        console.log('Logged out successfully');
-      } else {
-        console.error(result.error);
-        if (response.status === 403) {
-          await refreshAccessToken('disconnect');
+          reader.readAsDataURL(blob);
         }
       }
-    } catch (error) {
-      console.error('Error disconnecting from server:', error);
-    }
-  }
-
-  const fetchProfileData = async (token) => {
-    try {
-      const response = await fetch('http://localhost:8080/profile', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      const result = await response.json();
-      if (response.ok) {
-        localStorage.setItem('username', result.data.username !== undefined ? result.data.username : '');
-        localStorage.setItem('fullname', result.data.fullname !== undefined ? result.data.fullname : '');
-        localStorage.setItem('email', result.data.email !== undefined ? result.data.email : '');
-        localStorage.setItem('phone_number', result.data.phone_number !== undefined ? result.data.phone_number : '');
-
-        localStorage.setItem('AIO_USERNAME', result.data.AIO_USERNAME !== undefined ? result.data.AIO_USERNAME : '');
-        localStorage.setItem('AIO_KEY', result.data.AIO_KEY !== undefined ? result.data.AIO_KEY : '');
-        localStorage.setItem('webServerIp', result.data.webServerIp !== undefined ? result.data.webServerIp : '');
-
-        setImageInLocalStorage('avatar', result.data.avatar);
-        setImageInLocalStorage('coverPhoto', result.data.coverPhoto);
-      } else {
-        console.error(result.error);
+      else {
+        if (index === 0) {
+          console.error("Error fetching profile data: ", response.reason);
+          // TODO: Warning message here and logout
+        }
+        else if (index === 1) {
+          console.error("Error fetching avatar data: ", response.reason);
+        }
+        else {
+          console.error("Error fetching cover photo data: ", response.reason);
+        }
       }
-    } catch (error) {
-      console.error('Error fetching profile data:', error);
-    }
-  };
+    });
 
- 
-
-  const setImageInLocalStorage = (key, data) => {
-    if (data) {
-      const src = `data:${data.contentType};base64,${data.data}`;
-      localStorage.setItem(key, src);
-    } else {
-      localStorage.setItem(key, '');
-    }
+    await Promise.all(saveImagePromises).then(() => {
+      const event = new CustomEvent('profileDataFetched');
+      setTimeout(() => window.dispatchEvent(event), 300);
+    });
   };
 
   useEffect(() => {
     const storedLoggedInStatus = localStorage.getItem('isLoggedIn');
-    const accessToken = localStorage.getItem('accessToken');
+
     if (storedLoggedInStatus === 'true') {
       if (performance.navigation.type === 1) {
         localStorage.setItem('connected', 'false');
       }
       setIsLoggedIn(true);
      
-      fetchProfileData(accessToken);
-     
-      verryAccessToken(accessToken);
-      const intervalId = setInterval(() => {
-        
-        verryAccessToken(accessToken);
-      }, 1000);
-      return () => clearInterval(intervalId);
+      fetchProfileData();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
 
   const handleLogin = (status) => {
     setIsLoggedIn(status);
   };
 
-  const handleLogout = () => {
-    const accessToken = localStorage.getItem('accessToken');
-    fechLogout(accessToken);
+  const handleLogout = async () => {
+    try {
+      const userId = localStorage.getItem(CustomerModelKeys.userId);
+      const token = localStorage.getItem('accessToken');
+      const role = localStorage.getItem(CustomerModelKeys.userRole);
+
+      if (userId && token && role && role !== 'admin') {
+        const responses = await Promise.allSettled([
+          axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/login-count`, new FormData(), {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            params: {
+              userId: userId,
+              userRole: role
+            }
+          }),
+          role === 'spso' && axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/last-login`, new FormData(), {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            params: {
+              userId: userId
+            }
+          })
+        ]);
+
+        responses.forEach((response, index) => {
+          if (response.status === 'fulfilled') {
+            console.log(response.value.data);
+          }
+          else {
+            console.error("Error logging out: ", response.reason)
+          }
+        });
+      }
+
+      const result = await logout();
+      console.log(result.message);
+
+      setIsLoggedIn(false);
+      setSidebarOpen(false);
+      
+      localStorage.clear();
+      await clearDB().then(() => {
+        console.log('Database cleared successfully.');
+      });
+
+      const event = new CustomEvent('profileDataFetched');
+      setTimeout(() => window.dispatchEvent(event), 300);
+    } catch (error) {
+      console.error('Error logging out:', error);
+      //TODO: Handle the error here
+      return;
+    }
   };
 
   const toggleSidebar = () => {
     setSidebarOpen((prev) => !prev);
   };
 
-
-
   return (
-    <Box sx={{backgroundColor:'#f0f0f0'}}>
+    <Box sx={{backgroundColor:'#f0f0f0',
+      paddingTop: '100px',
+    }}>
       <Router >
       <MiniSidebar />
         <Routes >
@@ -217,7 +266,7 @@ function App() {
           <Route
             path="/documents"
             element={
-              isLoggedIn ?
+              //isLoggedIn ?
                 <SidebarLayout
                   isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
@@ -225,13 +274,13 @@ function App() {
                 >
                   <DocumentList/>
                 </SidebarLayout>
-                : <Navigate to="/" />
+                //: <Navigate to="/" />
             }
           />
            <Route
             path="/document-uploader"
             element={
-              isLoggedIn ?
+              //isLoggedIn ?
                 <SidebarLayout
                   isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
@@ -239,13 +288,13 @@ function App() {
                 >
                   <DocumentUp/>
                 </SidebarLayout>
-                : <Navigate to="/" />
+               // : <Navigate to="/" />
             }
           />
            <Route
             path="/order"
             element={
-              isLoggedIn ?
+              //isLoggedIn ?
                 <SidebarLayout
                   isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
@@ -253,7 +302,7 @@ function App() {
                 >
                   <Order/>
                 </SidebarLayout>
-                : <Navigate to="/" />
+                //: <Navigate to="/" />
             }
           />
            <Route
@@ -271,10 +320,7 @@ function App() {
             }
           />
 
-
-
-
-          {/* Admin */}
+          {/* printer */}
            <Route
             path="/manage-printer"
             element={
@@ -359,8 +405,48 @@ function App() {
                 : <Navigate to="/" />
             }
           />
-         
-         
+          {/* Admin */}
+         <Route
+            path="/dashboard"
+            element={
+              isLoggedIn ?
+                <SidebarLayout
+                  isSidebarOpen={isSidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                  onLogout={handleLogout}
+                >
+                  <Dashboard />
+                </SidebarLayout>
+                : <Navigate to="/" />
+            }
+          /><Route
+          path="/manageUser"
+          element={
+           // isLoggedIn ?
+              <SidebarLayout
+                isSidebarOpen={isSidebarOpen}
+                toggleSidebar={toggleSidebar}
+                onLogout={handleLogout}
+              >
+                <USER />
+              </SidebarLayout>
+            //  : <Navigate to="/" />
+          }
+        />
+         <Route
+            path="/managerPrint-er"
+            element={
+             // isLoggedIn ?
+                <SidebarLayout
+                  isSidebarOpen={isSidebarOpen}
+                  toggleSidebar={toggleSidebar}
+                  onLogout={handleLogout}
+                >
+                  <PRINT />
+                </SidebarLayout>
+              //  : <Navigate to="/" />
+            }
+          />
         </Routes>
         <Footer />
       </Router>

@@ -4,6 +4,10 @@ import {
   Dialog, DialogActions, DialogContent, DialogTitle
 } from '@mui/material';
 import LoadingSpinner from '../ui/Loading/LoadingSpinner';
+
+import axios from 'axios';
+import { sendCustomPasswordResetEmail, resetPassword} from '../../controllers/HCMUT_SSO.js';
+
 export default function Forget({ open, onClose }) {
   const [step, setStep] = useState('request'); // Các bước: 'request', 'verify', 'resetPassword'
   const [emailOrusername, setEmailOrUsername] = useState('');
@@ -16,90 +20,86 @@ export default function Forget({ open, onClose }) {
 
 
   const handleRequest = async () => {
+    if (!emailOrusername) {
+      setError("Email is required!");
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/email/send-code', {
-        method: 'POST',
+      
+      const response = await axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-user-id-by-email`, {
         headers: {
-          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.REACT_APP_SERVER_TOKEN}`
         },
-        body: JSON.stringify({ emailOrusername }),
+        params: {
+          email: emailOrusername
+        }
       });
-      const result = await response.json();
-      if (response.ok) {
-        setError('');
-        setStep('verify');
-        setSuccess('Instructions for resetting your password have been sent.');
-      } else {
-        setError(result.error);
+
+      if (response.status === 200) {
+        const result = await sendCustomPasswordResetEmail(emailOrusername);
+        setStep('vertidyAndResetPassword');
+        setSuccess(result.message);
+        // setSuccess('Instructions for resetting your password have been sent.');
       }
     } catch (error) {
-      setError(error);
+      console.log('Error when request:', error);
+      if (!error.response) {
+        setError(error.message || 'Failed to send reset password email!');
+      }
+      else {
+        setError(error.response.data.message || 'Failed to connect to the server!');
+      }
     }finally {
       setLoading(false); // Kết thúc loading
     }
   };
 
-  const handleVerify = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('http://localhost:8080/email/confirm-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ emailOrusername, verificationCode }),
-      });
-      const result = await response.json();
-      if (response.ok) {
-        setError('');
-        setSuccess('Verification successful.');
-        setStep('resetPassword');
-      } else {
-        setError(result.error);
-      }
-    } catch (error) {
-      setError(error);
-    }
-    finally {
-      setLoading(false); // Kết thúc loading
-    }
-  };
-
   const handleResetPassword = async () => {
+    // eslint-disable-next-line no-const-assign
+    if (!verificationCode || !newPassword || !confirmPassword) {
+      setError('All fields are required');
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-    // eslint-disable-next-line no-const-assign
-    emailOrusername = emailOrusername.toLowerCase();
+
+
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/forgot-password', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ emailOrusername, newPassword }),
-      });
-      const result = await response.json();
-      if (response.ok) {
-        setError('');
-        setSuccess('Password reset successful. Redirecting to login...');
-        setTimeout(() => {
-          onClose();
-          window.location.href = '/';
-        }, 2000);
-      } else {
-        setError(result.error);
-      }
+      
+      const result = await resetPassword(verificationCode, newPassword);
+
+      setError('');
+      setSuccess(`${result.message}. Redirecting to login...`);
+      setTimeout(() => {
+        onClose();
+        window.location.href = '/';
+      }, 2000);
     } catch (error) {
-      setError(error);
+      console.log('Error when reset password:', error);
+      setError(error.message || 'Failed to change password!');
+      resetState();
     }
     finally {
-      setLoading(false); // Kết thúc loading
+      setLoading(false);
     }
   };
+
+  const resetState = () => {
+    setEmailOrUsername('');
+    setVerificationCode('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setError('');
+    setSuccess('');
+    setStep('request');
+    setLoading(false);
+  }
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -122,10 +122,10 @@ export default function Forget({ open, onClose }) {
               />
             </>
           )}
-          {step === 'verify' && (
+          {step === 'vertidyAndResetPassword' && (
             <>
               <Typography variant="h6" sx={{ mb: 3 }}>
-                Enter the verification code sent to your email or phone
+                Enter the verification code/link sent to your email
               </Typography>
               <TextField
                 label="Verification Code"
@@ -134,10 +134,6 @@ export default function Forget({ open, onClose }) {
                 fullWidth
                 sx={{ mb: 2 }}
               />
-            </>
-          )}
-          {step === 'resetPassword' && (
-            <>
               <Typography variant="h6" sx={{ mb: 3 }}>
                 Enter your new password
               </Typography>
@@ -168,12 +164,7 @@ export default function Forget({ open, onClose }) {
            {loading ? <LoadingSpinner /> : 'Submit'} 
           </Button>
         )}
-        {step === 'verify' && (
-          <Button variant="contained" color="primary" onClick={handleVerify}>
-            {loading ? <LoadingSpinner /> : 'Verify'}
-          </Button>
-        )}
-        {step === 'resetPassword' && (
+        {step === 'vertidyAndResetPassword' && (
           <Button variant="contained" color="primary" onClick={handleResetPassword}>
             {loading ? <LoadingSpinner /> : 'Reset Password'}
           </Button>

@@ -1,56 +1,43 @@
 import React, { useState } from 'react';
-import { TextField, Button, Box, Typography, Modal, Paper } from '@mui/material';
+import { TextField, Button, Box, Typography } from '@mui/material';
 import LoadingSpinner from '../ui/Loading/LoadingSpinner';
+
+import axios from 'axios';
+import { CustomerModelKeys } from '../../models/User.js';
+
 export default function Signup({ onClose }) {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [idstudent, setidstudent] = useState('');
-  const [Faculty, setFaculty] = useState('');
-  const [phone, setPhone] = useState(''); // Thêm state cho số điện thoại
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [loading, setLoading] = useState(false); 
+  const [ email, setEmail ] = useState('');
+  const [ password, setPassword ] = useState('');
+  const [ confirmPassword, setConfirmPassword ] = useState('');
+  const [ userName, setUserName ] = useState('');
+  const [ phoneNum, setPhoneNum ] = useState('');
+  const [ hcmutId, setHcmutId ] = useState('');
+  const [ faculty, setFaculty ] = useState('');
+  const [ major, setMajor ] = useState('');
+  const [ academicYear, setAcademicYear ] = useState('');
+  const [ classId, setClassId ] = useState('');
+
+  const [ error, setError ] = useState('');
+  const [ success, setSuccess ] = useState('');
+  const [ loading, setLoading ] = useState(false); 
 
   const Signup = async () => {
-    let convert_username = username.toLowerCase();
-    let convert_email = email.toLowerCase();
-    try {
-      setLoading(true);
-      const response = await fetch('http://localhost:8080/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username: convert_username, email: convert_email, password, idstudent, Faculty, phone }),
-      });
-      const result = await response.json();
-      if (response.ok) {
-        setSuccess('Account created successfully!');
-        setError('');
-
-        // Close modal after 1 second
-        setTimeout(() => {
-          setSuccess('');
-          setIsModalOpen(false);
-          onClose(); // Call onClose to close the signup dialog
-        }, 1000);
-      } else {
-        setError(result.message || 'Failed to create account');
-      }
+    if (
+      !userName ||
+      !email ||
+      !password ||
+      !confirmPassword ||
+      !phoneNum ||
+      !hcmutId ||
+      !faculty ||
+      !major ||
+      !academicYear ||
+      !classId
+    ) {
+      setError('All fields are required');
+      return;
     }
-    catch (error) {
-      setError('Failed to connect to the server');
-    }finally {
-      setLoading(false); // Kết thúc loading
-    }
-  }
 
-  const handleSendCode = async (e) => {
-    e.preventDefault();
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -58,73 +45,52 @@ export default function Signup({ onClose }) {
 
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/email/send-code', {
+
+      const formData = new FormData();
+      formData.append(CustomerModelKeys.email, email);
+      formData.append('password', password);
+      formData.append(CustomerModelKeys.userName, userName);
+      formData.append(CustomerModelKeys.phoneNum, phoneNum);
+      formData.append(CustomerModelKeys.hcmutId, hcmutId);
+      formData.append(CustomerModelKeys.faculty, faculty);
+      formData.append(CustomerModelKeys.major, major);
+      formData.append(CustomerModelKeys.academicYear, academicYear);
+      formData.append(CustomerModelKeys.classId, classId);
+      
+      const response = await axios.post(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/register`, formData, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email })
+          'Content-Type': 'application/json'
+        }
       });
 
-      const result = await response.json();
+      const result = response.data;
 
-      if (response.ok) {
-        setSuccess('Verification code sent to your email.');
-        setError('');
-        setIsModalOpen(true);  // Open verification modal
+      setSuccess(result.message);
+      setError('');
+
+      // Close modal after 1 second
+      setTimeout(() => {
+        setSuccess('');
+        onClose(); // Call onClose to close the signup dialog
+      }, 1000);
+    }
+    catch (error) {
+      const response = error.response;
+      if (response && response.data && response.data.message) {
+        setError(response.data.message);
       } else {
-        console.error('Error:', result.message);
-        setError(result.message || 'Failed to request verification code');
+        setError('Failed to connect to the server');
       }
-    } catch (error) {
-      console.error('Error:', error);
-      setError('Failed to connect to the server');
     }finally {
       setLoading(false); // Kết thúc loading
     }
-  };
-
-  const handleVerifyCode = async (e) => {
-    e.preventDefault();
-
-    try {
-      setLoading(true);
-      const response = await fetch('http://localhost:8080/email/confirm-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, verificationCode }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        Signup();
-      } else {
-        console.error('Error:', result.message);
-        setError(result.message || 'Failed to verify code');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setError('Failed to connect to the server');
-    }
-    finally {
-      setLoading(false); // Kết thúc loading
-    }
-  };
+  }
 
   return (
     <>
       <Box sx={{ maxWidth: '400px', margin: '0 auto', textAlign: 'center' }}>
         <Typography variant="h4" sx={{ mb: 3 }}></Typography>
-        <TextField
-          label="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          fullWidth
-          sx={{ mb: 2 }}
-        />
         <TextField
           label="Email"
           value={email}
@@ -149,23 +115,51 @@ export default function Signup({ onClose }) {
           sx={{ mb: 2 }}
         />
         <TextField
+          label="User Name"
+          value={userName}
+          onChange={(e) => setUserName(e.target.value)}
+          fullWidth
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="Phone Number"
+          value={phoneNum}
+          onChange={(e) => setPhoneNum(e.target.value)}
+          fullWidth
+          sx={{ mb: 2 }}
+        />
+        <TextField
           label="ID Student"
-          value={idstudent}
-          onChange={(e) => setidstudent(e.target.value)}
+          value={hcmutId}
+          onChange={(e) => setHcmutId(e.target.value)}
           fullWidth
           sx={{ mb: 2 }}
         />
         <TextField
           label="Faculty"
-          value={Faculty}
+          value={faculty}
           onChange={(e) => setFaculty(e.target.value)}
           fullWidth
           sx={{ mb: 2 }}
         />
         <TextField
-          label="Phone"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          label="Major"
+          value={major}
+          onChange={(e) => setMajor(e.target.value)}
+          fullWidth
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="Academic Year"
+          value={academicYear}
+          onChange={(e) => setAcademicYear(e.target.value)}
+          fullWidth
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="Class ID"
+          value={classId}
+          onChange={(e) => setClassId(e.target.value)}
           fullWidth
           sx={{ mb: 2 }}
         />
@@ -173,35 +167,10 @@ export default function Signup({ onClose }) {
         {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
         {success && <Typography color="success" sx={{ mb: 2 }}>{success}</Typography>}
 
-        <Button variant="contained" color="primary" onClick={handleSendCode} fullWidth>
-          Create Account
+        <Button variant="contained" color="primary" onClick={Signup} fullWidth>
+          {loading ? <LoadingSpinner /> : 'Sign Up'}
         </Button>
       </Box>
-
-      <Modal
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        aria-labelledby="verification-modal-title"
-        aria-describedby="verification-modal-description"
-      >
-        <Paper sx={{ p: 4, maxWidth: '400px', margin: 'auto', mt: '10%', textAlign: 'center' }}>
-          <Typography id="verification-modal-title" variant="h6" component="h2">
-          {loading ? <LoadingSpinner /> : 'Enter Verification Code'}
-          </Typography>
-          <TextField
-            label="Verification Code"
-            value={verificationCode}
-            onChange={(e) => setVerificationCode(e.target.value)}
-            fullWidth
-            sx={{ mb: 2 }}
-          />
-          {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
-          {success && <Typography color="success" sx={{ mb: 2 }}>{success}</Typography>}
-          <Button variant="contained" color="primary" onClick={handleVerifyCode} fullWidth>
-          {loading ? <LoadingSpinner /> : 'Verify Code'}
-          </Button>
-        </Paper>
-      </Modal>
     </>
   );
 }

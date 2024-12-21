@@ -7,6 +7,9 @@ import Signup from '../../components/auth/Signup';
 import Forget from '../../components/auth/Forget';
 import LoadingSpinner from '../../components/ui/Loading/LoadingSpinner'; // Import LoadingSpinner
 
+import { loginWithEmailAndPassword } from '../../controllers/HCMUT_SSO.js';
+import { CustomerModelKeys } from '../../models/User.js';
+
 export default function Login({ onLogin }) {
   const [emailOrusername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -18,43 +21,38 @@ export default function Login({ onLogin }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    
+    if (!emailOrusername || !password) {
+      setError('Username and password are required.');
+      return;
+    }
+
     try {
-      if (!emailOrusername || !password) {
-        setError('Username and password are required.');
-        return;
-      }
       setLoading(true); // Bắt đầu trạng thái loading
-      let convert = emailOrusername.toLowerCase();
-      const response = await fetch('http://localhost:8080/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ emailOrusername: convert, password }),
-        
-      });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        setError('');
-        const { accessToken, refreshToken , profile} = result;
-        const { role } = profile;
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('role', role); 
-        console.log(result);
-        console.log(result.profile);
-        console.log(profile.role);
-
-        onLogin(true);
-        navigate('/home');
-      } else {
-        setError(result.error);
-      }
+      const result = await loginWithEmailAndPassword(emailOrusername, password);
+      
+      console.log('Login result: ', result.message);
+      setError('');
+      const { user, customToken } = result.data;
+      localStorage.setItem(CustomerModelKeys.userId, user.uid);
+      localStorage.setItem('accessToken', customToken);
+      localStorage.setItem('isLoggedIn', 'true');
+      
+      onLogin(true);
+      navigate('/home');
     } catch (error) {
-      setError('Failed to connect to the server');
+      console.error('Error when login:', error);
+      if (error.code === 'auth/user-not-found') {
+        setError('User not found!');
+      }
+      else if (error.code === 'auth/invalid-email') {
+        setError('Invalid email!');
+      }
+      else if (error.code === 'auth/invalid-credential') {
+        setError('Something is wrong with your email or password!');
+      }
+      else setError(error.message || 'Failed to login!');
     } finally {
       setLoading(false); // Kết thúc trạng thái loading
     }
@@ -71,8 +69,6 @@ export default function Login({ onLogin }) {
       handleLogin(e);
     }
   };
-
-
 
   return (
     <Box

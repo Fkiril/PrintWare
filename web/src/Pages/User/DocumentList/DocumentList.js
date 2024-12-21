@@ -1,101 +1,106 @@
 import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Box, Typography, List, ListItem, ListItemText, IconButton, Dialog, DialogActions, DialogTitle } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import {
+  Box,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Checkbox,
+  IconButton,
+  Button,
+} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import SettingsIcon from "@mui/icons-material/Settings";
+import "./DocumentList.css";
 
 const DocumentList = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const [documents, setDocuments] = React.useState(location.state?.documents || []);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [deleteIndex, setDeleteIndex] = React.useState(null);
+  const [documents, setDocuments] = React.useState([
+    { name: "policy.pdf", size: "20 MB" },
+    { name: "tailieu.docx", size: "15 MB" },
+  ]);
+  const [selectedDocs, setSelectedDocs] = React.useState([]);
 
-  const handleDeleteDialog = (index) => {
-    setDeleteIndex(index);
-    setIsDialogOpen(true);
+  const handleToggleSelect = (index) => {
+    setSelectedDocs((prevSelected) =>
+      prevSelected.includes(index)
+        ? prevSelected.filter((i) => i !== index)
+        : [...prevSelected, index]
+    );
   };
 
-  const handleConfirmDelete = () => {
-    setDocuments((prevDocs) => prevDocs.filter((_, i) => i !== deleteIndex));
-    setIsDialogOpen(false);
-    setDeleteIndex(null);
-  };
-
-  const handleCancelDelete = () => {
-    setIsDialogOpen(false);
-    setDeleteIndex(null);
+  const handleDelete = (index) => {
+    setDocuments((prevDocs) => prevDocs.filter((_, i) => i !== index));
+    setSelectedDocs((prevSelected) => prevSelected.filter((i) => i !== index));
   };
 
   const handleAddDocument = () => {
     navigate("/document-uploader");
   };
-  const handleOrder = () => {
+
+  const handleNext = () => {
     navigate("/order");
   };
+
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        padding: "20px",
-        backgroundColor: "#f1f1f1",
-      }}
-    >
-      <Typography variant="h4" sx={{ marginBottom: "20px" }}>
-        Document List
-      </Typography>
-      <List sx={{ width: "50%", backgroundColor: "#fff", borderRadius: "6px", padding: "10px" }}>
-        {documents.map((doc, index) => (
-          <ListItem
-            key={index}
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              border: "1px solid #ddd",
-              borderRadius: "6px",
-              padding: "10px 15px",
-              marginBottom: "10px",
-            }}
+    <Box className="document-list-container">
+      <Box className="document-list-box">
+        <Typography variant="h4" className="document-list-title">
+          Document List
+        </Typography>
+        <TableContainer className="table-container">
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell align="center" className="table-header-cell">
+                  Select
+                </TableCell>
+                <TableCell className="table-header-cell">Document Name</TableCell>
+                <TableCell align="right" className="table-header-cell">
+                  Size
+                </TableCell>
+                <TableCell align="center" className="table-header-cell">
+                  Actions
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {documents.map((doc, index) => (
+                <TableRow key={index}>
+                  <TableCell align="center">
+                    <Checkbox
+                      checked={selectedDocs.includes(index)}
+                      onChange={() => handleToggleSelect(index)}
+                    />
+                  </TableCell>
+                  <TableCell>{doc.name}</TableCell>
+                  <TableCell align="right">{doc.size}</TableCell>
+                  <TableCell align="center">
+                    <IconButton color="error" onClick={() => handleDelete(index)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Box className="button-container">
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handleAddDocument}
           >
-            <ListItemText primary={doc.name} />
-            <Box>
-              <IconButton color="primary">
-                <SettingsIcon />
-              </IconButton>
-              <IconButton color="error" onClick={() => handleDeleteDialog(index)}>
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          </ListItem>
-        ))}
-      </List>
-      <Box sx={{ display: "flex", justifyContent: "space-between", marginTop: "20px", width: "50%" }}>
-        <Button variant="contained" color="secondary" onClick={handleAddDocument}>
-         Upload More
-        </Button>
-
-        <Button variant="contained" color="primary" onClick={handleOrder}>
-          Confirm
-        </Button>
+            Add Document
+          </Button>
+          <Button variant="contained" color="primary" onClick={handleNext}>
+            Next
+          </Button>
+        </Box>
       </Box>
-
-      {/* Dialog for delete confirmation */}
-      <Dialog open={isDialogOpen} onClose={handleCancelDelete}>
-        <DialogTitle>Are you sure you want to delete this document?</DialogTitle>
-        <DialogActions>
-          <Button onClick={handleCancelDelete} color="secondary">
-            Cancel
-          </Button>
-          <Button onClick={handleConfirmDelete} color="error">
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

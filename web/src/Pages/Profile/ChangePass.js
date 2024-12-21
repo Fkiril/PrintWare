@@ -1,38 +1,35 @@
 import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button } from '@mui/material';
 
+import { changePassword } from '../../controllers/HCMUT_SSO.js'
+import { CustomerModelKeys } from '../../models/User.js';
+
 const PasswordDialog = ({ open, onClose, onConfirm }) => {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [ currentPassword, setCurrentPassword ] = useState('');
+  const [ newPassword, setNewPassword ] = useState('');
+  const [ confirmPassword, setConfirmPassword ] = useState('');
+  const [ error, setError ] = useState('');
 
   const handleConfirm = async () => {
-    if (newPassword !== confirmPassword) {
+    if (!newPassword || newPassword !== confirmPassword) {
       setError('Passwords do not match.');
       return;
     }
-    try {
-      const response = await fetch('http://localhost:8080/profile/change-password', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        body: JSON.stringify({ password: currentPassword, newpassword: newPassword }),
-      });
+    const email = localStorage.getItem(CustomerModelKeys.email);
+    if (!email) {
+      setError('Email is required.');
+      return;
+    }
 
-      const result = await response.json();
-      if (response.ok) {
-        console.log('Password changed successfully.');
-        setError('');
-        onConfirm(true);
-        onClose();
-      } else {
-        setError(result.error);
-      }
+    try {
+      const result = await changePassword(email, currentPassword, newPassword);
+      console.log(result.message);
+      
+      setError('');
+      onConfirm(true);
+      onClose();
     } catch (error) {
-      setError(error);
+      setError(error.message || 'Failed to connect to the server');
     }
   };
 

@@ -1,3 +1,4 @@
+// Import React and necessary libraries
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -5,24 +6,25 @@ import {
   Typography,
   Button,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   IconButton,
   List,
   ListItem,
   ListItemText,
-  Dialog,
-  DialogTitle,
-  DialogActions,
+  Divider,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DeleteIcon from "@mui/icons-material/Delete";
 
+// Importing the CSS file
+import "./DocumentUploader.css";
+
 const DocumentUploader = () => {
   const [documents, setDocuments] = useState([]);
-  const [deleteIndex, setDeleteIndex] = useState(null); // Quản lý chỉ số tài liệu muốn xóa
-  const [isDialogOpen, setIsDialogOpen] = useState(false); // Quản lý trạng thái pop-up
+  const [fileType, setFileType] = useState("all");
   const navigate = useNavigate();
 
-  // Xử lý khi chọn file
   const handleFileChange = (event) => {
     const files = event.target.files;
     const newDocs = Array.from(files).map((file) => ({
@@ -32,58 +34,44 @@ const DocumentUploader = () => {
     setDocuments((prevDocs) => [...prevDocs, ...newDocs]);
   };
 
-  // Mở pop-up xóa
-  const openDeleteDialog = (index) => {
-    setDeleteIndex(index);
-    setIsDialogOpen(true);
+  const handleTypeChange = (event, newType) => {
+    if (newType !== null) setFileType(newType);
   };
 
-  // Xử lý xóa tài liệu sau khi xác nhận
-  const handleConfirmDelete = () => {
-    const updatedDocuments = documents.filter((_, i) => i !== deleteIndex);
-    setDocuments(updatedDocuments);
-    setIsDialogOpen(false);
-  };
-
-  // Hủy bỏ xóa
-  const handleCancelDelete = () => {
-    setDeleteIndex(null);
-    setIsDialogOpen(false);
-  };
-
-  // Chuyển sang DocumentList
-  const handleNext = () => {
-    navigate("/document-list", { state: { documents } });
-  };
+  const filteredDocuments =
+    fileType === "all"
+      ? documents
+      : fileType === "other"
+      ? documents.filter(
+          (doc) =>
+            !doc.name.endsWith(".pdf") &&
+            !doc.name.endsWith(".docx") &&
+            !doc.name.endsWith(".txt")
+        )
+      : documents.filter((doc) => doc.name.endsWith(fileType));
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        backgroundColor: "#f9f9f9",
-        padding: "20px",
-      }}
-    >
-      <Box
-        sx={{
-          width: "600px",
-          padding: "20px",
-          borderRadius: "10px",
-          backgroundColor: "#fff",
-          boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
-          textAlign: "center",
-        }}
-      >
-        <Typography variant="h4" gutterBottom>
-          Upload Your Document
+    <Box className="document-uploader-container">
+      <Box className="document-uploader-box">
+        <Typography variant="h4" className="document-uploader-title">
+          Upload Your Documents
         </Typography>
 
-        {/* Phần tải file */}
-        <Box>
+        <Box className="upload-controls">
+          {/* Toggle button for file types */}
+          <ToggleButtonGroup
+            value={fileType}
+            exclusive
+            onChange={handleTypeChange}
+            className="toggle-button-group"
+          >
+            <ToggleButton value="all">All</ToggleButton>
+            <ToggleButton value=".pdf">PDF</ToggleButton>
+            <ToggleButton value=".docx">DOCX</ToggleButton>
+            <ToggleButton value=".txt">TXT</ToggleButton>
+            <ToggleButton value="other">Other</ToggleButton>
+          </ToggleButtonGroup>
+
           <TextField
             type="file"
             inputProps={{ multiple: true }}
@@ -97,63 +85,53 @@ const DocumentUploader = () => {
               component="span"
               color="primary"
               startIcon={<UploadFileIcon />}
+              className="upload-button"
             >
-              Upload
+              Upload Files
             </Button>
           </label>
         </Box>
 
-        {/* Danh sách tài liệu */}
-        <List sx={{ marginTop: "20px", textAlign: "left" }}>
-          {documents.map((doc, index) => (
-            <ListItem
-              key={index}
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                marginBottom: "10px",
-                padding: "8px 16px",
-              }}
-            >
-              <ListItemText primary={doc.name} />
-              <IconButton
-                color="error"
-                size="small"
-                onClick={() => openDeleteDialog(index)}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </ListItem>
-          ))}
+        <List className="document-list">
+          {filteredDocuments.length === 0 ? (
+            <Typography variant="body1" className="no-files-text">
+              No documents uploaded.
+            </Typography>
+          ) : (
+            filteredDocuments.map((doc, index) => (
+              <React.Fragment key={index}>
+                <ListItem className="document-list-item">
+                  <ListItemText
+                    primary={doc.name}
+                    secondary={`Size: ${(doc.size / 1024).toFixed(2)} KB`}
+                  />
+                  <IconButton
+                    color="error"
+                    size="small"
+                    onClick={() => {
+                      const updatedDocs = documents.filter((_, i) => i !== index);
+                      setDocuments(updatedDocs);
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </ListItem>
+                {index < filteredDocuments.length - 1 && <Divider />}
+              </React.Fragment>
+            ))
+          )}
         </List>
 
-        {/* Nút Next */}
         <Button
           variant="contained"
           color="primary"
           disabled={documents.length === 0}
-          onClick={handleNext}
-          sx={{ marginTop: "20px" }}
+          onClick={() => navigate("/documents", { state: { documents } })}
+          className="confirm-button"
         >
-          Confirm
+          Confirm Upload
         </Button>
       </Box>
-
-      {/* Pop-up Xác Nhận Xóa */}
-      <Dialog open={isDialogOpen} onClose={handleCancelDelete}>
-        <DialogTitle>Are you sure you want to delete this document?</DialogTitle>
-        <DialogActions>
-          <Button onClick={handleCancelDelete} color="secondary">
-            Cancle
-          </Button>
-          <Button onClick={handleConfirmDelete} color="error">
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

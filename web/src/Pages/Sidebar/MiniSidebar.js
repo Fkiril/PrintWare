@@ -5,6 +5,9 @@ import PersonIcon from '@mui/icons-material/Person';
 import HistoryIcon from '@mui/icons-material/History'; // Icon lịch sử
 import LogoutIcon from '@mui/icons-material/Logout'; // Icon logout
 
+import { CustomerModelKeys, UserRoles } from '../../models/User.js';
+import { getImage } from '../../services/IndexDB.js';
+
 export default function Navbar({ onLogout }) {
   const [avatar, setAvatar] = useState('');
   const [role, setRole] = useState('');
@@ -13,16 +16,42 @@ export default function Navbar({ onLogout }) {
   const location = useLocation();
   
   const loadData = async () => {
-    const savedAvatar = localStorage.getItem('avatar');
-    const savedRole = localStorage.getItem('role'); // Lấy role từ localStorage
-    setAvatar(savedAvatar || '');
-    setRole(savedRole || '');
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (isLoggedIn) {
+      const savedRole = localStorage.getItem(CustomerModelKeys.userRole); // Lấy role từ localStorage
+      setRole(savedRole || '');
+
+      // const savedAvatar = localStorage.getItem(CustomerModelKeys.avatar);
+      // setAvatar(savedAvatar || '');
+      await getImage(CustomerModelKeys.avatar).then((image) => {
+        setAvatar(image ? (image.src ? image.src : '') : '');
+      }).catch((error) => {
+        console.error('Error getting avatar image: ', error);
+        setAvatar('');
+      });
+    }
+    else {
+      setRole('');
+      setAvatar('');
+    }
   };
 
   useEffect(() => {
-    loadData();
-    const intervalId = setInterval(loadData, 1000); // Cập nhật định kỳ
-    return () => clearInterval(intervalId);
+    const intervalId = setInterval(loadData, 30000); // Cập nhật định kỳ
+
+    const handleProfileDataFetched = () => {
+      console.log('Profile data fetched. Reloading data...');
+      loadData();
+    };
+
+    // Add event listener for custom event
+    window.addEventListener('profileDataFetched', handleProfileDataFetched);
+
+    // Cleanup event listener and interval on component unmount
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('profileDataFetched', handleProfileDataFetched);
+    };
   }, []);
 
   const handleAvatarClick = (event) => {
@@ -87,7 +116,7 @@ export default function Navbar({ onLogout }) {
           </Box>
 
           {/* Hiển thị menu khác nhau dựa trên role */}
-          {role === 'user' && (
+          {role === UserRoles.USER && (
             <Box
             sx={{
               display: 'flex', // Đặt các phần tử con trong cùng một hàng
@@ -124,7 +153,7 @@ export default function Navbar({ onLogout }) {
           
           )}
 
-          {role === 'admin' && (
+          {role === UserRoles.SPSO && (
             <>
               <Box>
                 <Link to="/manage-printer" style={{ textDecoration: 'none' }}>
@@ -142,21 +171,69 @@ export default function Navbar({ onLogout }) {
               </Box>
             </>
           )}
+
+          {role === UserRoles.ADMIN && (
+            <>
+              <Box>
+                <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: location.pathname === '/dashboard' ? '#1976d2' : '#333',
+                      '&:hover': { color: '#787878' },
+                      paddingLeft: '10px',
+                    }}
+                  >
+                    Dashboard
+                  </Typography>
+                </Link>
+              </Box>
+              <Box>
+                <Link to="/manageUser" style={{ textDecoration: 'none' }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: location.pathname === '/manageUser' ? '#1976d2' : '#333',
+                      '&:hover': { color: '#787878' },
+                      paddingLeft: '10px',
+                    }}
+                  >
+                    Manage User
+                  </Typography>
+                </Link>
+              </Box>
+              <Box>
+                <Link to="/managerPrint-er" style={{ textDecoration: 'none' }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: location.pathname === '/managerPrint-er' ? '#1976d2' : '#333',
+                      '&:hover': { color: '#787878' },
+                      paddingLeft: '10px',
+                    }}
+                  >
+                    Manage Printer
+                  </Typography>
+                </Link>
+              </Box>
+            </>
+          )}
+
         </Box>
     
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {role === 'user' ? (
+          {role === UserRoles.USER ? (
             <IconButton onClick={handleAvatarClick} sx={{ marginRight: 2 ,marginTop:'5px'}}>
               <Avatar src={avatar} sx={{ width: 35, height: 35 }} />
             </IconButton>
-          ) : role === 'admin' ? (
+          ) : role === UserRoles.SPSO ||  role === UserRoles.ADMIN? (
             <IconButton onClick={onLogout} sx={{ marginRight: 2 }}>
               <LogoutIcon sx={{ color: '#d32f2f', fontSize: 30 }} />
             </IconButton>
           ) : null}
 
 
-          {role === 'user' && (
+          {role === UserRoles.USER && (
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
