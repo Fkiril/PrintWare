@@ -140,7 +140,7 @@ function App() {
 
     await Promise.all(saveImagePromises).then(() => {
       const event = new CustomEvent('profileDataFetched');
-      window.dispatchEvent(event);
+      setTimeout(() => window.dispatchEvent(event), 300);
     });
   };
 
@@ -209,8 +209,10 @@ function App() {
       localStorage.clear();
       await clearDB().then(() => {
         console.log('Database cleared successfully.');
-        window.location.reload();
       });
+
+      const event = new CustomEvent('profileDataFetched');
+      setTimeout(() => window.dispatchEvent(event), 300);
     } catch (error) {
       console.error('Error logging out:', error);
       //TODO: Handle the error here

@@ -30,6 +30,10 @@ export default function Navbar({ onLogout }) {
         setAvatar('');
       });
     }
+    else {
+      setRole('');
+      setAvatar('');
+    }
   };
 
   useEffect(() => {
@@ -56,13 +60,6 @@ export default function Navbar({ onLogout }) {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-  };
-
-  const handleLogout = async () => {
-    await onLogout();
-    setAnchorEl(null);
-    setAvatar('');
-    setRole('');
   };
 
   const breadcrumbs = location.pathname
@@ -230,7 +227,7 @@ export default function Navbar({ onLogout }) {
               <Avatar src={avatar} sx={{ width: 35, height: 35 }} />
             </IconButton>
           ) : role === UserRoles.SPSO ||  role === UserRoles.ADMIN? (
-            <IconButton onClick={handleLogout} sx={{ marginRight: 2 }}>
+            <IconButton onClick={onLogout} sx={{ marginRight: 2 }}>
               <LogoutIcon sx={{ color: '#d32f2f', fontSize: 30 }} />
             </IconButton>
           ) : null}
@@ -250,7 +247,7 @@ export default function Navbar({ onLogout }) {
                 <HistoryIcon sx={{ marginRight: 1, color: '#1976d2' }} />
                 History
               </MenuItem>
-              <MenuItem onClick={handleLogout} sx={{ marginRight: 2 }}>
+              <MenuItem onClick={onLogout} sx={{ marginRight: 2 }}>
                 <LogoutIcon sx={{ color: '#d32f2f', fontSize: 30 }} />
                 Logout
               </MenuItem>
