@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   TextField, Button, Box, Typography, Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
@@ -9,7 +9,6 @@ import LoadingSpinner from '../../components/ui/Loading/LoadingSpinner'; // Impo
 
 import { loginWithEmailAndPassword } from '../../controllers/HCMUT_SSO.js';
 import { CustomerModelKeys } from '../../models/User.js';
-import axios from 'axios';
 
 export default function Login({ onLogin }) {
   const [emailOrusername, setEmailOrUsername] = useState('');
@@ -22,20 +21,20 @@ export default function Login({ onLogin }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    try {
-      if (!emailOrusername || !password) {
-        setError('Username and password are required.');
-        return;
-      }
-      setLoading(true); // Bắt đầu trạng thái loading
-      let convert = emailOrusername.toLowerCase();
+    
+    if (!emailOrusername || !password) {
+      setError('Username and password are required.');
+      return;
+    }
 
-      const result = await loginWithEmailAndPassword(convert, password);
+    try {
+      setLoading(true); // Bắt đầu trạng thái loading
+
+      const result = await loginWithEmailAndPassword(emailOrusername, password);
       
-      console.log('login result: ', result);
+      console.log('Login result: ', result.message);
       setError('');
       const { user, customToken } = result.data;
-      localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem(CustomerModelKeys.userId, user.uid);
       localStorage.setItem('accessToken', customToken);
       localStorage.setItem('isLoggedIn', 'true');
@@ -44,7 +43,7 @@ export default function Login({ onLogin }) {
       navigate('/home');
     } catch (error) {
       console.error('Error when login:', error);
-      setError(error.message || 'Failed to connect to the server');
+      setError(error.message || 'Failed to login!');
     } finally {
       setLoading(false); // Kết thúc trạng thái loading
     }
@@ -61,8 +60,6 @@ export default function Login({ onLogin }) {
       handleLogin(e);
     }
   };
-
-
 
   return (
     <Box

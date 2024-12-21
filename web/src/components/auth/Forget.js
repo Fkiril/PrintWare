@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import LoadingSpinner from '../ui/Loading/LoadingSpinner';
 
+import axios from 'axios';
 import { sendCustomPasswordResetEmail, resetPassword} from '../../controllers/HCMUT_SSO.js';
 
 export default function Forget({ open, onClose }) {
@@ -19,7 +20,7 @@ export default function Forget({ open, onClose }) {
 
 
   const handleRequest = async () => {
-    if (!!!emailOrusername) {
+    if (!emailOrusername) {
       setError("Email is required!");
       return;
     }
@@ -27,67 +28,78 @@ export default function Forget({ open, onClose }) {
     try {
       setLoading(true);
       
-      const result = await sendCustomPasswordResetEmail(emailOrusername);
+      const response = await axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-user-id-by-email`, {
+        headers: {
+          'Authorization': `Bearer ${process.env.REACT_APP_SERVER_TOKEN}`
+        },
+        params: {
+          email: emailOrusername
+        }
+      });
 
-      setStep('verify');
-      setSuccess('Instructions for resetting your password have been sent.');
-      // setSuccess(result.message);
+      if (response.status === 200) {
+        const result = await sendCustomPasswordResetEmail(emailOrusername);
+        setStep('vertidyAndResetPassword');
+        setSuccess(result.message);
+        // setSuccess('Instructions for resetting your password have been sent.');
+      }
     } catch (error) {
       console.log('Error when request:', error);
-      setError(error.message || 'Failed to connect to the server');
+      if (!error.response) {
+        setError(error.message || 'Failed to send reset password email!');
+      }
+      else {
+        setError(error.response.data.message || 'Failed to connect to the server!');
+      }
     }finally {
-      setLoading(false); // Kết thúc loading
-    }
-  };
-
-  const handleVerify = async () => {
-    if (!!!verificationCode) {
-      setError("Verification code is required!");
-      return;
-    }
-    if (!!!newPassword) {
-      setError("New password is required!");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      
-      const result = await resetPassword(verificationCode, newPassword);
-
-      setError('');
-      setSuccess('Verification successful.');
-      setStep('resetPassword');
-    } catch (error) {
-      console.log('Error when verify:', error);
-      setError(error.message || 'Failed to connect to the server');
-    }
-    finally {
       setLoading(false); // Kết thúc loading
     }
   };
 
   const handleResetPassword = async () => {
     // eslint-disable-next-line no-const-assign
-    emailOrusername = emailOrusername.toLowerCase();
+    if (!verificationCode || !newPassword || !confirmPassword) {
+      setError('All fields are required');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+
     try {
       setLoading(true);
       
       const result = await resetPassword(verificationCode, newPassword);
 
       setError('');
-      setSuccess('Password reset successful. Redirecting to login...');
+      setSuccess(`${result.message}. Redirecting to login...`);
       setTimeout(() => {
         onClose();
         window.location.href = '/';
       }, 2000);
     } catch (error) {
-      setError(error);
+      console.log('Error when reset password:', error);
+      setError(error.message || 'Failed to change password!');
+      resetState();
     }
     finally {
-      setLoading(false); // Kết thúc loading
+      setLoading(false);
     }
   };
+
+  const resetState = () => {
+    setEmailOrUsername('');
+    setVerificationCode('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setError('');
+    setSuccess('');
+    setStep('request');
+    setLoading(false);
+  }
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -110,10 +122,10 @@ export default function Forget({ open, onClose }) {
               />
             </>
           )}
-          {step === 'verify' && (
+          {step === 'vertidyAndResetPassword' && (
             <>
               <Typography variant="h6" sx={{ mb: 3 }}>
-                Enter the verification code sent to your email or phone
+                Enter the verification code/link sent to your email
               </Typography>
               <TextField
                 label="Verification Code"
@@ -122,10 +134,6 @@ export default function Forget({ open, onClose }) {
                 fullWidth
                 sx={{ mb: 2 }}
               />
-            </>
-          )}
-          {step === 'resetPassword' && (
-            <>
               <Typography variant="h6" sx={{ mb: 3 }}>
                 Enter your new password
               </Typography>
@@ -156,12 +164,7 @@ export default function Forget({ open, onClose }) {
            {loading ? <LoadingSpinner /> : 'Submit'} 
           </Button>
         )}
-        {step === 'verify' && (
-          <Button variant="contained" color="primary" onClick={handleVerify}>
-            {loading ? <LoadingSpinner /> : 'Verify'}
-          </Button>
-        )}
-        {step === 'resetPassword' && (
+        {step === 'vertidyAndResetPassword' && (
           <Button variant="contained" color="primary" onClick={handleResetPassword}>
             {loading ? <LoadingSpinner /> : 'Reset Password'}
           </Button>

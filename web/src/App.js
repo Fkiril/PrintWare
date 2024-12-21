@@ -30,7 +30,7 @@ import USER from './Pages/Admin/manageUser/ManageUser';
 import axios from 'axios';
 import { logout } from './controllers/HCMUT_SSO';
 import { CustomerModelKeys } from './models/User';
-
+import { saveImage } from './services/IndexDB.js';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -100,37 +100,59 @@ function App() {
           localStorage.setItem('avatarId', profileResponse.data.avatar || '');
           localStorage.setItem('coverPhotoId', profileResponse.data.coverPhoto || '');
         } else {
-          const imageResponse = response.value;
-          const imgData = btoa(String.fromCharCode.apply(null, new Uint8Array(imageResponse.data)));
-          const imgType = imageResponse.headers.getContentType();
-
-          setImageInLocalStorage(index === 1 ? 'avatar' : 'coverPhoto', { contentType: imgType, data: imgData });
+          try {
+            const imageResponse = response.value;
+            const blob = new Blob([imageResponse.data], { type: imageResponse.headers.getContentType() });
+            const reader = new FileReader();
+  
+            reader.onloadend = async () => {
+                const imgData = reader.result.split(',')[1]; // Get base64 string
+                const imgType = imageResponse.headers.getContentType();
+  
+                await saveImage(index === 1 ? CustomerModelKeys.avatar : CustomerModelKeys.coverPhoto, { contentType: imgType, data: imgData }).then(() => {
+                  console.log('Image saved successfully.');
+                });
+            };
+  
+            reader.readAsDataURL(blob);
+          } catch (error) {
+            console.error('Error saving image data: ', error);
+          }
         }
       }
       else {
         if (index === 0) {
-          console.error("Error fetching profile data: ", response.reason)
+          console.error("Error fetching profile data: ", response.reason);
+          // TODO: Warning message here and logout
         }
         else if (index === 1) {
-          console.error("Error fetching avatar data: ", response.reason)
+          console.error("Error fetching avatar data: ", response.reason);
+          // setImageInLocalStorage('avatar', null);
         }
         else {
-          console.error("Error fetching cover photo data: ", response.reason)
+          console.error("Error fetching cover photo data: ", response.reason);
+          // setImageInLocalStorage('coverPhoto', null);
         }
       }
     });
   };
 
-  const setImageInLocalStorage = (key, data) => {
-    if (data) {
-      const src = `data:${data.contentType};base64,${data.data}`;
-      localStorage.setItem(key, src);
-    } else {
-      localStorage.setItem(key, '');
-    }
-  };
+  // const setImageInLocalStorage = (key, data) => {
+  //   if (data) {
+  //     const src = `data:${data.contentType};base64,${data.data}`;
+  //     localStorage.setItem(key, src);
+  //   } else {
+  //     localStorage.setItem(key, '');
+  //   }
+  // };
 
   useEffect(() => {
+    // openDB().then(() => {
+    //   console.log('IndexedDB opened successfully.');
+    // }).catch((error) => {
+    //   console.error('Error opening IndexedDB:', error);
+    // });
+
     const storedLoggedInStatus = localStorage.getItem('isLoggedIn');
 
     if (storedLoggedInStatus === 'true') {

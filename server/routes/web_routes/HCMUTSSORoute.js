@@ -187,7 +187,25 @@ router.get('/get-picture-by-user-id', async (req, res) => {
 
     const result = await getPictureByUserId(query.userId, query.type);
 
-    res.status(result.status).json(result.body);
+    if (result.status !== 200) {
+        res.status(result.status).json(result.body);
+        return;
+    }
+    
+    res.set({
+        'Content-Type': result.body.data.contentType,
+        'Content-Disposition': `attachment; filename="${result.body.data.fileId}"`
+    });
+
+    result.body.file
+        .on('end', () => {
+            console.log('File downloaded successfully.');
+        })
+        .on('error', (error) => {
+            console.log('Error pipe: ', error);
+            res.status(500).json({ message: error.message });
+        })
+        .pipe(res);
 })
 
 router.get('/get-picture', async (req, res) => {
@@ -221,7 +239,6 @@ router.get('/get-picture', async (req, res) => {
             res.status(500).json({ message: error.message });
         })
         .pipe(res);
-
 })
 
 router.delete('/delete-picture', async (req, res) => {

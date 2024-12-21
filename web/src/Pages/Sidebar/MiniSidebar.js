@@ -4,7 +4,9 @@ import { Box, IconButton, Avatar, Typography, Menu, MenuItem } from '@mui/materi
 import PersonIcon from '@mui/icons-material/Person';
 import HistoryIcon from '@mui/icons-material/History'; // Icon lịch sử
 import LogoutIcon from '@mui/icons-material/Logout'; // Icon logout
-import { CustomerModelKeys, UserRoles } from '../../models/User';
+
+import { CustomerModelKeys, UserRoles } from '../../models/User.js';
+import { getImage } from '../../services/IndexDB.js';
 
 export default function Navbar({ onLogout }) {
   const [avatar, setAvatar] = useState('');
@@ -14,15 +16,24 @@ export default function Navbar({ onLogout }) {
   const location = useLocation();
   
   const loadData = async () => {
-    const savedAvatar = localStorage.getItem(CustomerModelKeys.avatar);
-    const savedRole = localStorage.getItem(CustomerModelKeys.userRole); // Lấy role từ localStorage
-    setAvatar(savedAvatar || '');
-    setRole(savedRole || '');
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (isLoggedIn) {
+      // const savedAvatar = localStorage.getItem(CustomerModelKeys.avatar);
+      // setAvatar(savedAvatar || '');
+      await getImage(CustomerModelKeys.avatar).then((image) => {
+        console.log('Get avatar image from IndexDB: ', image);
+        setAvatar(image.src || '');
+      }).catch((error) => {
+        console.error('Error getting avatar image: ', error);
+        setAvatar('');
+      });
+      const savedRole = localStorage.getItem(CustomerModelKeys.userRole); // Lấy role từ localStorage
+      setRole(savedRole || '');
+    }
   };
 
   useEffect(() => {
-    loadData();
-    const intervalId = setInterval(loadData, 1000); // Cập nhật định kỳ
+    const intervalId = setInterval(loadData, 60000); // Cập nhật định kỳ
     return () => clearInterval(intervalId);
   }, []);
 

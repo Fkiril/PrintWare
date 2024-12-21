@@ -31,7 +31,7 @@ import {
 } from "chart.js";
 
 import axios from "axios";
-import { CustomerModelKeys, SPSOModelKeys } from "../../../models/User";
+import { SPSOModelKeys } from "../../../models/User";
 
 // Đăng ký các thành phần cần thiết của Chart.js
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -158,6 +158,8 @@ const AdminDashboard = () => {
         }
       });
 
+      console.log('Update\'s response: ', response.data);
+
       return true;
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -214,6 +216,8 @@ const AdminDashboard = () => {
           userRole: userRole
         }
       });
+
+      console.log('Delete\'s response: ', response.data);
 
       return true;
     } catch (error) {

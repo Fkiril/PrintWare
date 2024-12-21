@@ -49,7 +49,8 @@ const whitelist = [
   '/',
   '/favicon.ico',
   '/enroll-events',
-  '/hcmut-sso/register'
+  '/hcmut-sso/register',
+  '/hcmut-sso/get-user-id-by-email'
 ];
 app.use((req, res, next) => {
   if (!whitelist.includes(req.path)) {

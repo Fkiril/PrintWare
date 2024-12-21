@@ -3,12 +3,12 @@ import { Box, TextField, Button, Avatar, Grid, Paper } from '@mui/material';
 import PasswordDialog from './ChangePass';
 import { InputAdornment } from '@mui/material';
 import Swal from 'sweetalert2';
-import { toast } from 'react-toastify';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import LoadingSpinner from '../../components/ui/Loading/LoadingSpinner';
 
 import axios from 'axios';
-import { CustomerModelKeys } from '../../models/User';
+import { CustomerModelKeys } from '../../models/User.js';
+import { getImage } from '../../services/IndexDB.js';
 
 const showAlert = (message, type) => {
   Swal.fire({
@@ -38,26 +38,42 @@ const Profile = () => {
   const [ isPasswordConfirmed, setIsPasswordConfirmed ] = useState(false);
   const [ loading, setLoading ] = useState(false); 
 
-  const loadData = () => {
-    setUsername(localStorage.getItem(CustomerModelKeys.userName));
+  const loadData = async () => {
     setEmail(localStorage.getItem(CustomerModelKeys.email));
+    setUsername(localStorage.getItem(CustomerModelKeys.userName));
     setPhone(localStorage.getItem(CustomerModelKeys.phoneNum));
-    setClass(localStorage.getItem(CustomerModelKeys.classId));
     setHcmutId(localStorage.getItem(CustomerModelKeys.hcmutId));
     setFaculty(localStorage.getItem(CustomerModelKeys.faculty));
     setMajor(localStorage.getItem(CustomerModelKeys.major));
     setAcademicYear(localStorage.getItem(CustomerModelKeys.academicYear));
+    setClass(localStorage.getItem(CustomerModelKeys.classId));
 
-    if (localStorage.getItem(CustomerModelKeys.avatar)) {
-      setAvatar(localStorage.getItem(CustomerModelKeys.avatar));
-      setOriginalAvatar(localStorage.getItem(CustomerModelKeys.avatar));
+    if (localStorage.getItem('avatarId')) {
+      // setAvatar(localStorage.getItem(CustomerModelKeys.avatar));
+      // setOriginalAvatar(localStorage.getItem(CustomerModelKeys.avatar));
+      await getImage(CustomerModelKeys.avatar).then((result) => {
+        setAvatar(result.src || '');
+        setOriginalAvatar(result.src || '');
+      }).catch((error) => {
+        console.error('Error getting avatar image: ', error);
+        setAvatar('');
+        setOriginalAvatar('');
+      });
     } else {
       setAvatar('');
       setOriginalAvatar('');
     }
-    if (localStorage.getItem(CustomerModelKeys.coverPhoto)) {
-      setCoverPhoto(localStorage.getItem(CustomerModelKeys.coverPhoto));
-      setOriginalCoverPhoto(localStorage.getItem(CustomerModelKeys.coverPhoto));
+    if (localStorage.getItem('coverPhotoId')) {
+      // setCoverPhoto(localStorage.getItem(CustomerModelKeys.coverPhoto));
+      // setOriginalCoverPhoto(localStorage.getItem(CustomerModelKeys.coverPhoto));
+      await getImage(CustomerModelKeys.coverPhoto).then((result) => {
+        setCoverPhoto(result.src || '');
+        setOriginalCoverPhoto(result.src || '');
+      }).catch((error) => {
+        console.error('Error getting cover photo image: ', error);
+        setCoverPhoto('');
+        setOriginalCoverPhoto('');
+      });
     }
     else {
       setCoverPhoto('');
@@ -83,7 +99,7 @@ const Profile = () => {
       return;
     }
     if (!hcmutId || !faculty) {
-      showAlert('HcmutId and faculty are required', 'error');
+      showAlert('Student Id and Faculty are required', 'error');
       return;
     }
 
@@ -96,8 +112,8 @@ const Profile = () => {
     if (document.querySelector('input[name="phoneNum"]').value) formData.append(CustomerModelKeys.phoneNum, document.querySelector('input[name="phoneNum"]').value);
     if (document.querySelector('input[name="hcmutId"]').value) formData.append(CustomerModelKeys.hcmutId, document.querySelector('input[name="hcmutId"]').value);
     if (document.querySelector('input[name="faculty"]').value) formData.append(CustomerModelKeys.faculty, document.querySelector('input[name="faculty"]').value);
-    // if (document.querySelector('input[name="major"]').value) formData.append(CustomerModelKeys.major, document.querySelector('input[name="major"]').value);
-    // if (document.querySelector('input[name="academicYear"]').value) formData.append(CustomerModelKeys.academicYear, document.querySelector('input[name="academicYear"]').value);
+    if (document.querySelector('input[name="major"]').value) formData.append(CustomerModelKeys.major, document.querySelector('input[name="major"]').value);
+    if (document.querySelector('input[name="academicYear"]').value) formData.append(CustomerModelKeys.academicYear, document.querySelector('input[name="academicYear"]').value);
     if (document.querySelector('input[name="classId"]').value) formData.append(CustomerModelKeys.classId, document.querySelector('input[name="classId"]').value);
 
     const avaFormData = new FormData();
@@ -162,26 +178,28 @@ const Profile = () => {
             console.log('Update profile result: ', result);
             setIsEditable(false);
 
-            if (formData.has(CustomerModelKeys.userName)) localStorage.setItem(CustomerModelKeys.userName, formData.get(CustomerModelKeys.userName));
             if (formData.has(CustomerModelKeys.email)) localStorage.setItem(CustomerModelKeys.email, formData.get(CustomerModelKeys.email));
+            if (formData.has(CustomerModelKeys.userName)) localStorage.setItem(CustomerModelKeys.userName, formData.get(CustomerModelKeys.userName));
             if (formData.has(CustomerModelKeys.phoneNum)) localStorage.setItem(CustomerModelKeys.phoneNum, formData.get(CustomerModelKeys.phoneNum));
             if (formData.has(CustomerModelKeys.hcmutId)) localStorage.setItem(CustomerModelKeys.hcmutId, formData.get(CustomerModelKeys.hcmutId));
             if (formData.has(CustomerModelKeys.faculty)) localStorage.setItem(CustomerModelKeys.faculty, formData.get(CustomerModelKeys.faculty));
             if (formData.has(CustomerModelKeys.major)) localStorage.setItem(CustomerModelKeys.major, formData.get(CustomerModelKeys.major));
-            if (formData.has(CustomerModelKeys.classId)) localStorage.setItem(CustomerModelKeys.classId, formData.get(CustomerModelKeys.classId));
             if (formData.has(CustomerModelKeys.academicYear)) localStorage.setItem(CustomerModelKeys.academicYear, formData.get(CustomerModelKeys.academicYear));
+            if (formData.has(CustomerModelKeys.classId)) localStorage.setItem(CustomerModelKeys.classId, formData.get(CustomerModelKeys.classId));
           }
           else {
             const result = response.value.data;
-            if (index === 1) {
-              console.log('Update avatar result: ', result);
-              if (avatar) localStorage.setItem(CustomerModelKeys.avatar, avatar);
-              localStorage.setItem('avatarId', result.data);
-            }
-            else if (index === 2) {
-              console.log('Update cover photo result: ', result);
-              if (coverPhoto) localStorage.setItem(CustomerModelKeys.coverPhoto, coverPhoto);
-              localStorage.setItem('coverPhotoId', result.data);
+            if (result) {
+              if (index === 1) {
+                console.log('Update avatar result: ', result);
+                if (avatar) localStorage.setItem(CustomerModelKeys.avatar, avatar);
+                localStorage.setItem('avatarId', result.data);
+              }
+              else if (index === 2) {
+                console.log('Update cover photo result: ', result);
+                if (coverPhoto) localStorage.setItem(CustomerModelKeys.coverPhoto, coverPhoto);
+                localStorage.setItem('coverPhotoId', result.data);
+              }
             }
           }
         }
@@ -195,8 +213,10 @@ const Profile = () => {
           else {
             console.error("Error update cover photo data: ", response.reason)
           }
+          setIsEditable(false);
         }
       }
+      setLoading(false);
     });
 
     loadData();
@@ -210,8 +230,8 @@ const Profile = () => {
       const currentPhoneNum = document.querySelector('input[name="phoneNum"]').value;
       const currentHcmutId = document.querySelector('input[name="hcmutId"]').value;
       const currentFaculty = document.querySelector('input[name="faculty"]').value;
-      // const currentMajor = document.querySelector('input[name="major"]').value;
-      // const currentAcademicYear = document.querySelector('input[name="academicYear"]').value;
+      const currentMajor = document.querySelector('input[name="major"]').value;
+      const currentAcademicYear = document.querySelector('input[name="academicYear"]').value;
       const currentClassId = document.querySelector('input[name="classId"]').value;
   
       if (
@@ -219,8 +239,8 @@ const Profile = () => {
         currentPhoneNum !== phoneNum ||
         currentHcmutId !== hcmutId ||
         currentFaculty !== faculty ||
-        // currentMajor !== major ||
-        // currentAcademicYear !== academicYear ||
+        currentMajor !== major ||
+        currentAcademicYear !== academicYear ||
         currentClassId !== classId
       ) {
         resolve(true);
@@ -339,9 +359,6 @@ const Profile = () => {
               mb: 2,
             }}
           >
-            <img 
-              id='test-img'/>
-
             <Avatar src={avatar} sx={{ width: 100, height: 100,top:15, }} />
             {isEditable && (
               <Button
@@ -376,21 +393,6 @@ const Profile = () => {
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
-              label="userName"
-              name="userName"
-              value={isEditable ? null : userName}
-              // onChange={(e) => setUsername(e.target.value)}
-              fullWidth
-              InputProps={{
-                readOnly: !isEditable,
-              }}
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
               label="Email"
               name="email"
               value={isEditable ? email : obfuscateEmail(email)}
@@ -401,20 +403,6 @@ const Profile = () => {
               }}
               InputLabelProps={{
                 shrink: true,
-              }}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              label="Phone Number"
-              name="phoneNum"
-              value={isEditable ? phoneNum : obfuscatePhone(phoneNum)}
-              fullWidth
-              InputProps={{
-                readOnly: !isEditable,
-              }}
-              InputLabelProps={{
-                shrink: true, // Always keep the label on top
               }}
             />
           </Grid>
@@ -445,7 +433,36 @@ const Profile = () => {
           </Grid>
           <Grid item xs={12}>
             <TextField
-              label="ID Student"
+              label="User Name"
+              name="userName"
+              value={isEditable ? null : userName}
+              // onChange={(e) => setUsername(e.target.value)}
+              fullWidth
+              InputProps={{
+                readOnly: !isEditable,
+              }}
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Phone Number"
+              name="phoneNum"
+              value={isEditable ? phoneNum : obfuscatePhone(phoneNum)}
+              fullWidth
+              InputProps={{
+                readOnly: !isEditable,
+              }}
+              InputLabelProps={{
+                shrink: true, // Always keep the label on top
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Student ID"
               name="hcmutId"
               value={isEditable ? null : hcmutId}
               // onChange={(e) => setHcmutId(e.target.value)}
@@ -460,10 +477,10 @@ const Profile = () => {
           </Grid>
           <Grid item xs={12}>
             <TextField
-              label="classId"
-              name="classId"
-              value={isEditable ? null : classId}
-              // onChange={(e) => setClass(e.target.value)}
+              label="Faculty"
+              name="faculty"
+              value={isEditable ? null : faculty}
+              // onChange={(e) => setFaculty(e.target.value)}
               fullWidth
               InputProps={{
                 readOnly: !isEditable,
@@ -475,10 +492,40 @@ const Profile = () => {
           </Grid>
           <Grid item xs={12}>
             <TextField
-              label="faculty"
-              name="faculty"
-              value={isEditable ? null : faculty}
-              // onChange={(e) => setFaculty(e.target.value)}
+              label="Major"
+              name="major"
+              value={isEditable ? null : major}
+              // onChange={(e) => setMajor(e.target.value)}
+              fullWidth
+              InputProps={{
+                readOnly: !isEditable,
+              }}
+              InputLabelProps={{
+                shrink: true, // Always keep the label on top
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Academic Year"
+              name="academicYear"
+              value={isEditable ? null : academicYear}
+              // onChange={(e) => setAcademicYear(e.target.value)}
+              fullWidth
+              InputProps={{
+                readOnly: !isEditable,
+              }}
+              InputLabelProps={{
+                shrink: true, // Always keep the label on top
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Class ID"
+              name="classId"
+              value={isEditable ? null : classId}
+              // onChange={(e) => setClass(e.target.value)}
               fullWidth
               InputProps={{
                 readOnly: !isEditable,
