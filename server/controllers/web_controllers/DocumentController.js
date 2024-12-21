@@ -134,12 +134,11 @@ export const takeDocList = async (ownerId) => {
       .where("ownerId", "==", ownerId)
       .get();
 
-    if (snapshot.size === 0) return [];
-    else if (snapshot.size === 1) return snapshot.docs[0];
-    else {
-      const documents = snapshot.docs.map((doc) => doc.data());
-      return documents;
-    }
+    const data = snapshot.docs.map((doc) => ({
+      ...doc.data(),
+    }));
+
+    return data;
   } catch (error) {
     console.error("Lấy thông tin thất bại:", error.message);
     throw new Error(`Lấy tài liệu thất bại: ${error.message}`);
