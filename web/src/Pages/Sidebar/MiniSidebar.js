@@ -24,7 +24,7 @@ export default function Navbar({ onLogout }) {
       // const savedAvatar = localStorage.getItem(CustomerModelKeys.avatar);
       // setAvatar(savedAvatar || '');
       await getImage(CustomerModelKeys.avatar).then((image) => {
-        setAvatar(image.src || '');
+        setAvatar(image ? (image.src ? image.src : '') : '');
       }).catch((error) => {
         console.error('Error getting avatar image: ', error);
         setAvatar('');

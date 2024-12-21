@@ -167,7 +167,7 @@ function App() {
       const token = localStorage.getItem('accessToken');
       const role = localStorage.getItem(CustomerModelKeys.userRole);
 
-      if (userId && token && role) {
+      if (userId && token && role && role !== 'admin') {
         const responses = await Promise.allSettled([
           axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/login-count`, new FormData(), {
             method: 'PATCH',

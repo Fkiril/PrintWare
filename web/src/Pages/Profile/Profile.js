@@ -52,8 +52,8 @@ const Profile = () => {
       // setAvatar(localStorage.getItem(CustomerModelKeys.avatar));
       // setOriginalAvatar(localStorage.getItem(CustomerModelKeys.avatar));
       await getImage(CustomerModelKeys.avatar).then((result) => {
-        setAvatar(result.src || '');
-        setOriginalAvatar(result.src || '');
+        setAvatar(result ? (result.src ? result.src : '') : '');
+        setOriginalAvatar(result ? (result.src ? result.src : '') : '');
       }).catch((error) => {
         console.error('Error getting avatar image: ', error);
         setAvatar('');
@@ -67,8 +67,8 @@ const Profile = () => {
       // setCoverPhoto(localStorage.getItem(CustomerModelKeys.coverPhoto));
       // setOriginalCoverPhoto(localStorage.getItem(CustomerModelKeys.coverPhoto));
       await getImage(CustomerModelKeys.coverPhoto).then((result) => {
-        setCoverPhoto(result.src || '');
-        setOriginalCoverPhoto(result.src || '');
+        setCoverPhoto(result ? (result.src ? result.src : '') : '');
+        setOriginalCoverPhoto(result ? (result.src ? result.src : '') : '');
       }).catch((error) => {
         console.error('Error getting cover photo image: ', error);
         setCoverPhoto('');

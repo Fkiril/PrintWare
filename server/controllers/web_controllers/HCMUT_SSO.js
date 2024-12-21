@@ -69,7 +69,7 @@ export async function register(paramBody) {
 export async function adminRegister(paramBody) {
     try {
         paramBody['userRole'] = 'spso';
-        boparamBodydparamBodyy['highestAuthority'] = false;
+        paramBody['highestAuthority'] = false;
 
         const checkUserQuery = firestore.collection(process.env.USERS_COLLECTION).where('email', '==', paramBody.email);
         checkUserQuery.get().then((checkUserSnapshot) => {

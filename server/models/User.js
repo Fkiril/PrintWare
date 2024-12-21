@@ -82,13 +82,15 @@ export class SPSO extends IUser {
     highestAuthority = false;
     employeeId = '';
     address = '';
+    phoneNum = '';
     lastLogin = '';
 
-    constructor(userName = '', userId = '', userRole = '', email = '', loginCount = 0, highestAuthority = false, employeeId = '', address = '', lastLogin = '') {
+    constructor(userName = '', userId = '', userRole = '', email = '', loginCount = 0, highestAuthority = false, employeeId = '', address = '', phoneNum = '', lastLogin = '') {
         super(userName, userId, userRole, email, loginCount);
         this.highestAuthority = highestAuthority;
         this.employeeId = employeeId;
         this.address = address;
+        this.phoneNum = phoneNum;
         this.lastLogin = lastLogin;
     }
 
@@ -102,6 +104,7 @@ export class SPSO extends IUser {
             highestAuthority: this.highestAuthority?? false,
             employeeId: this.employeeId?? '',
             address: this.address?? '',
+            phoneNum: this.phoneNum?? '',
             lastLogin: this.lastLogin?? ''
         };
     }
@@ -115,6 +118,7 @@ export class SPSO extends IUser {
         this.highestAuthority = json.highestAuthority?? false;
         this.employeeId = json.employeeId?? '';
         this.address = json.address?? '';
+        this.phoneNum = json.phoneNum?? '';
         this.lastLogin = json.lastLogin?? '';
     }
 }
