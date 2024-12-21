@@ -1,3 +1,4 @@
+// Import React and necessary libraries
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,18 +12,17 @@ import {
   List,
   ListItem,
   ListItemText,
-  Dialog,
-  DialogTitle,
-  DialogActions,
+  Divider,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DeleteIcon from "@mui/icons-material/Delete";
 
+// Importing the CSS file
+import "./DocumentUploader.css";
+
 const DocumentUploader = () => {
   const [documents, setDocuments] = useState([]);
-  const [deleteIndex, setDeleteIndex] = useState(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [fileType, setFileType] = useState("all"); // State cho loại file
+  const [fileType, setFileType] = useState("all");
   const navigate = useNavigate();
 
   const handleFileChange = (event) => {
@@ -41,98 +41,95 @@ const DocumentUploader = () => {
   const filteredDocuments =
     fileType === "all"
       ? documents
+      : fileType === "other"
+      ? documents.filter(
+          (doc) =>
+            !doc.name.endsWith(".pdf") &&
+            !doc.name.endsWith(".docx") &&
+            !doc.name.endsWith(".txt")
+        )
       : documents.filter((doc) => doc.name.endsWith(fileType));
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        backgroundColor: "#f9f9f9",
-        padding: "20px",
-      }}
-    >
-      <Box
-        sx={{
-          width: "600px",
-          padding: "20px",
-          borderRadius: "10px",
-          backgroundColor: "#fff",
-          boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.2)",
-          textAlign: "center",
-        }}
-      >
-        <Typography variant="h4" gutterBottom>
-          Upload Your Document
+    <Box className="document-uploader-container">
+      <Box className="document-uploader-box">
+        <Typography variant="h4" className="document-uploader-title">
+          Upload Your Documents
         </Typography>
-        {/* Thanh chọn loại tài liệu */}
-        <ToggleButtonGroup
-          value={fileType}
-          exclusive
-          onChange={handleTypeChange}
-          sx={{ marginBottom: "20px" }}
-          fullWidth
-        >
-          <ToggleButton value="all">All</ToggleButton>
-          <ToggleButton value=".pdf">PDF</ToggleButton>
-          <ToggleButton value=".docx">DOCX</ToggleButton>
-          <ToggleButton value=".txt">TXT</ToggleButton>
-        </ToggleButtonGroup>
 
-        <TextField
-          type="file"
-          inputProps={{ multiple: true }}
-          onChange={handleFileChange}
-          style={{ display: "none" }}
-          id="upload-input"
-        />
-        <label htmlFor="upload-input">
-          <Button
-            variant="contained"
-            component="span"
-            color="primary"
-            startIcon={<UploadFileIcon />}
+        <Box className="upload-controls">
+          {/* Toggle button for file types */}
+          <ToggleButtonGroup
+            value={fileType}
+            exclusive
+            onChange={handleTypeChange}
+            className="toggle-button-group"
           >
-            Upload
-          </Button>
-        </label>
+            <ToggleButton value="all">All</ToggleButton>
+            <ToggleButton value=".pdf">PDF</ToggleButton>
+            <ToggleButton value=".docx">DOCX</ToggleButton>
+            <ToggleButton value=".txt">TXT</ToggleButton>
+            <ToggleButton value="other">Other</ToggleButton>
+          </ToggleButtonGroup>
 
-        <List sx={{ marginTop: "20px", textAlign: "left" }}>
-          {filteredDocuments.map((doc, index) => (
-            <ListItem
-              key={index}
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                marginBottom: "10px",
-                padding: "8px 16px",
-              }}
+          <TextField
+            type="file"
+            inputProps={{ multiple: true }}
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+            id="upload-input"
+          />
+          <label htmlFor="upload-input">
+            <Button
+              variant="contained"
+              component="span"
+              color="primary"
+              startIcon={<UploadFileIcon />}
+              className="upload-button"
             >
-              <ListItemText primary={doc.name} />
-              <IconButton
-                color="error"
-                size="small"
-                onClick={() => setDeleteIndex(index)}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </ListItem>
-          ))}
+              Upload Files
+            </Button>
+          </label>
+        </Box>
+
+        <List className="document-list">
+          {filteredDocuments.length === 0 ? (
+            <Typography variant="body1" className="no-files-text">
+              No documents uploaded.
+            </Typography>
+          ) : (
+            filteredDocuments.map((doc, index) => (
+              <React.Fragment key={index}>
+                <ListItem className="document-list-item">
+                  <ListItemText
+                    primary={doc.name}
+                    secondary={`Size: ${(doc.size / 1024).toFixed(2)} KB`}
+                  />
+                  <IconButton
+                    color="error"
+                    size="small"
+                    onClick={() => {
+                      const updatedDocs = documents.filter((_, i) => i !== index);
+                      setDocuments(updatedDocs);
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </ListItem>
+                {index < filteredDocuments.length - 1 && <Divider />}
+              </React.Fragment>
+            ))
+          )}
         </List>
+
         <Button
           variant="contained"
           color="primary"
           disabled={documents.length === 0}
-          onClick={() => navigate("/document-list", { state: { documents } })}
-          sx={{ marginTop: "20px" }}
+          onClick={() => navigate("/documents", { state: { documents } })}
+          className="confirm-button"
         >
-          Confirm
+          Confirm Upload
         </Button>
       </Box>
     </Box>

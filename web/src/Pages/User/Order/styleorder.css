@@ -1,105 +1,123 @@
-h1, h2 {
-  text-align: center;
-}
-
-.upload-container {
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.file-input {
-  margin-bottom: 10px;
-  padding: 8px;
-  width: 80%;
-}
-
-.button-group {
-  display: flex;
-  justify-content: space-evenly;
-}
-
-.btn {
-  padding: 10px 15px;
-  border: none;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-}
-
-.confirm {
-  background-color: #007bff;
-  color: white;
-}
-
-.cancel {
-  background-color: #f44336;
-  color: white;
-}
-
-.file-list {
-  margin-top: 20px;
-}
-
-.file-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #f9f9f9;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.action-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.edit {
-  background-color: #ffa500;
-  color: white;
-}
-
-.delete {
-  background-color: #ff6347;
-  color: white;
-}
-
-.edit, .delete {
-  padding: 5px 10px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
+/* General styles for the order page */
 body {
-  background-color: #f4f4f4;
+  background-color: rgba(0, 122, 255, 0.1); /* Transparent blue background */
+  font-family: 'Montserrat', sans-serif;
   margin: 0;
   padding: 0;
 }
 
-.App {
-  text-align: center;
-  padding: 20px;
-}
-
-
 .order-container {
-  width: 80%;
-  margin: 20px auto;
+  width: 90%;
+  margin: 40px auto;
   padding: 20px;
-  border-radius: 10px;
   background-color: #ffffff;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+  border-radius: 15px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  position: relative;
+  top: 100px; /* Positions the container below the header */
 }
 
 .order-container h2 {
-  text-align: center;
-  font-size: 24px;
+  font-size: 28px;
+  color: #0d47a1;
   margin-bottom: 20px;
+}
+
+.order-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.order-table {
+  flex: 1;
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.order-table th,
+.order-table td {
+  border: 1px solid #ddd;
+  padding: 15px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.order-table th {
+  background-color: #f1f5f9;
+  font-size: 16px;
+  color: #0d47a1;
+  font-weight: bold;
+}
+
+.order-table tbody tr:hover {
+  background-color: #e3f2fd;
+}
+
+.order-table tbody tr td {
+  font-size: 14px;
   color: #333;
 }
 
+.copies-control {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px; /* Added spacing between elements */
+}
+
+.invoice {
+  flex: 0.4;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.invoice h3 {
+  font-size: 20px;
+  color: #0d47a1;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.invoice-item {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.invoice-item span {
+  font-size: 16px;
+  color: #333;
+}
+
+.primary-button {
+  width: 100%;
+  background-color: #0d47a1;
+  color: #fff;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.primary-button:hover {
+  background-color: #08306b;
+}
+
+/* Printer location and popup styles */
 .printer-location {
   display: flex;
   justify-content: space-between;
@@ -115,34 +133,35 @@ body {
 
 .settings-icon {
   font-size: 24px;
-  color: #007bff;
+  color: #0d47a1;
   cursor: pointer;
 }
 
 .settings-icon:hover {
-  color: #007bff;
+  color: #08306b;
 }
 
 .popup-overlay {
+  display: none; /* Hide the overlay by default */
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
 }
 
 .popup-content {
+  position: relative; /* Ensures the close button positions correctly */
   background: #fff;
   padding: 20px;
   border-radius: 10px;
   text-align: center;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-  width: 300px;
+  width: 400px;
 }
 
 .popup-content h3 {
@@ -152,10 +171,13 @@ body {
 
 .popup-buttons {
   margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
 
 .popup-button {
-  background-color: #007bff;
+  background-color: #0d47a1;
   color: #fff;
   padding: 10px 20px;
   margin: 5px;
@@ -163,221 +185,27 @@ body {
   border-radius: 5px;
   font-size: 14px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .popup-button:hover {
-  background-color: #007bff;
+  background-color: #08306b;
 }
 
 .close-popup {
+  position: absolute;
+  top: 10px;
+  right: 10px; /* Aligned to the top-right corner */
   background-color: #e57373;
-  margin-top: 20px;
+  border: none;
+  color: white;
+  font-size: 18px;
+  padding: 5px 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .close-popup:hover {
   background-color: #d32f2f;
-}
-
-.order-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.order-table {
-  width: 60%;
-  border-collapse: collapse;
-  margin-right: 20px;
-}
-
-.order-table th,
-.order-table td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: center;
-}
-
-.order-table th {
-  background-color: #f1f1f1;
-  font-size: 16px;
-}
-
-.order-table td span {
-  font-size: 12px;
-  color: #777;
-}
-
-.adjust-button {
-  padding: 5px 10px;
-  margin: 0 5px;
-  background-color: #e0e0e0;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.adjust-button:hover {
-  background-color: #bdbdbd;
-}
-
-.copies-count {
-  font-weight: bold;
-  font-size: 16px;
-}
-
-.invoice {
-  width: 35%;
-  padding: 20px;
-  border-radius: 10px;
-  background-color: #f9f9f9;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.invoice h3 {
-  text-align: center;
-  font-size: 18px;
-  margin-bottom: 20px;
-}
-
-.invoice-item {
-  display: inline-block;
-  margin-bottom: 10px;
-}
-
-.invoice-item span {
-  font-size: 16px;
-  color: #333;
-}
-
-.primary-button {
-  display: block;
-  width: 100%;
-  background-color: #007bff;
-  color: #fff;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 20px;
-}
-
-.primary-button:hover {
-  background-color: #007bff;
-}
-
-/*Payment*/
-/* General container styling */
-.payment-container {
-  max-width: 600px;
-  margin: 50px auto;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Title styling */
-.payment-title {
-  font-size: 24px;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 20px;
-  color: #333;
-}
-
-/* Payment methods container */
-.payment-methods {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-/* Individual payment option styling */
-.payment-option {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 15px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background-color: #fff;
-}
-
-.payment-option:hover {
-  border-color: #007bff;
-}
-
-.payment-option.selected {
-  border-color: #007bff;
-  background-color: #e6f3ff;
-}
-
-.payment-option input {
-  display: none;
-}
-
-.payment-option img {
-  width: 50px;
-  height: 50px;
-}
-
-.payment-option span {
-  font-size: 16px;
-  font-weight: 500;
-  color: #333;
-}
-
-/* Error message styling */
-.error-message {
-  color: #ff4d4f;
-  font-size: 14px;
-  text-align: center;
-  margin-top: 10px;
-}
-
-/* Actions container styling */
-.actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 30px;
-}
-
-/* Button styling */
-.actions .secondary-button,
-.actions .primary-button {
-  flex: 1;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  text-align: center;
-  margin: 0 5px; /* Ensure spacing between buttons */
-}
-
-.actions .secondary-button {
-  background-color: #f5f5f5;
-  color: #333;
-  border: 1px solid #ccc;
-}
-
-.actions .secondary-button:hover {
-  background-color: #e6e6e6;
-}
-
-.actions .primary-button {
-  background-color: #007bff;
-  color: #fff;
-}
-
-.actions .primary-button:hover {
-  background-color: #0056b3;
 }

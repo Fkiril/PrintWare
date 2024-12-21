@@ -245,7 +245,7 @@ function App() {
           <Route
             path="/documents"
             element={
-              isLoggedIn ?
+              //isLoggedIn ?
                 <SidebarLayout
                   isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
@@ -253,13 +253,13 @@ function App() {
                 >
                   <DocumentList/>
                 </SidebarLayout>
-                : <Navigate to="/" />
+                //: <Navigate to="/" />
             }
           />
            <Route
             path="/document-uploader"
             element={
-              isLoggedIn ?
+              //isLoggedIn ?
                 <SidebarLayout
                   isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
@@ -267,13 +267,13 @@ function App() {
                 >
                   <DocumentUp/>
                 </SidebarLayout>
-                : <Navigate to="/" />
+               // : <Navigate to="/" />
             }
           />
            <Route
             path="/order"
             element={
-              isLoggedIn ?
+              //isLoggedIn ?
                 <SidebarLayout
                   isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
@@ -281,7 +281,7 @@ function App() {
                 >
                   <Order/>
                 </SidebarLayout>
-                : <Navigate to="/" />
+                //: <Navigate to="/" />
             }
           />
            <Route
@@ -401,7 +401,7 @@ function App() {
           /><Route
           path="/manageUser"
           element={
-            isLoggedIn ?
+           // isLoggedIn ?
               <SidebarLayout
                 isSidebarOpen={isSidebarOpen}
                 toggleSidebar={toggleSidebar}
@@ -409,13 +409,13 @@ function App() {
               >
                 <USER />
               </SidebarLayout>
-              : <Navigate to="/" />
+            //  : <Navigate to="/" />
           }
         />
          <Route
             path="/managerPrint-er"
             element={
-              isLoggedIn ?
+             // isLoggedIn ?
                 <SidebarLayout
                   isSidebarOpen={isSidebarOpen}
                   toggleSidebar={toggleSidebar}
@@ -423,7 +423,7 @@ function App() {
                 >
                   <PRINT />
                 </SidebarLayout>
-                : <Navigate to="/" />
+              //  : <Navigate to="/" />
             }
           />
         </Routes>
