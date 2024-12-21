@@ -19,7 +19,7 @@ const ManageUser = () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-all-user-profiles`, {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`
         },
         params: {
           userType: 'customer'

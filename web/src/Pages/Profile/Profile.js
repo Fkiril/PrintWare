@@ -74,6 +74,10 @@ const Profile = () => {
       showAlert('Access token not found', 'error');
       return;
     }
+    if (!localStorage.getItem(CustomerModelKeys.userRole)) {
+      showAlert('User role not found', 'error');
+      return;
+    }
     if (!userName) {
       showAlert('userName is required', 'error');
       return;
@@ -118,15 +122,18 @@ const Profile = () => {
       isProfileChanged && axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/update-profile`, formData, {
         method: 'PATCH',
         headers: {
+          'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`
         },
         params: {
-          userId: localStorage.getItem(CustomerModelKeys.userId)
+          userId: localStorage.getItem(CustomerModelKeys.userId),
+          userRole: localStorage.getItem(CustomerModelKeys.userRole)
         }
       }),
       avaFormData.has('file') && axios.post(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/upload-picture`, avaFormData, {
         method: 'POST',
         headers: {
+          'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,
         },
         params: {
@@ -137,6 +144,7 @@ const Profile = () => {
       coverFormData.has('file') && axios.post(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/upload-picture`, coverFormData, {
         method: 'POST',
         headers: {
+          'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,
         },
         params: {
@@ -168,10 +176,12 @@ const Profile = () => {
             if (index === 1) {
               console.log('Update avatar result: ', result);
               if (avatar) localStorage.setItem(CustomerModelKeys.avatar, avatar);
+              localStorage.setItem('avatarId', result.data);
             }
             else if (index === 2) {
               console.log('Update cover photo result: ', result);
               if (coverPhoto) localStorage.setItem(CustomerModelKeys.coverPhoto, coverPhoto);
+              localStorage.setItem('coverPhotoId', result.data);
             }
           }
         }

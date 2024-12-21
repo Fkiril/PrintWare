@@ -4,6 +4,7 @@ export const CustomerModelKeys = {
     userRole: 'userRole',
     email: 'email',
     phoneNum: 'phoneNum',
+    loginCount: 'loginCount',
     hcmutId: 'hcmutId',
     faculty: 'faculty',
     major: 'major',
@@ -20,7 +21,11 @@ export const SPSOModelKeys = {
     userRole: 'userRole',
     email: 'email',
     phoneNum: 'phoneNum',
-    highestAuthority: 'highestAuthority'
+    loginCount: 'loginCount',
+    highestAuthority: 'highestAuthority',
+    address: 'address',
+    employeeId: 'employeeId',
+    lastLogin: 'lastLogin'
 }
 
 export const UserRoles =  {

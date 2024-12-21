@@ -31,6 +31,7 @@ import {
 } from "chart.js";
 
 import axios from "axios";
+import { CustomerModelKeys, SPSOModelKeys } from "../../../models/User";
 
 // Đăng ký các thành phần cần thiết của Chart.js
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -48,7 +49,7 @@ const AdminDashboard = () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-all-user-profiles`, {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`
         },
         params: {
           userType: 'spso'
@@ -117,17 +118,123 @@ const AdminDashboard = () => {
     setSelectedEmployee(null);
   };
 
+  async function fetchAccountEditData(employeeData) {
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+      console.error('Access token not found');
+      return false;
+    }
+    const userId = employeeData.userId;
+    if (!userId) {
+      console.error('User ID not found');
+      return false;
+    }
+    const userRole = employeeData.userRole;
+    if (!userRole) {
+      console.error('User role not found');
+      return false;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append(SPSOModelKeys.userId, userId);
+      formData.append(SPSOModelKeys.userRole, userRole);
+      if (employeeData.employeeId) formData.append(SPSOModelKeys.employeeId, employeeData.employeeId);
+      if (employeeData.userName) formData.append(SPSOModelKeys.userName, employeeData.userName);
+      if (employeeData.email) formData.append(SPSOModelKeys.email, employeeData.email);
+      if (employeeData.address) formData.append(SPSOModelKeys.address, employeeData.address);
+      if (employeeData.lastLogin) formData.append(SPSOModelKeys.lastLogin, employeeData.lastLogin);
+      if (employeeData.loginCount) formData.append(SPSOModelKeys.loginCount, employeeData.loginCount);
+
+      const response = await axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/update-profile`, formData, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        params: {
+          userId: userId,
+          userRole: userRole
+        }
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return false;
+    };
+  };
+
   const handleSaveChanges = () => {
-    setEmployees((prev) =>
-      prev.map((emp) =>
-        emp.id === selectedEmployee.id ? { ...selectedEmployee } : emp
-      )
-    );
-    handleCloseDialog();
+    fetchAccountEditData(selectedEmployee).then((result) => {
+      if (result) {
+        console.log('Data updated successfully');
+        setEmployees((prev) =>
+          prev.map((emp) =>
+            emp.id === selectedEmployee.id ? { ...selectedEmployee } : emp
+          )
+        );
+        handleCloseDialog();
+      }
+      else {
+        console.log('Failed to update data');
+        handleCloseDialog();
+      }
+    }).catch((error) => {
+      console.error('Error updating data:', error);
+      handleCloseDialog();
+    });
+  };
+
+  async function fetchDeleteAccount(userId) {
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+      console.error('Access token not found');
+      return false;
+    }
+    if (!userId) {
+      console.error('User ID not found');
+      return false;
+    }
+
+    const userRole = employees.find((emp) => emp.userId === userId).userRole;
+    if (!userRole) {
+      console.error('User role not found');
+      return false;
+    }
+
+    try {
+      const response = await axios.delete(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/delete-account`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        },
+        params: {
+          userId: userId,
+          userRole: userRole
+        }
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return false;
+    }
   };
 
   const handleDelete = (id) => {
-    setEmployees((prev) => prev.filter((emp) => emp.id !== id));
+    console.log('Delete account:', id);
+    fetchDeleteAccount(id).then((result) => {
+      if (result) {
+        console.log('Data deleted successfully');
+        setEmployees((prev) => prev.filter((emp) => emp.id !== id));
+      }
+      else {
+        console.log('Failed to delete data');
+      }
+    }).catch((error) => {
+      console.error('Error deleting data:', error);
+    });
   };
 
   return (
@@ -174,7 +281,7 @@ const AdminDashboard = () => {
                   </IconButton>
                   <IconButton
                     color="error"
-                    onClick={() => handleDelete(emp.id)}
+                    onClick={() => handleDelete(emp.userId)}
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -212,11 +319,11 @@ const AdminDashboard = () => {
             />
             <TextField
               label="Name"
-              value={selectedEmployee.name}
+              value={selectedEmployee.userName}
               onChange={(e) =>
                 setSelectedEmployee({
                   ...selectedEmployee,
-                  name: e.target.value,
+                  userName: e.target.value,
                 })
               }
               fullWidth

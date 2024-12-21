@@ -39,18 +39,16 @@ export async function register(paramBody) {
         const userRecord = await adminAuth.createUser(createRequest);
 
         user.setInfoFromJSON(paramBody);
-        // const wallet = new Wallet();
-        // wallet.setInfoFromJson({ ownerId: userRecord.uid });
+        const wallet = new Wallet('', userRecord.uid, 0, FieldValue.serverTimestamp(), FieldValue.serverTimestamp(), FieldValue.serverTimestamp());
 
         const batch = firestore.batch();
         const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(userRecord.uid);
-        // const walletRef = firestore.collection(process.env.WALLETS_COLLECTION).doc(userRecord.uid);
+        const walletRef = firestore.collection(process.env.WALLETS_COLLECTION).doc(userRecord.uid);
 
         batch.set(userRef, user.convertToJSON());
         batch.update(userRef, { userId: userRecord.uid })
 
-        // batch.set(walletRef, wallet.convertToJSON());
-        // batch.update(walletRef, { ownerId: userRecord.uid });
+        batch.set(walletRef, wallet.convertToJson());
 
         return await batch.commit().then(() => {
             user.userId = userRecord.uid;
@@ -122,61 +120,140 @@ export async function adminRegister(paramBody) {
 }
 
 // Checked
-export async function deleteAccount(paramUserId) {
-    return await adminAuth.deleteUser(paramUserId).then(async () => {
-        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
+export async function deleteAccount(paramUserId, paramUserRole) {
+    if (paramUserRole != 'customer' && paramUserRole != 'spso') {
+        return { status: 400, body: { message: 'Invalid user role.' } };
+    }
 
-        const userSnapshot = await userRef.get();
-        if (userSnapshot.data() === undefined) {
-            return { status: 404, body: { message: 'User not found.' } };
-        }
+    if (paramUserRole === 'customer') {
+        return await adminAuth.deleteUser(paramUserId).then(async () => {
+            const batch = firestore.batch();
 
-        if (userSnapshot.data().role === 'customer') {
+            const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
+    
+            const userSnapshot = await userRef.get();
+            if (userSnapshot.data() === undefined) {
+                return { status: 404, body: { message: 'User not found.' } };
+            }
+            
+            batch.delete(userRef);
+            
+            const docs = userSnapshot.data().documents;
+            for (const docId of docs) {
+                const docSnapshot = await firestore.collection(process.env.DOCUMENTS_COLLECTION).doc(docId).get();
+                if (docSnapshot.data() !== undefined) {
+                    const printTaskQuery = firestore.collection(process.env.PRINT_TASKS_COLLECTION).where('docId', '==', docId);
+                    const printTaskSnapshot = await printTaskQuery.get();
+                    if (printTaskSnapshot.empty) {
+                        batch.delete(docRef);
+                    }
+                }
+            }
+            
             const walletRef = firestore.collection(process.env.WALLETS_COLLECTION).doc(query.userId);
             const walletSnapshot = await walletRef.get();
             if (walletSnapshot.data() !== undefined) {
-                walletRef.delete();
+                batch.delete(walletRef);
             }
-        }
 
-        userRef.delete();
+            return await batch.commit().then(() => {
+                return { status: 200, body: { message: 'User deleted successfully.' } };
+            })
+            .catch((error) => {
+                console.log('Error deleting user:', error);
+                return { status: 500, body: { message: error.message } };
+            });
+        })
+        .catch((error) => {
+            console.log('Error deleting user:', error);
+            return { status: 500, body: { message: error.message } };
+        });
+    }
+    else {
+        return await adminAuth.deleteUser(paramUserId).then(async () => {
+            const adminRef = firestore.collection(process.env.ADMINS_COLLECTION).doc(paramUserId);
+    
+            const adminSnapshot = await adminRef.get();
+            if (adminSnapshot.data() === undefined) {
+                return { status: 404, body: { message: 'Admin account not found.' } };
+            }
 
-        return { status: 200, body: { message: 'User deleted successfully.' } };
-    })
-    .catch((error) => {
-        console.log('Error deleting user:', error);
-        return { status: 500, body: { message: error.message } };
-    });
+            if (adminSnapshot.data().highestAuthority) {
+                return { status: 400, body: { message: 'Cannot delete highest authority account.' } };
+            }
+    
+            adminRef.delete();
+    
+            return { status: 200, body: { message: 'Admin account deleted successfully.' } };
+        })
+        .catch((error) => {
+            console.log('Error deleting admin account:', error);
+            return { status: 500, body: { message: error.message } };
+        });
+    }
 }
 
 // Checked
-export async function updateProfile(paramUserId, paramBody) {
+export async function updateProfile(paramUserId, paramUserRole, paramBody) {
+    if (paramUserRole != 'customer' && paramUserRole != 'spso') {
+        return { status: 400, body: { message: 'Invalid user role.' } };
+    }
+    
     try {
-        const CustomerInstance = new Customer();
-        const validFields = Object.keys(CustomerInstance).filter(key => key !== 'constructor');
-        
-        const invalidFields = Object.keys(paramBody).filter(key => !validFields.includes(key));
-        if (invalidFields.length > 0) {
-            return { status: 400, body: { message: `The following fields are invalid: ${invalidFields.join(', ')}.` } };
+        if (paramUserRole === 'customer') {
+            const CustomerInstance = new Customer();
+            const validFields = Object.keys(CustomerInstance).filter(key => key !== 'constructor');
+            
+            const invalidFields = Object.keys(paramBody).filter(key => !validFields.includes(key));
+            if (invalidFields.length > 0) {
+                return { status: 400, body: { message: `The following fields are invalid: ${invalidFields.join(', ')}.` } };
+            }
+
+            const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
+            const userSnapshot = await userRef.get();
+            if (userSnapshot.data() === undefined) {
+                return { status: 404, body: { message: 'User not found.' } };
+            }
+
+            const batch = firestore.batch();
+
+            batch.update(userRef, paramBody);
+
+            return await batch.commit().then(() => {
+                return { status: 200, body: { message: 'User updated successfully.' } };
+            })
+            .catch((error) => {
+                console.log('Error updating user:', error);
+                return { status: 500, body: { message: error.message } };
+            });
         }
+        else if (paramUserRole === 'spso') {
+            const SPSOInstance = new SPSO();
+            const validFields = Object.keys(SPSOInstance).filter(key => key !== 'constructor');
+            
+            const invalidFields = Object.keys(paramBody).filter(key => !validFields.includes(key));
+            if (invalidFields.length > 0) {
+                return { status: 400, body: { message: `The following fields are invalid: ${invalidFields.join(', ')}.` } };
+            }
 
-        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
-        const userSnapshot = await userRef.get();
-        if (userSnapshot.data() === undefined) {
-            return { status: 404, body: { message: 'User not found.' } };
+            const adminRef = firestore.collection(process.env.ADMINS_COLLECTION).doc(paramUserId);
+            const adminSnapshot = await adminRef.get();
+            if (adminSnapshot.data() === undefined) {
+                return { status: 404, body: { message: 'Admin account not found.' } };
+            }
+
+            const batch = firestore.batch();
+
+            batch.update(adminRef, paramBody);
+
+            return await batch.commit().then(() => {
+                return { status: 200, body: { message: 'Admin account updated successfully.' } };
+            })
+            .catch((error) => {
+                console.log('Error updating admin account:', error);
+                return { status: 500, body: { message: error.message } };
+            })
         }
-
-        const batch = firestore.batch();
-
-        batch.update(userRef, paramBody);
-
-        return await batch.commit().then(() => {
-            return { status: 200, body: { message: 'User updated successfully.' } };
-        })
-        .catch((error) => {
-            console.log('Error updating user:', error);
-            return { status: 500, body: { message: error.message } };
-        });
     }
     catch (error) {
         console.log('Error:', error);
@@ -331,7 +408,7 @@ export async function uploadPicture(paramFile, paramUserId, paramType) {
 }
 
 // Check
-export async function getPicture(paramUserId, paramType) {
+export async function getPictureByUserId(paramUserId, paramType) {
     const workingType = paramType;
 
     if (workingType !== 'avatar' && workingType !== 'coverPhoto') {
@@ -369,6 +446,36 @@ export async function getPicture(paramUserId, paramType) {
         console.log('Error getting avatar: ', error);
         return { status: 500, body: { message: error.message } };
     }
+}
+
+export async function getPicture(paramPicId) {
+    try {
+        const response = await googleDrive.files.get({
+            fileId: paramPicId,
+            alt: 'media'
+        }, {
+            responseType: 'stream'
+        });
+
+        if (response.data === undefined) {
+            return { status: 404, body: { message: 'File not found.' } };
+        }
+
+        return { status: 200, body: { message: 'File found.', file: response.data, data: { fileId: fileId, contentType: response.headers['content-type'] } } };
+    } catch (error) {
+        console.log('Error getting picture: ', error);
+        return { status: 500, body: { message: error.message } };
+    }
+}
+
+export async function deletePicture(paramPicId) {
+    return await googleDrive.files.delete({ fileId: paramPicId }).then(() => {
+        console.log('Picture deleted successfully.');
+        return { status: 200, body: { message: 'Picture deleted successfully.' } };
+    }).catch((error) => {
+        console.log('Error deleting picture: ', error);
+        return { status: 500, body: { message: error.message } };
+    });
 }
 
 export async function createResetPasswordLink(paramEmail) {
@@ -437,38 +544,47 @@ export async function getDocIdList(paramUserId) {
 }
 
 
-export async function updateLoginCount(paramUserId) {
-    try {
-        // Check for admin account first
-        const adminRef = firestore.collection(process.env.ADMINS_COLLECTION).doc(paramUserId);
+export async function updateLoginCount(paramUserId, paramUserRole) {
+    if (paramUserRole != 'customer' && paramUserRole != 'spso') {
+        return { status: 400, body: { message: 'Invalid user role.' } };
+    }
 
-        const adminSnapshot = await adminRef.get();
-        if (adminSnapshot.exists) {
-            return await adminRef.update({ loginCount: FieldValue.increment(1) })
+    try {
+        if (paramUserRole === 'customer') {
+            const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
+
+            const userSnapshot = await userRef.get();
+            if (userSnapshot.data() === undefined) {
+                return { status: 404, body: { message: 'Account not found.' } };
+            }
+
+            return await userRef.update({ loginCount: FieldValue.increment(1) })
                 .then(() => {
-                    return { status: 201, body: { message: "Update login count successfully." }};
+                    return { status: 201, body: { message: "Update login count successfully." } };
                 })
                 .catch((error) => {
                     console.log('Error updating document:', error);
                     return { status: 500, body: { message: error.message } };
-                })
+                });
         }
+        else {
+            const adminRef = firestore.collection(process.env.ADMINS_COLLECTION).doc(paramUserId);
 
-        const userRef = firestore.collection(process.env.USERS_COLLECTION).doc(paramUserId);
-
-        const userSnapshot = await userRef.get();
-        if (userSnapshot.data() === undefined) {
-            return { status: 404, body: { message: 'Account not found.' } };
+            const adminSnapshot = await adminRef.get();
+            if (adminSnapshot.data() === undefined) {
+                return { status: 404, body: { message: 'Admin account not found.' } };
+            }
+            else {
+                return await adminRef.update({ loginCount: FieldValue.increment(1) })
+                    .then(() => {
+                        return { status: 201, body: { message: "Update login count successfully." }};
+                    })
+                    .catch((error) => {
+                        console.log('Error updating document:', error);
+                        return { status: 500, body: { message: error.message } };
+                    });
+            }
         }
-
-        return await userRef.update({ loginCount: FieldValue.increment(1) })
-            .then(() => {
-                return { status: 201, body: { message: "Update login count successfully." } };
-            })
-            .catch((error) => {
-                console.log('Error updating document:', error);
-                return { status: 500, body: { message: error.message } };
-            })
     }
     catch (error) {
         console.log('Error updating login count:', error);

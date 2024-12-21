@@ -53,17 +53,16 @@ function App() {
       axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-user-profile-by-id`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
         params: {
           userId: userId,
         }
       }),
-      axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-picture`, {
+      axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-picture-by-user-id`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
         params: {
           userId: userId,
@@ -71,10 +70,10 @@ function App() {
         },
         responseType: 'arraybuffer'
       }),
-      axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-picture`, {
+      axios.get(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/get-picture-by-user-id`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
         params: {
           userId: userId,
@@ -98,6 +97,8 @@ function App() {
           localStorage.setItem(CustomerModelKeys.major, profileResponse.data.major || '');
           localStorage.setItem(CustomerModelKeys.classId, profileResponse.data.classId || '');
           localStorage.setItem(CustomerModelKeys.academicYear, profileResponse.data.academicYear || '');
+          localStorage.setItem('avatarId', profileResponse.data.avatar || '');
+          localStorage.setItem('coverPhotoId', profileResponse.data.coverPhoto || '');
         } else {
           const imageResponse = response.value;
           const imgData = btoa(String.fromCharCode.apply(null, new Uint8Array(imageResponse.data)));
@@ -158,19 +159,20 @@ function App() {
           axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/login-count`, new FormData(), {
             method: 'PATCH',
             headers: {
-              'Authorization': `Bearer ${token}`,
+              'Authorization': `Bearer ${token}`
             },
             params: {
               userId: userId,
+              userRole: role
             }
           }),
           role === 'spso' && axios.patch(`${process.env.REACT_APP_SERVER_URL}/hcmut-sso/last-login`, new FormData(), {
             method: 'PATCH',
             headers: {
-              'Authorization': `Bearer ${token}`,
+              'Authorization': `Bearer ${token}`
             },
             params: {
-              userId: userId,
+              userId: userId
             }
           })
         ]);

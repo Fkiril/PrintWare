@@ -1,6 +1,24 @@
 import { response, Router } from 'express';
 const router = Router();
-import { adminRegister, register, deleteAccount, updateProfile, getUserProfileById, getUserProfileByEmail, getUserIdByEmail, uploadPicture, getPicture, createResetPasswordLink, createEmailVertificationLink, getDocIdList, updateLoginCount, updateLastLogin, getAllUserProfiles} from '../../controllers/web_controllers/HCMUT_SSO.js';
+import {
+    adminRegister,
+    register,
+    deleteAccount,
+    updateProfile,
+    getUserProfileById,
+    getUserProfileByEmail,
+    getUserIdByEmail,
+    uploadPicture,
+    getPictureByUserId,
+    getPicture,
+    deletePicture,
+    createResetPasswordLink,
+    createEmailVertificationLink,
+    getDocIdList,
+    updateLoginCount,
+    updateLastLogin,
+    getAllUserProfiles
+} from '../../controllers/web_controllers/HCMUT_SSO.js';
 
 import multer from 'multer';
 const storage = multer.memoryStorage();
@@ -50,12 +68,12 @@ router.delete('/delete-account', async (req, res) => {
 
     const query = req.query;
     console.log('query: ', query);
-    if (!query || !query.userId) {
+    if (!query || !query.userId || !query.userRole) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
 
-    const result = await deleteAccount(query.userId);
+    const result = await deleteAccount(query.userId, query.userRole);
 
     res.status(result.status).json(result.body);
 })
@@ -69,12 +87,12 @@ router.patch('/update-profile', upload.single(''), async (req, res) => {
     const body = req.body;
     const query = req.query;
     console.log('body: ', body, 'query: ', query);
-    if (!body || Object.keys(body).length === 0 || !query || !query.userId) {
+    if (!body || Object.keys(body).length === 0 || !query || !query.userId || !query.userRole) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
 
-    const result = await updateProfile(query.userId, body);
+    const result = await updateProfile(query.userId, query.userRole, body);
 
     res.status(result.status).json(result.body);
 })
@@ -158,17 +176,31 @@ router.post('/upload-picture', upload.single('file'), async (req, res) => {
     // query: userId
     // query: type (avatar or coverPhoto)
 // Output: file as a blod object
-router.get('/get-picture', async (req, res) => {
-    console.log('Received a get picture request!');
+router.get('/get-picture-by-user-id', async (req, res) => {
+    console.log('Received a get picture by userId request!');
 
     const query = req.query;
-    console.log('query: ', query);
     if (!query || !query.userId || !query.type) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
 
-    const result = await getPicture(query.userId, query.type);
+    const result = await getPictureByUserId(query.userId, query.type);
+
+    res.status(result.status).json(result.body);
+})
+
+router.get('/get-picture', async (req, res) => {
+    console.log('Received a get picture request!');
+
+    const query = req.query;
+    console.log('query: ', query);
+    if (!query || !query.pictureId) {
+        res.status(400).json({ message: 'Missing required parameters.' });
+        return;
+    }
+
+    const result = await getPicture(query.pictureId);
 
     if (result.status !== 200) {
         res.status(result.status).json(result.body);
@@ -190,6 +222,20 @@ router.get('/get-picture', async (req, res) => {
         })
         .pipe(res);
 
+})
+
+router.delete('/delete-picture', async (req, res) => {
+    console.log('Received a delete picture request!');
+
+    const query = req.query;
+    if (!query || !query.pictureId) {
+        res.status(400).json({ message: 'Missing required parameters.' });
+        return;
+    }
+
+    const result = await deletePicture(query.pictureId);
+
+    res.status(result.status).json(result.body);
 })
 
 
@@ -254,12 +300,12 @@ router.patch('/login-count', async (req, res) => {
 
     const query = req.query;
     console.log('query: ', query);
-    if (!query || !query.userId) {
+    if (!query || !query.userId || !query.userRole) {
         res.status(400).json({ message: 'Missing required parameters.' });
         return;
     }
 
-    const result = await updateLoginCount(query.userId);
+    const result = await updateLoginCount(query.userId, query.userRole);
 
     res.status(result.status).json(result.body);
 })
